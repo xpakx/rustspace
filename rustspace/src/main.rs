@@ -24,31 +24,40 @@ async fn main() {
 }
 
 async fn root() -> impl IntoResponse {
-   let template = RootTemplate {};
+   let template = RootTemplate {path: "index"};
    return HtmlTemplate(template)
 }
 
 async fn about() -> impl IntoResponse {
-   let template = AboutTemplate {};
+   let template = AboutTemplate {path: "about"};
    return HtmlTemplate(template)
 }
 
 async fn help() -> impl IntoResponse {
-   let template = HelpTemplate {};
+   let template = HelpTemplate {path: "help"};
    return HtmlTemplate(template)
 }
 
 #[derive(Template)]
 #[template(path = "index.html")]
-pub struct RootTemplate {}
+#[allow(dead_code)]
+pub struct RootTemplate {
+    path: &'static str
+}
 
 #[derive(Template)]
 #[template(path = "about.html")]
-pub struct AboutTemplate {}
+#[allow(dead_code)]
+pub struct AboutTemplate {
+    path: &'static str
+}
 
 #[derive(Template)]
 #[template(path = "help.html")]
-pub struct HelpTemplate {}
+#[allow(dead_code)]
+pub struct HelpTemplate {
+    path: &'static str
+}
 
 struct HtmlTemplate<T>(T);
 

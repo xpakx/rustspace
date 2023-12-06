@@ -41,6 +41,13 @@ body {
   color: #e44d26;
 }
 
+.nav a.active {
+  text-decoration: none;
+  color: #76493f;
+  pointer-events: none;
+  cursor: default;
+}
+
 .nav .separator {
   color: #555;
 }

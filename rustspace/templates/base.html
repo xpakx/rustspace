@@ -13,11 +13,11 @@
   <div class="page">
 	  <div class="header">RustSpace</div>
 	  <div class="nav">
-		<a href="/">Home</a> 
+		  <a href="/" {% if path == "index" %}class="active"{% endif %}>Home</a> 
 		<span class="separator">|</span>
-		<a href="/about">About</a> 
+		<a href="/about" {% if path == "about" %}class="active"{% endif %}>About</a> 
 		<span class="separator">|</span>
-		<a href="/help">Help</a>
+		<a href="/help" {% if path == "help" %}class="active"{% endif %}>Help</a>
 	  </div>
 	  <div class="content">
 		{% block content %}{% endblock %}
