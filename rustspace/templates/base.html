@@ -5,16 +5,24 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}{{ title }}{% endblock %}</title>
+  <link href="/assets/site.css" rel="stylesheet" />
   {% block head %}{% endblock %}
 </head>
 
 <body>
-	<div class="nav">
-		<a href="/">Home</a> |
-		<a href="/about">About</a> |
+  <div class="page">
+	  <div class="header">RustSpace</div>
+	  <div class="nav">
+		<a href="/">Home</a> 
+		<span class="separator">|</span>
+		<a href="/about">About</a> 
+		<span class="separator">|</span>
 		<a href="/help">Help</a>
-	</div>
-  {% block content %}{% endblock %}
+	  </div>
+	  <div class="content">
+		{% block content %}{% endblock %}
+	  </div>
+  </div<
 </body>
 
 </html>

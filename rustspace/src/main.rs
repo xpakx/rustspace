@@ -2,14 +2,17 @@ use axum::{routing::get, Router};
 use axum::response::{Html, IntoResponse, Response};
 use axum::http::StatusCode;
 use askama::Template;
+use tower_http::services::ServeDir;
 
 #[tokio::main]
 async fn main() {
+    let assets_path = std::env::current_dir().unwrap();
     let app = Router::new()
         .route("/", get(root))
         .route("/index", get(root))
         .route("/about", get(about))
-        .route("/help", get(help));
+        .route("/help", get(help))
+        .nest_service("/assets", ServeDir::new(format!("{}/assets/", assets_path.to_str().unwrap())));
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000")
         .await
