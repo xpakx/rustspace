@@ -27,8 +27,10 @@ async fn main() {
         .route("/help", get(help))
         .nest_service("/assets", ServeDir::new(format!("{}/assets/", assets_path.to_str().unwrap())));
 
+    let host = "0.0.0.0";
     let port = 3000;
-    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port))
+
+    let listener = tokio::net::TcpListener::bind(format!("{}:{}", host, port))
         .await
         .unwrap();
     info!("Router initialized. Listening on port {}", port);
