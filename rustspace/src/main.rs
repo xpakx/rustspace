@@ -3,9 +3,22 @@ use axum::response::{Html, IntoResponse, Response};
 use axum::http::StatusCode;
 use askama::Template;
 use tower_http::services::ServeDir;
+use tracing::info;
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+ 
 
 #[tokio::main]
 async fn main() {
+    tracing_subscriber::registry()
+        .with(
+            tracing_subscriber::EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| "rustspace=debug".into()),
+        )
+        .with(tracing_subscriber::fmt::layer())
+        .init();
+ 
+    info!("Initializing router...");
+
     let assets_path = std::env::current_dir().unwrap();
     let app = Router::new()
         .route("/", get(root))
@@ -14,9 +27,11 @@ async fn main() {
         .route("/help", get(help))
         .nest_service("/assets", ServeDir::new(format!("{}/assets/", assets_path.to_str().unwrap())));
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000")
+    let port = 3000;
+    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port))
         .await
         .unwrap();
+    info!("Router initialized. Listening on port {}", port);
 
     axum::serve(listener, app)
         .await
@@ -24,16 +39,19 @@ async fn main() {
 }
 
 async fn root() -> impl IntoResponse {
+   info!("index requested");
    let template = RootTemplate {path: "index"};
    return HtmlTemplate(template)
 }
 
 async fn about() -> impl IntoResponse {
+   info!("about requested");
    let template = AboutTemplate {path: "about"};
    return HtmlTemplate(template)
 }
 
 async fn help() -> impl IntoResponse {
+   info!("help requested");
    let template = HelpTemplate {path: "help"};
    return HtmlTemplate(template)
 }
