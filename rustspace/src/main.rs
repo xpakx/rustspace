@@ -5,6 +5,7 @@ use askama::Template;
 use tower_http::services::ServeDir;
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use sqlx::postgres::PgPoolOptions;
  
 
 #[tokio::main]
@@ -16,7 +17,23 @@ async fn main() {
         )
         .with(tracing_subscriber::fmt::layer())
         .init();
+    
+    let db_url = "postgresql://root:password@localhost:5432/rustspace";
+
+    info!("Connecting to database...");
+    let pool = PgPoolOptions::new()
+        .max_connections(5)
+        .connect(&db_url)
+        .await
+        .unwrap();
  
+    info!("Connection to database established.");
+    
+    sqlx::migrate!()
+        .run(&pool)
+        .await
+        .unwrap();
+
     info!("Initializing router...");
 
     let assets_path = std::env::current_dir().unwrap();
@@ -33,7 +50,7 @@ async fn main() {
     let listener = tokio::net::TcpListener::bind(format!("{}:{}", host, port))
         .await
         .unwrap();
-    info!("Router initialized. Listening on port {}", port);
+    info!("Router initialized. Listening on port {}.", port);
 
     axum::serve(listener, app)
         .await
