@@ -5,7 +5,8 @@ use askama::Template;
 use tower_http::services::ServeDir;
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use sqlx::postgres::PgPoolOptions;
+use sqlx::postgres::{PgPool, PgPoolOptions};
+use regex::Regex;
  
 
 #[tokio::main]
@@ -96,6 +97,14 @@ pub struct HelpTemplate {
     path: &'static str
 }
 
+#[derive(Template)]
+#[template(path = "register.html")]
+#[allow(dead_code)]
+pub struct RegisterTemplate {
+    path: &'static str,
+    errors: Vec<&'static str>
+}
+
 struct HtmlTemplate<T>(T);
 
 impl<T> IntoResponse for HtmlTemplate<T> where T: Template, {
@@ -109,4 +118,114 @@ impl<T> IntoResponse for HtmlTemplate<T> where T: Template, {
                 .into_response(),
         }
     }
+}
+
+#[derive(sqlx::FromRow)]
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+struct UserModel {
+    id: Option<i32>,
+    screen_name: String,
+    email: String,
+    password: String,
+    // created_at: Option<chrono::DateTime<chrono::Utc>>,
+    // updated_at: Option<chrono::DateTime<chrono::Utc>>,
+}
+
+fn validate_user(name: Option<String>, email: Option<String>, password: Option<String>) -> Vec<&'static str> {
+    let mut errors = vec![];
+    if !validate_non_empty(name.clone()) {
+        errors.push("Username cannot be empty!");
+    }
+    if let Some(name) = name {
+        if !validate_length(name.clone(), 4, 20) {
+            errors.push("Username must have length between 4 and 20 characters!");
+        }
+        if !validate_alphanumeric(name.clone()) {
+            errors.push("Username must contain only letters, numbers, or the underscore!");
+        }
+    }
+
+    if !validate_non_empty(email.clone()) {
+        errors.push("Email cannot be empty!");
+    }
+    if let Some(email) = email {
+        if !validate_length(email.clone(), 0, 50) {
+            errors.push("Email must be shorter than 50 characters!");
+        }
+    }
+
+    if !validate_non_empty(password.clone()) {
+        errors.push("Password cannot be empty!");
+    }
+    if let Some(password) = password {
+        if !validate_length(password.clone(), 4, 20) {
+            errors.push("Password must have length between 4 and 20 characters!");
+        }
+    }
+    return errors;
+}
+
+fn validate_non_empty(text: Option<String>) -> bool {
+    if text.is_none() {
+        return false;
+    }
+    let text = text.unwrap();
+    if text == "" {
+        return false;
+    }
+    true
+}
+
+fn validate_length(text: String, min: usize, max: usize) -> bool {
+    if text.len() < min {
+        return false;
+    }
+    if text.len() > max {
+        return false;
+    }
+    true
+}
+
+fn validate_alphanumeric(text: String) -> bool {
+    let re = Regex::new(r"^([A-Za-z0-9_]+$").unwrap();
+    let Some(_) = re.captures(&text) else {
+        return false;
+    };
+    true
+}
+
+
+#[allow(dead_code)]
+async fn register_user(
+    db: PgPool,
+    name: Option<String>,
+    email: Option<String>,
+    password: Option<String>) -> impl IntoResponse {
+    let mut errors = validate_user(name.clone(), email.clone(), password.clone());
+    if errors.len() > 0 {
+        let template = RegisterTemplate {path: "register", errors: errors};
+        return HtmlTemplate(template)
+    }
+    let query_result =
+        sqlx::query(r#"INSERT INTO users (screen_name, email, password) VALUES (?, ?, ?)"#)
+            .bind(name.unwrap())
+            .bind(email.unwrap())
+            .bind(password.unwrap())
+            .execute(&db)
+            .await
+            .map_err(|err: sqlx::Error| err.to_string());
+
+    if let Err(err) = query_result {
+        if err.contains("Duplicate entry") && err.contains("screen_name") {
+            errors.push("Username must be unique!");
+        }
+        if err.contains("Duplicate entry") && err.contains("email") {
+            errors.push("Email must be unique!");
+        }
+        let template = RegisterTemplate {path: "register", errors: errors};
+        return HtmlTemplate(template)
+    }
+   let template = RegisterTemplate {path: "register", errors: vec![]};
+   return HtmlTemplate(template)
 }
