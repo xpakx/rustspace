@@ -1,10 +1,14 @@
 {% extends "base.html" %}
 
+{% block head %}
+  <link href="/assets/form.css" rel="stylesheet" />
+{% endblock %}
+
 {% block title %}Registration{% endblock %}
 
 {% block content %}
 <h1>Registration</h1>
-<p>Please fill in this form to create an account.</p>
+<legend>Please fill in this form to create an account.</legend>
 <form hx-post="/register">
 	<div class="form-row">
 		<label for="username"><b>Username</b></label>
@@ -26,7 +30,9 @@
 		<input type="password" placeholder="Repeat Password" name="psw-repeat" id="psw-repeat" required>
 	</div>
 
-	<button type="submit" class="registerbtn">Register</button>
+	<div class="button-container">
+		<button type="submit" class="register-btn">Register</button>
+	</div>
 </form>
 
 <div class="container signin">
