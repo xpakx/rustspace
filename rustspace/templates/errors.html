@@ -1,3 +1,4 @@
+{% if errors.len() > 0 %}
 <div class="errors">
 	<h2>{{errors.len()}} errors!</h2>
 
@@ -9,3 +10,6 @@
 		</ul>
 	</div>
 </div>
+{% else %}
+Success
+{% endif %}

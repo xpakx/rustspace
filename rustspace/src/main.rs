@@ -250,13 +250,13 @@ async fn register_user(
 
     if let Err(err) = query_result {
         debug!("cannot add user to db!");
-        if err.contains("Duplicate entry") && err.contains("screen_name") {
+        if err.contains("duplicate key") && err.contains("screen_name") {
             errors.push("Username must be unique!");
         }
-        if err.contains("Duplicate entry") && err.contains("email") {
+        if err.contains("duplicate key") && err.contains("email") {
             errors.push("Email must be unique!");
         }
-        if !err.contains("Duplicate entry") {
+        if !err.contains("duplicate key") {
             errors.push("Couldn't add to db!");
         }
         debug!(err);
