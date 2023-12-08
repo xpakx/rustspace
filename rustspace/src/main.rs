@@ -43,6 +43,7 @@ async fn main() {
         .route("/index", get(root))
         .route("/about", get(about))
         .route("/help", get(help))
+        .route("/register", get(register_form))
         .nest_service("/assets", ServeDir::new(format!("{}/assets/", assets_path.to_str().unwrap())));
 
     let host = "0.0.0.0";
@@ -204,7 +205,7 @@ async fn register_user(
     password: Option<String>) -> impl IntoResponse {
     let mut errors = validate_user(name.clone(), email.clone(), password.clone());
     if errors.len() > 0 {
-        let template = RegisterTemplate {path: "register", errors: errors};
+        let template = RegisterTemplate {path: "register", errors};
         return HtmlTemplate(template)
     }
     let query_result =
@@ -223,9 +224,15 @@ async fn register_user(
         if err.contains("Duplicate entry") && err.contains("email") {
             errors.push("Email must be unique!");
         }
-        let template = RegisterTemplate {path: "register", errors: errors};
+        let template = RegisterTemplate {path: "register", errors};
         return HtmlTemplate(template)
     }
    let template = RegisterTemplate {path: "register", errors: vec![]};
+   return HtmlTemplate(template)
+}
+
+async fn register_form() -> impl IntoResponse {
+   info!("register form requested");
+   let template = RegisterTemplate {path: "help", errors: vec![]};
    return HtmlTemplate(template)
 }
