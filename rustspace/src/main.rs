@@ -3,7 +3,7 @@ use axum::response::{Html, IntoResponse, Response};
 use axum::http::StatusCode;
 use askama::Template;
 use tower_http::services::ServeDir;
-use tracing::info;
+use tracing::{info, debug};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use sqlx::postgres::{PgPool, PgPoolOptions};
 use regex::Regex;
@@ -198,7 +198,7 @@ fn validate_length(text: String, min: usize, max: usize) -> bool {
 }
 
 fn validate_alphanumeric(text: String) -> bool {
-    let re = Regex::new(r"^([A-Za-z0-9_]+$").unwrap();
+    let re = Regex::new(r"^[A-Za-z0-9_]+$").unwrap();
     let Some(_) = re.captures(&text) else {
         return false;
     };
@@ -206,17 +206,23 @@ fn validate_alphanumeric(text: String) -> bool {
 }
 
 
-#[allow(dead_code)]
 async fn register_user(
     State(state): State<Arc<AppState>>) -> impl IntoResponse {
+    info!("register form sent");
+    debug!("validating...");
+
     let name = Some(String::from("aaa"));
     let email = Some(String::from("aaa"));
     let password = Some(String::from("aaa"));
     let mut errors = validate_user(name.clone(), email.clone(), password.clone());
     if errors.len() > 0 {
+        debug!("user input is invalid");
         let template = RegisterTemplate {path: "register", errors};
         return HtmlTemplate(template)
     }
+
+
+    debug!("trying to add user to db...");
     let query_result =
         sqlx::query(r#"INSERT INTO users (screen_name, email, password) VALUES (?, ?, ?)"#)
             .bind(name.unwrap())
@@ -227,6 +233,7 @@ async fn register_user(
             .map_err(|err: sqlx::Error| err.to_string());
 
     if let Err(err) = query_result {
+        debug!("cannot add user to db!");
         if err.contains("Duplicate entry") && err.contains("screen_name") {
             errors.push("Username must be unique!");
         }
@@ -236,8 +243,9 @@ async fn register_user(
         let template = RegisterTemplate {path: "register", errors};
         return HtmlTemplate(template)
     }
-   let template = RegisterTemplate {path: "register", errors: vec![]};
-   return HtmlTemplate(template)
+    info!("user succesfully created.");
+    let template = RegisterTemplate {path: "register", errors: vec![]};
+    return HtmlTemplate(template)
 }
 
 async fn register_form() -> impl IntoResponse {
