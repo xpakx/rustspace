@@ -67,3 +67,51 @@ button:hover {
 	display: flex;
 	justify-content: center;
 }
+
+.errors {
+	max-width: 400px;
+	margin: 20px auto;
+	background: #fff3f3;
+	padding: 20px;
+	border: 1px solid #e44d26;
+	border-radius: 8px;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+
+	transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+	animation: fadeInUp 0.3s ease-in-out;
+}
+
+@keyframes fadeInUp {
+	0% {
+		opacity: 0;
+		transform: translateY(20px);
+	}
+	100% {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.errors h2 {
+	color: #e44d26;
+	font-size: 1.3em;
+	margin-bottom: 10px;
+}
+
+.error-list ul {
+	list-style: none;
+	padding: 0;
+}
+
+.error-list li {
+	color: #e44d26;
+	margin-bottom: 8px;
+}
+
+.error-list li::before {
+	content: '\2022';
+	color: #e44d26;
+	display: inline-block;
+	width: 1em;
+	margin-right: 5px;
+}

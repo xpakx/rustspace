@@ -53,6 +53,7 @@ async fn main() {
         .route("/help", get(help))
         .route("/register", get(register_form))
         .route("/register", post(register_user))
+        .route("/user", get(user))
         .with_state(Arc::new(state))
         .nest_service("/assets", ServeDir::new(format!("{}/assets/", assets_path.to_str().unwrap())));
 
@@ -112,6 +113,13 @@ pub struct HelpTemplate {
 #[template(path = "register.html")]
 #[allow(dead_code)]
 pub struct RegisterTemplate {
+    path: &'static str,
+}
+
+#[derive(Template)]
+#[template(path = "user.html")]
+#[allow(dead_code)]
+pub struct UserTemplate {
     path: &'static str,
 }
 
@@ -273,6 +281,12 @@ async fn register_user(
 
 async fn register_form() -> impl IntoResponse {
     info!("register form requested");
-    let template = RegisterTemplate {path: "help"};
+    let template = RegisterTemplate {path: "register"};
+    return HtmlTemplate(template)
+}
+
+async fn user() -> impl IntoResponse {
+    info!("user index requested");
+    let template = UserTemplate {path: "user"};
     return HtmlTemplate(template)
 }
