@@ -1290,6 +1290,7 @@ dependencies = [
  "askama",
  "axum",
  "regex",
+ "serde",
  "sqlx",
  "tokio",
  "tower",

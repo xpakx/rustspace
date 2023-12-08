@@ -1,4 +1,4 @@
-use axum::{routing::{get, post}, Router};
+use axum::{routing::{get, post}, Router, Form};
 use axum::response::{Html, IntoResponse, Response};
 use axum::http::StatusCode;
 use askama::Template;
@@ -9,6 +9,7 @@ use sqlx::postgres::{PgPool, PgPoolOptions};
 use regex::Regex;
 use std::sync::Arc;
 use axum::extract::State;
+use serde::{Serialize, Deserialize};
  
 
 struct AppState {
@@ -211,15 +212,24 @@ pub struct ErrorsTemplate {
     errors: Vec<&'static str>
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct UserRequest {
+    username: Option<String>,
+    psw: Option<String>,
+    psw_repeat: Option<String>,
+    email: Option<String>,
+}
+
 
 async fn register_user(
-    State(state): State<Arc<AppState>>) -> impl IntoResponse {
+    State(state): State<Arc<AppState>>,
+    Form(user): Form<UserRequest>) -> impl IntoResponse {
     info!("register form sent");
     debug!("validating...");
 
-    let name = Some(String::from("aaa"));
-    let email = Some(String::from("aaa"));
-    let password = Some(String::from("aaa"));
+    let name = user.username;
+    let email = user.email;
+    let password = user.psw;
     let mut errors = validate_user(name.clone(), email.clone(), password.clone());
     if errors.len() > 0 {
         debug!("user input is invalid");
@@ -230,7 +240,7 @@ async fn register_user(
 
     debug!("trying to add user to db...");
     let query_result =
-        sqlx::query(r#"INSERT INTO users (screen_name, email, password) VALUES (?, ?, ?)"#)
+        sqlx::query("INSERT INTO users (screen_name, email, password) VALUES ($1, $2, $3)")
             .bind(name.unwrap())
             .bind(email.unwrap())
             .bind(password.unwrap())
@@ -246,6 +256,10 @@ async fn register_user(
         if err.contains("Duplicate entry") && err.contains("email") {
             errors.push("Email must be unique!");
         }
+        if !err.contains("Duplicate entry") {
+            errors.push("Couldn't add to db!");
+        }
+        debug!(err);
         let template = ErrorsTemplate {errors};
         return HtmlTemplate(template)
     }
