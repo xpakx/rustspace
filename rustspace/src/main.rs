@@ -1,4 +1,4 @@
-use axum::{routing::get, Router};
+use axum::{routing::{get, post}, Router};
 use axum::response::{Html, IntoResponse, Response};
 use axum::http::StatusCode;
 use askama::Template;
@@ -7,7 +7,13 @@ use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use sqlx::postgres::{PgPool, PgPoolOptions};
 use regex::Regex;
+use std::sync::Arc;
+use axum::extract::State;
  
+
+struct AppState {
+    db: PgPool,
+}
 
 #[tokio::main]
 async fn main() {
@@ -34,6 +40,7 @@ async fn main() {
         .run(&pool)
         .await
         .unwrap();
+    let state = AppState { db: pool };
 
     info!("Initializing router...");
 
@@ -44,6 +51,8 @@ async fn main() {
         .route("/about", get(about))
         .route("/help", get(help))
         .route("/register", get(register_form))
+        .route("/register", post(register_user))
+        .with_state(Arc::new(state))
         .nest_service("/assets", ServeDir::new(format!("{}/assets/", assets_path.to_str().unwrap())));
 
     let host = "0.0.0.0";
@@ -199,10 +208,10 @@ fn validate_alphanumeric(text: String) -> bool {
 
 #[allow(dead_code)]
 async fn register_user(
-    db: PgPool,
-    name: Option<String>,
-    email: Option<String>,
-    password: Option<String>) -> impl IntoResponse {
+    State(state): State<Arc<AppState>>) -> impl IntoResponse {
+    let name = Some(String::from("aaa"));
+    let email = Some(String::from("aaa"));
+    let password = Some(String::from("aaa"));
     let mut errors = validate_user(name.clone(), email.clone(), password.clone());
     if errors.len() > 0 {
         let template = RegisterTemplate {path: "register", errors};
@@ -213,7 +222,7 @@ async fn register_user(
             .bind(name.unwrap())
             .bind(email.unwrap())
             .bind(password.unwrap())
-            .execute(&db)
+            .execute(&state.db)
             .await
             .map_err(|err: sqlx::Error| err.to_string());
 
