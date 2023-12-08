@@ -9,7 +9,8 @@
 {% block content %}
 <h1>Registration</h1>
 <legend>Please fill in this form to create an account.</legend>
-<form hx-post="/register">
+<div id="error-container"></div>
+<form hx-post="/register" hx-target="#error-container">
 	<div class="form-row">
 		<label for="username"><b>Username</b></label>
 		<input type="text" placeholder="Enter Username" name="username" id="username" required>

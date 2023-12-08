@@ -112,7 +112,6 @@ pub struct HelpTemplate {
 #[allow(dead_code)]
 pub struct RegisterTemplate {
     path: &'static str,
-    errors: Vec<&'static str>
 }
 
 struct HtmlTemplate<T>(T);
@@ -205,6 +204,13 @@ fn validate_alphanumeric(text: String) -> bool {
     true
 }
 
+#[derive(Template)]
+#[template(path = "errors.html")]
+#[allow(dead_code)]
+pub struct ErrorsTemplate {
+    errors: Vec<&'static str>
+}
+
 
 async fn register_user(
     State(state): State<Arc<AppState>>) -> impl IntoResponse {
@@ -217,7 +223,7 @@ async fn register_user(
     let mut errors = validate_user(name.clone(), email.clone(), password.clone());
     if errors.len() > 0 {
         debug!("user input is invalid");
-        let template = RegisterTemplate {path: "register", errors};
+        let template = ErrorsTemplate {errors};
         return HtmlTemplate(template)
     }
 
@@ -240,16 +246,16 @@ async fn register_user(
         if err.contains("Duplicate entry") && err.contains("email") {
             errors.push("Email must be unique!");
         }
-        let template = RegisterTemplate {path: "register", errors};
+        let template = ErrorsTemplate {errors};
         return HtmlTemplate(template)
     }
     info!("user succesfully created.");
-    let template = RegisterTemplate {path: "register", errors: vec![]};
+    let template = ErrorsTemplate {errors: vec![]};
     return HtmlTemplate(template)
 }
 
 async fn register_form() -> impl IntoResponse {
    info!("register form requested");
-   let template = RegisterTemplate {path: "help", errors: vec![]};
+   let template = RegisterTemplate {path: "help"};
    return HtmlTemplate(template)
 }
