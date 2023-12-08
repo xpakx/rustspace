@@ -1,6 +1,6 @@
 use axum::{routing::{get, post}, Router, Form};
 use axum::response::{Html, IntoResponse, Response};
-use axum::http::StatusCode;
+use axum::http::{StatusCode, HeaderMap};
 use askama::Template;
 use tower_http::services::ServeDir;
 use tracing::{info, debug};
@@ -234,10 +234,11 @@ async fn register_user(
     if errors.len() > 0 {
         debug!("user input is invalid");
         let template = ErrorsTemplate {errors};
-        return HtmlTemplate(template)
+        return HtmlTemplate(template).into_response()
     }
 
 
+    // TODO: hashing password
     debug!("trying to add user to db...");
     let query_result =
         sqlx::query("INSERT INTO users (screen_name, email, password) VALUES ($1, $2, $3)")
@@ -261,15 +262,17 @@ async fn register_user(
         }
         debug!(err);
         let template = ErrorsTemplate {errors};
-        return HtmlTemplate(template)
+        return HtmlTemplate(template).into_response()
     }
     info!("user succesfully created.");
-    let template = ErrorsTemplate {errors: vec![]};
-    return HtmlTemplate(template)
+
+    let mut headers = HeaderMap::new();
+    headers.insert("HX-redirect", "/user".parse().unwrap());
+    (headers, "Success").into_response()
 }
 
 async fn register_form() -> impl IntoResponse {
-   info!("register form requested");
-   let template = RegisterTemplate {path: "help"};
-   return HtmlTemplate(template)
+    info!("register form requested");
+    let template = RegisterTemplate {path: "help"};
+    return HtmlTemplate(template)
 }
