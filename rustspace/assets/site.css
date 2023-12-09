@@ -14,7 +14,7 @@ body {
   overflow: hidden;
 }
 
-.header {
+header {
   background-color: #e44d26;
   color: #fff;
   padding: 20px;
@@ -23,44 +23,55 @@ body {
   font-weight: bold;
 }
 
-.nav {
+nav {
   background-color: #333;
   padding: 10px;
   text-align: center;
 }
 
-.nav a {
+nav a {
   color: #fff;
   text-decoration: none;
-  margin: 0 10px;
+  margin-right: 5px;
   font-size: 16px;
 }
 
-.nav a:hover {
+nav a:hover {
   text-decoration: underline;
   color: #e44d26;
 }
 
-.nav a.active {
+nav a.active {
   text-decoration: none;
   color: #76493f;
   pointer-events: none;
   cursor: default;
 }
 
-.nav .separator {
+nav .separator {
   color: #555;
 }
 
-.content {
+nav a::after {
+  content: '|';
+  color: #555;
+  margin-left: 5px;
+}
+
+nav a:last-child::after {
+  content: none;
+  padding: 0;
+}
+
+main {
   padding: 20px;
   color: #333;
 }
 
-.header {
+header {
   transition: color 0.3s ease-in-out;
 }
 
-.header:hover {
+header:hover {
   color: #333;
 }

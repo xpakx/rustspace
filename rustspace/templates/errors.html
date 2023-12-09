@@ -1,5 +1,5 @@
 {% if errors.len() > 0 %}
-<div class="errors">
+<section class="errors">
 	<h2>{{errors.len()}} error{% if errors.len()>1 %}s{% endif %}!</h2>
 
 	<div class="error-list">
@@ -9,5 +9,5 @@
 			{% endfor %}
 		</ul>
 	</div>
-</div>
+</section>
 {% endif %}
