@@ -151,32 +151,31 @@ struct UserModel {
     // updated_at: Option<chrono::DateTime<chrono::Utc>>,
 }
 
-fn validate_user(name: Option<String>, email: Option<String>, password: Option<String>, password_re: Option<String>) -> Vec<&'static str> {
+fn validate_user(user: &UserRequest) -> Vec<&'static str> {
     let mut errors = vec![];
-    if !validate_non_empty(name.clone()) {
-        errors.push("Username cannot be empty!");
-    }
-    if let Some(name) = name {
-        if !validate_length(name.clone(), 4, 20) {
-            errors.push("Username must have length between 4 and 20 characters!");
-        }
-        if !validate_alphanumeric(name.clone()) {
-            errors.push("Username must contain only letters, numbers, or the underscore!");
-        }
-    }
+    errors.append(&mut validate_username(&user.username));
+    errors.append(&mut validate_email(&user.email));
+    errors.append(&mut validate_password(&user.psw));
+    errors.append(&mut validate_repeated_password(&user.psw, &user.psw_repeat));
 
-    if !validate_non_empty(email.clone()) {
-        errors.push("Email cannot be empty!");
+    return errors;
+}
+
+fn validate_password(password: &Option<String>) -> Vec<&'static str> {
+    let mut errors = vec![];
+    if !validate_non_empty(password) {
+        errors.push("Password cannot be empty!");
     }
-    if let Some(email) = email {
-        if !validate_length(email.clone(), 0, 50) {
-            errors.push("Email must be shorter than 50 characters!");
+    if let Some(password) = password {
+        if !validate_length(password, 4, 20) {
+            errors.push("Password must have length between 4 and 20 characters!");
         }
     }
-    let mut pass_errors = validate_password(password.clone());
-    errors.append(&mut pass_errors);
-
-    if !validate_non_empty(password_re.clone()) {
+    errors
+}
+fn validate_repeated_password(password: &Option<String>, password_re: &Option<String>) -> Vec<&'static str> {
+    let mut errors = vec![];
+    if !validate_non_empty(password_re) {
         errors.push("Password cannot be empty!");
     }
     if let (Some(password), Some(password_re)) = (password, password_re) {
@@ -184,35 +183,49 @@ fn validate_user(name: Option<String>, email: Option<String>, password: Option<S
             errors.push("Passwords must match!");
         }
     }
-    return errors;
+    errors
 }
 
-fn validate_password(password: Option<String>) -> Vec<&'static str> {
+fn validate_username(username: &Option<String>) -> Vec<&'static str> {
     let mut errors = vec![];
-    if !validate_non_empty(password.clone()) {
-        errors.push("Password cannot be empty!");
+    if !validate_non_empty(username) {
+        errors.push("Username cannot be empty!");
     }
-    if let Some(password) = password {
-        if !validate_length(password.clone(), 4, 20) {
-            errors.push("Password must have length between 4 and 20 characters!");
+    if let Some(name) = username {
+        if !validate_length(name, 4, 20) {
+            errors.push("Username must have length between 4 and 20 characters!");
+        }
+        if !validate_alphanumeric(name) {
+            errors.push("Username must contain only letters, numbers, or the underscore!");
         }
     }
     errors
 }
 
-
-fn validate_non_empty(text: Option<String>) -> bool {
-    if text.is_none() {
-        return false;
+fn validate_email(email: &Option<String>) -> Vec<&'static str> {
+    let mut errors = vec![];
+    if !validate_non_empty(email) {
+        errors.push("Email cannot be empty!");
     }
-    let text = text.unwrap();
-    if text == "" {
-        return false;
+    if let Some(email) = email {
+        if !validate_length(email, 0, 50) {
+            errors.push("Email must be shorter than 50 characters!");
+        }
     }
-    true
+    errors
 }
 
-fn validate_length(text: String, min: usize, max: usize) -> bool {
+fn validate_non_empty(text: &Option<String>) -> bool {
+    match text {
+        None => false,
+        Some(text) => match &text as &str {
+            "" => false,
+            _ => true
+        }
+    }
+}
+
+fn validate_length(text: &String, min: usize, max: usize) -> bool {
     if text.len() < min {
         return false;
     }
@@ -222,9 +235,9 @@ fn validate_length(text: String, min: usize, max: usize) -> bool {
     true
 }
 
-fn validate_alphanumeric(text: String) -> bool {
+fn validate_alphanumeric(text: &String) -> bool {
     let re = Regex::new(r"^[A-Za-z0-9_]+$").unwrap();
-    let Some(_) = re.captures(&text) else {
+    let Some(_) = re.captures(text) else {
         return false;
     };
     true
@@ -263,11 +276,7 @@ async fn register_user(
     info!("register form sent");
     debug!("validating...");
 
-    let name = user.username;
-    let email = user.email;
-    let password = user.psw;
-    let password_re = user.psw_repeat;
-    let mut errors = validate_user(name.clone(), email.clone(), password.clone(), password_re.clone());
+    let mut errors = validate_user(&user);
     if errors.len() > 0 {
         debug!("user input is invalid");
         let template = ErrorsTemplate {errors};
@@ -278,9 +287,9 @@ async fn register_user(
     debug!("trying to add user to db...");
     let query_result =
         sqlx::query("INSERT INTO users (screen_name, email, password) VALUES ($1, $2, $3)")
-            .bind(name.unwrap())
-            .bind(email.unwrap())
-            .bind(password.unwrap())
+            .bind(user.username.unwrap())
+            .bind(user.email.unwrap())
+            .bind(user.psw.unwrap())
             .execute(&state.db)
             .await
             .map_err(|err: sqlx::Error| err.to_string());
@@ -324,7 +333,7 @@ async fn check_password(Form(user): Form<UserRequest>) -> impl IntoResponse {
     debug!("validating...");
 
     let password = user.psw;
-    let errors = validate_password(password.clone());
+    let errors = validate_password(&password);
     let error = errors.len() > 0;
     let value = match password {
         Some(password) => password,
