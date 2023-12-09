@@ -31,7 +31,7 @@ label {
 input {
   width: 100%;
   padding: 10px;
-  border: 1px s5olid #ccc;
+  border: 1px solid #ccc;
   border-radius: 4px;
   box-sizing: border-box;
 }
@@ -114,4 +114,18 @@ button:hover {
 	display: inline-block;
 	width: 1em;
 	margin-right: 5px;
+}
+
+.error-message {
+	color:red;
+}
+
+.error input {
+	box-shadow: 0 0 3px #CC0000;
+	border-color: #CC0000;
+}
+
+.valid input {
+	box-shadow: 0 0 3px #36cc00;
+	border-color: #36cc00;
 }

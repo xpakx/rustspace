@@ -53,6 +53,7 @@ async fn main() {
         .route("/help", get(help))
         .route("/register", get(register_form))
         .route("/register", post(register_user))
+        .route("/validation/password", post(check_password))
         .route("/user", get(user))
         .with_state(Arc::new(state))
         .nest_service("/assets", ServeDir::new(format!("{}/assets/", assets_path.to_str().unwrap())));
@@ -172,23 +173,33 @@ fn validate_user(name: Option<String>, email: Option<String>, password: Option<S
             errors.push("Email must be shorter than 50 characters!");
         }
     }
+    let mut pass_errors = validate_password(password.clone());
+    errors.append(&mut pass_errors);
 
-    if !validate_non_empty(password.clone()) {
-        errors.push("Password cannot be empty!");
-    }
     if !validate_non_empty(password_re.clone()) {
         errors.push("Password cannot be empty!");
     }
     if let (Some(password), Some(password_re)) = (password, password_re) {
-        if !validate_length(password.clone(), 4, 20) {
-            errors.push("Password must have length between 4 and 20 characters!");
-        }
         if !validate_same(password.clone(), password_re.clone()) {
             errors.push("Passwords must match!");
         }
     }
     return errors;
 }
+
+fn validate_password(password: Option<String>) -> Vec<&'static str> {
+    let mut errors = vec![];
+    if !validate_non_empty(password.clone()) {
+        errors.push("Password cannot be empty!");
+    }
+    if let Some(password) = password {
+        if !validate_length(password.clone(), 4, 20) {
+            errors.push("Password must have length between 4 and 20 characters!");
+        }
+    }
+    errors
+}
+
 
 fn validate_non_empty(text: Option<String>) -> bool {
     if text.is_none() {
@@ -230,6 +241,14 @@ pub struct ErrorsTemplate {
     errors: Vec<&'static str>
 }
 
+#[derive(Template)]
+#[template(path = "password-validation.html")]
+#[allow(dead_code)]
+pub struct PasswordFieldTemplate {
+    value: String,
+    error: bool,
+}
+
 #[derive(Serialize, Deserialize)]
 pub struct UserRequest {
     username: Option<String>,
@@ -237,7 +256,6 @@ pub struct UserRequest {
     psw_repeat: Option<String>,
     email: Option<String>,
 }
-
 
 async fn register_user(
     State(state): State<Arc<AppState>>,
@@ -299,4 +317,19 @@ async fn user() -> impl IntoResponse {
     info!("user index requested");
     let template = UserTemplate {path: "user"};
     return HtmlTemplate(template)
+}
+
+async fn check_password(Form(user): Form<UserRequest>) -> impl IntoResponse {
+    info!("request to validate password");
+    debug!("validating...");
+
+    let password = user.psw;
+    let errors = validate_password(password.clone());
+    let error = errors.len() > 0;
+    let value = match password {
+        Some(password) => password,
+        None => String::from("")
+    };
+    let template = PasswordFieldTemplate {value, error};
+    return HtmlTemplate(template).into_response()
 }

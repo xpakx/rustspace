@@ -21,9 +21,9 @@
 		<input type="text" placeholder="Enter Email" name="email" id="email" required>
 	</div>
 
-	<div class="form-row">
+	<div class="form-row" hx-target="this" hx-swap="outerHTML">
 		<label for="psw"><b>Password</b></label>
-		<input type="password" placeholder="Enter Password" name="psw" id="psw" required>
+		<input type="password" hx-post="/validation/password" placeholder="Enter Password" name="psw" id="psw" required>
 	</div>
 
 	<div class="form-row">
