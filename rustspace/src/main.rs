@@ -150,7 +150,7 @@ struct UserModel {
     // updated_at: Option<chrono::DateTime<chrono::Utc>>,
 }
 
-fn validate_user(name: Option<String>, email: Option<String>, password: Option<String>) -> Vec<&'static str> {
+fn validate_user(name: Option<String>, email: Option<String>, password: Option<String>, password_re: Option<String>) -> Vec<&'static str> {
     let mut errors = vec![];
     if !validate_non_empty(name.clone()) {
         errors.push("Username cannot be empty!");
@@ -176,9 +176,15 @@ fn validate_user(name: Option<String>, email: Option<String>, password: Option<S
     if !validate_non_empty(password.clone()) {
         errors.push("Password cannot be empty!");
     }
-    if let Some(password) = password {
+    if !validate_non_empty(password_re.clone()) {
+        errors.push("Password cannot be empty!");
+    }
+    if let (Some(password), Some(password_re)) = (password, password_re) {
         if !validate_length(password.clone(), 4, 20) {
             errors.push("Password must have length between 4 and 20 characters!");
+        }
+        if !validate_same(password.clone(), password_re.clone()) {
+            errors.push("Passwords must match!");
         }
     }
     return errors;
@@ -213,6 +219,10 @@ fn validate_alphanumeric(text: String) -> bool {
     true
 }
 
+fn validate_same(text: String, text2: String) -> bool {
+    text == text2
+}
+
 #[derive(Template)]
 #[template(path = "errors.html")]
 #[allow(dead_code)]
@@ -238,13 +248,13 @@ async fn register_user(
     let name = user.username;
     let email = user.email;
     let password = user.psw;
-    let mut errors = validate_user(name.clone(), email.clone(), password.clone());
+    let password_re = user.psw_repeat;
+    let mut errors = validate_user(name.clone(), email.clone(), password.clone(), password_re.clone());
     if errors.len() > 0 {
         debug!("user input is invalid");
         let template = ErrorsTemplate {errors};
         return HtmlTemplate(template).into_response()
     }
-
 
     // TODO: hashing password
     debug!("trying to add user to db...");
