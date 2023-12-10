@@ -11,24 +11,23 @@
 <legend>Please fill in this form to create an account.</legend>
 <div id="error-container"></div>
 <form hx-post="/register" hx-target="#error-container">
-	<div class="form-row">
+	<div class="form-row" hx-target="this" hx-swap="outerHTML">
 		<label for="username"><b>Username</b></label>
-		<input type="text" placeholder="Enter Username" name="username" id="username" required>
+		<input type="text" hx-post="/validation/username" placeholder="Enter Username" name="username" id="username" required>
 	</div>
-	<div class="form-row">
-
+	<div class="form-row" hx-target="this" hx-swap="outerHTML">
 		<label for="email"><b>Email</b></label>
-		<input type="text" placeholder="Enter Email" name="email" id="email" required>
+		<input type="text" hx-post="/validation/email" placeholder="Enter Email" name="email" id="email" required>
 	</div>
 
 	<div class="form-row" hx-target="this" hx-swap="outerHTML">
 		<label for="psw"><b>Password</b></label>
-		<input type="password" hx-post="/validation/password" placeholder="Enter Password" name="psw" id="psw" required>
+		<input type="password" hx-post="/validation/psw" placeholder="Enter Password" name="psw" id="psw" required>
 	</div>
 
-	<div class="form-row">
-		<label for="psw-repeat"><b>Repeat Password</b></label>
-		<input type="password" placeholder="Repeat Password" name="psw_repeat" id="psw-repeat" required>
+	<div class="form-row" hx-target="this" hx-swap="outerHTML">
+		<label for="psw_repeat"><b>Repeat Password</b></label>
+		<input type="password" hx-post="/validation/psw_repeat" placeholder="Repeat Password" name="psw_repeat" id="psw_repeat" required>
 	</div>
 
 	<div class="button-container">

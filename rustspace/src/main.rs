@@ -53,7 +53,10 @@ async fn main() {
         .route("/help", get(help))
         .route("/register", get(register_form))
         .route("/register", post(register_user))
-        .route("/validation/password", post(check_password))
+        .route("/validation/psw", post(check_password))
+        .route("/validation/username", post(check_username))
+        .route("/validation/email", post(check_email))
+        .route("/validation/psw_repeat", post(check_password_repeat))
         .route("/user", get(user))
         .with_state(Arc::new(state))
         .nest_service("/assets", ServeDir::new(format!("{}/assets/", assets_path.to_str().unwrap())));
@@ -157,7 +160,6 @@ fn validate_user(user: &UserRequest) -> Vec<&'static str> {
     errors.append(&mut validate_email(&user.email));
     errors.append(&mut validate_password(&user.psw));
     errors.append(&mut validate_repeated_password(&user.psw, &user.psw_repeat));
-
     return errors;
 }
 
@@ -257,9 +259,13 @@ pub struct ErrorsTemplate {
 #[derive(Template)]
 #[template(path = "password-validation.html")]
 #[allow(dead_code)]
-pub struct PasswordFieldTemplate {
+pub struct FieldTemplate {
     value: String,
     error: bool,
+    placeholder: &'static str,
+    name: &'static str,
+    text: &'static str,
+    form_type: &'static str,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -339,6 +345,52 @@ async fn check_password(Form(user): Form<UserRequest>) -> impl IntoResponse {
         Some(password) => password,
         None => String::from("")
     };
-    let template = PasswordFieldTemplate {value, error};
+    let template = FieldTemplate {value, error, name: "psw", placeholder: "Enter Password", form_type: "password", text: "Password"};
+    return HtmlTemplate(template).into_response()
+}
+
+async fn check_username(Form(user): Form<UserRequest>) -> impl IntoResponse {
+    info!("request to validate username");
+    debug!("validating...");
+
+    let username = user.username;
+    let errors = validate_username(&username);
+    let error = errors.len() > 0;
+    let value = match username {
+        Some(username) => username,
+        None => String::from("")
+    };
+    let template = FieldTemplate {value, error, name: "username", placeholder: "Enter Username", form_type: "text", text: "Username"};
+    return HtmlTemplate(template).into_response()
+}
+
+async fn check_email(Form(user): Form<UserRequest>) -> impl IntoResponse {
+    info!("request to validate email");
+    debug!("validating...");
+
+    let email = user.email;
+    let errors = validate_email(&email);
+    let error = errors.len() > 0;
+    let value = match email {
+        Some(email) => email,
+        None => String::from("")
+    };
+    let template = FieldTemplate {value, error, name: "email", placeholder: "Enter Email", form_type: "text", text: "Email"};
+    return HtmlTemplate(template).into_response()
+}
+
+async fn check_password_repeat(Form(user): Form<UserRequest>) -> impl IntoResponse {
+    info!("request to validate password");
+    debug!("validating...");
+
+    let password = user.psw;
+    let password_re = user.psw_repeat;
+    let errors = validate_repeated_password(&password, &password_re);
+    let error = errors.len() > 0;
+    let value = match password_re {
+        Some(password) => password,
+        None => String::from("")
+    };
+    let template = FieldTemplate {value, error, name: "psw_repeat", placeholder: "Repeat Password", form_type: "password", text: "Repeat Password"};
     return HtmlTemplate(template).into_response()
 }
