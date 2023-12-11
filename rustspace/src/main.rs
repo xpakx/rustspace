@@ -12,6 +12,7 @@ use axum::extract::State;
 use serde::{Serialize, Deserialize};
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
 use rand_core::OsRng;
+use std::fmt;
 
 struct AppState {
     db: PgPool,
@@ -292,13 +293,17 @@ async fn register_user(
 
     debug!("hashing password...");
     let password = hash_password(&user.psw.unwrap());
+    if let Err(error) = password {
+        let template = ErrorsTemplate { errors: vec![error.message]};
+        return HtmlTemplate(template).into_response()
+    }
 
     debug!("trying to add user to db...");
     let query_result =
         sqlx::query("INSERT INTO users (screen_name, email, password) VALUES ($1, $2, $3)")
             .bind(user.username.unwrap())
             .bind(user.email.unwrap())
-            .bind(password)
+            .bind(password.unwrap())
             .execute(&state.db)
             .await
             .map_err(|err: sqlx::Error| err.to_string());
@@ -398,11 +403,24 @@ async fn check_password_repeat(Form(user): Form<UserRequest>) -> impl IntoRespon
     return HtmlTemplate(template).into_response()
 }
 
-// TODO error handling
-fn hash_password(password: &String) -> String {
+fn hash_password(password: &String) -> Result<String, HashError> {
     let salt = SaltString::generate(&mut OsRng);
-    Argon2::default()
+    let hash_password = Argon2::default()
         .hash_password(password.as_bytes(), &salt)
-        .unwrap()
-        .to_string()
+        .map_err(|_| {
+            return HashError{message: "Couldn't hash password!"}
+        })
+        .map(|hash| hash.to_string())?;
+    Ok(hash_password)
+}
+
+#[derive(Debug, Clone)]
+struct HashError {
+    message: &'static str
+}
+
+impl fmt::Display for HashError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Hashing error")
+    }
 }
