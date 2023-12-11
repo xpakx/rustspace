@@ -10,7 +10,8 @@ use regex::Regex;
 use std::sync::Arc;
 use axum::extract::State;
 use serde::{Serialize, Deserialize};
- 
+use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
+use rand_core::OsRng;
 
 struct AppState {
     db: PgPool,
@@ -289,13 +290,15 @@ async fn register_user(
         return HtmlTemplate(template).into_response()
     }
 
-    // TODO: hashing password
+    debug!("hashing password...");
+    let password = hash_password(&user.psw.unwrap());
+
     debug!("trying to add user to db...");
     let query_result =
         sqlx::query("INSERT INTO users (screen_name, email, password) VALUES ($1, $2, $3)")
             .bind(user.username.unwrap())
             .bind(user.email.unwrap())
-            .bind(user.psw.unwrap())
+            .bind(password)
             .execute(&state.db)
             .await
             .map_err(|err: sqlx::Error| err.to_string());
@@ -393,4 +396,13 @@ async fn check_password_repeat(Form(user): Form<UserRequest>) -> impl IntoRespon
     };
     let template = FieldTemplate {value, error, name: "psw_repeat", placeholder: "Repeat Password", form_type: "password", text: "Repeat Password"};
     return HtmlTemplate(template).into_response()
+}
+
+// TODO error handling
+fn hash_password(password: &String) -> String {
+    let salt = SaltString::generate(&mut OsRng);
+    Argon2::default()
+        .hash_password(password.as_bytes(), &salt)
+        .unwrap()
+        .to_string()
 }

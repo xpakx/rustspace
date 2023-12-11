@@ -6,8 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+argon2 = "0.5.2"
 askama = "0.12.1"
 axum = "0.7.2"
+rand_core = "0.6.4"
 regex = "1.10.2"
 serde = "1.0.193"
 sqlx = { version = "0.7.3", features = ["postgres", "runtime-tokio-rustls"] }
