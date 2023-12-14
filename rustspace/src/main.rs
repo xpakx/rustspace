@@ -177,6 +177,7 @@ fn validate_password(password: &Option<String>) -> Vec<&'static str> {
     }
     errors
 }
+
 fn validate_repeated_password(password: &Option<String>, password_re: &Option<String>) -> Vec<&'static str> {
     let mut errors = vec![];
     if !validate_non_empty(password_re) {
@@ -428,7 +429,9 @@ impl fmt::Display for HashError {
 
 #[cfg(test)]
 mod tests {
-    use crate::validate_username;
+    use crate::{validate_username, validate_password, validate_repeated_password, validate_email};
+
+    // Validating username
 
     #[test]
     fn test_validating_username_that_is_too_long() {
@@ -493,5 +496,148 @@ mod tests {
             .iter()
             .any(|a| a.contains("only letters"));
         assert!(message)
+    }
+
+    #[test]
+    fn test_validating_valid_username() {
+        let username = "username";
+        let result = validate_username(&Some(String::from(username)));
+        assert!(result.len() == 0);
+    }
+
+    // Validating password
+
+    #[test]
+    fn test_validating_password_that_is_too_long() {
+        let password = "password_that_is_too_long";
+        let result = validate_password(&Some(String::from(password)));
+        assert!(result.len() > 0);
+        let message = result
+            .iter()
+            .any(|a| a.contains("length"));
+        assert!(message)
+    }
+
+    #[test]
+    fn test_validating_password_that_is_too_short() {
+        let password = "usr";
+        let result = validate_password(&Some(String::from(password)));
+        assert!(result.len() > 0);
+        let message = result
+            .iter()
+            .any(|a| a.contains("length"));
+        assert!(message)
+    }
+
+    #[test]
+    fn test_validating_password_that_is_none() {
+        let result = validate_password(&None);
+        assert!(result.len() > 0);
+        let message = result
+            .iter()
+            .any(|a| a.contains("empty"));
+        assert!(message)
+    }
+
+    #[test]
+    fn test_validating_password_that_is_empty() {
+        let password = "";
+        let result = validate_password(&Some(String::from(password)));
+        assert!(result.len() > 0);
+        let message = result
+            .iter()
+            .any(|a| a.contains("empty"));
+        assert!(message)
+    }
+
+    #[test]
+    fn test_validating_valid_password() {
+        let password = "password";
+        let result = validate_password(&Some(String::from(password)));
+        assert!(result.len() == 0);
+    }
+
+    // Validating repeated password
+
+    #[test]
+    fn test_validating_repeated_password_that_is_none() {
+        let result = validate_repeated_password(&None, &None);
+        assert!(result.len() > 0);
+        let message = result
+            .iter()
+            .any(|a| a.contains("empty"));
+        assert!(message)
+    }
+
+    #[test]
+    fn test_validating_repeated_password_that_is_empty() {
+        let password = "";
+        let result = validate_repeated_password(&None, &Some(String::from(password)));
+        assert!(result.len() > 0);
+        let message = result
+            .iter()
+            .any(|a| a.contains("empty"));
+        assert!(message)
+    }
+
+    #[test]
+    fn test_validating_unmatched_passwords() {
+        let password = "password";
+        let password2 = "password2";
+        let result = validate_repeated_password(&Some(String::from(password2)), &Some(String::from(password)));
+        assert!(result.len() > 0);
+        let message = result
+            .iter()
+            .any(|a| a.contains("match"));
+        assert!(message)
+    }
+
+    #[test]
+    fn test_validating_matching_passwords() {
+        let password = "password";
+        let password2 = "password";
+        let result = validate_repeated_password(&Some(String::from(password2)), &Some(String::from(password)));
+        assert!(result.len() == 0);
+    }
+
+    // Validating email
+
+    #[test]
+    fn test_validating_email_that_is_none() {
+        let result = validate_email(&None);
+        assert!(result.len() > 0);
+        let message = result
+            .iter()
+            .any(|a| a.contains("empty"));
+        assert!(message)
+    }
+
+    #[test]
+    fn test_validating_email_that_is_empty() {
+        let email = "";
+        let result = validate_email(&Some(String::from(email)));
+        assert!(result.len() > 0);
+        let message = result
+            .iter()
+            .any(|a| a.contains("empty"));
+        assert!(message)
+    }
+
+    #[test]
+    fn test_validating_email_that_is_too_long() {
+        let email = "veryveryveryveryveryveryveryveryveryverylong@email.com";
+        let result = validate_email(&Some(String::from(email)));
+        assert!(result.len() > 0);
+        let message = result
+            .iter()
+            .any(|a| a.contains("shorter"));
+        assert!(message)
+    }
+
+    #[test]
+    fn test_validating_valid_email() {
+        let email = "email@email.com";
+        let result = validate_email(&Some(String::from(email)));
+        assert!(result.len() == 0);
     }
 }
