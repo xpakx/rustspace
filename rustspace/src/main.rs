@@ -434,40 +434,64 @@ mod tests {
     fn test_validating_username_that_is_too_long() {
         let username = "username_that_is_too_long";
         let result = validate_username(&Some(String::from(username)));
-        assert!(result.len() > 0)
+        assert!(result.len() > 0);
+        let message = result
+            .iter()
+            .any(|a| a.contains("length"));
+        assert!(message)
     }
 
     #[test]
     fn test_validating_username_that_is_too_short() {
         let username = "usr";
         let result = validate_username(&Some(String::from(username)));
-        assert!(result.len() > 0)
+        assert!(result.len() > 0);
+        let message = result
+            .iter()
+            .any(|a| a.contains("length"));
+        assert!(message)
     }
 
     #[test]
     fn test_validating_username_that_is_none() {
         let result = validate_username(&None);
-        assert!(result.len() > 0)
+        assert!(result.len() > 0);
+        let message = result
+            .iter()
+            .any(|a| a.contains("empty"));
+        assert!(message)
     }
 
     #[test]
     fn test_validating_username_that_is_empty() {
         let username = "";
         let result = validate_username(&Some(String::from(username)));
-        assert!(result.len() > 0)
+        assert!(result.len() > 0);
+        let message = result
+            .iter()
+            .any(|a| a.contains("empty"));
+        assert!(message)
     }
 
     #[test]
     fn test_validating_username_with_dash() {
         let username = "user-name";
         let result = validate_username(&Some(String::from(username)));
-        assert!(result.len() > 0)
+        assert!(result.len() > 0);
+        let message = result
+            .iter()
+            .any(|a| a.contains("only letters"));
+        assert!(message)
     }
 
     #[test]
     fn test_validating_username_with_at() {
         let username = "user@name";
         let result = validate_username(&Some(String::from(username)));
-        assert!(result.len() > 0)
+        assert!(result.len() > 0);
+        let message = result
+            .iter()
+            .any(|a| a.contains("only letters"));
+        assert!(message)
     }
 }
