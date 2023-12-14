@@ -29,33 +29,19 @@ async fn main() {
         .init();
     
     let db_url = "postgresql://root:password@localhost:5432/rustspace";
-
-    info!("Connecting to database...");
-    let pool = PgPoolOptions::new()
-        .max_connections(5)
-        .connect(&db_url)
-        .await
-        .unwrap();
- 
-    info!("Connection to database established.");
-    
-    sqlx::migrate!()
-        .run(&pool)
-        .await
-        .unwrap();
+    let pool = get_db(db_url).await;
     let state = AppState { db: pool };
 
-    info!("Initializing router...");
-
     let assets_path = std::env::current_dir().unwrap();
+    info!("Assets path: {}", assets_path.to_str().unwrap());
 
+    info!("Initializing router...");
     let app = get_router()
         .with_state(Arc::new(state))
         .nest_service("/assets", ServeDir::new(format!("{}/assets/", assets_path.to_str().unwrap())));
 
     let host = "0.0.0.0";
     let port = 3000;
-
     let listener = tokio::net::TcpListener::bind(format!("{}:{}", host, port))
         .await
         .unwrap();
@@ -81,6 +67,24 @@ fn get_router() -> Router<Arc<AppState>> {
         .route("/user", get(user))
 }
 
+async fn get_db(db_url: &str) -> PgPool {
+    info!("Connecting to database...");
+    let pool = PgPoolOptions::new()
+        .max_connections(5)
+        .connect(&db_url)
+        .await
+        .unwrap();
+ 
+    info!("Connection to database established.");
+    
+    info!("Applying migrations...");
+    sqlx::migrate!()
+        .run(&pool)
+        .await
+        .unwrap();
+    pool
+}
+
 async fn root() -> impl IntoResponse {
    info!("index requested");
    let template = RootTemplate {path: "index"};
@@ -101,35 +105,30 @@ async fn help() -> impl IntoResponse {
 
 #[derive(Template)]
 #[template(path = "index.html")]
-#[allow(dead_code)]
 pub struct RootTemplate {
     path: &'static str
 }
 
 #[derive(Template)]
 #[template(path = "about.html")]
-#[allow(dead_code)]
 pub struct AboutTemplate {
     path: &'static str
 }
 
 #[derive(Template)]
 #[template(path = "help.html")]
-#[allow(dead_code)]
 pub struct HelpTemplate {
     path: &'static str
 }
 
 #[derive(Template)]
 #[template(path = "register.html")]
-#[allow(dead_code)]
 pub struct RegisterTemplate {
     path: &'static str,
 }
 
 #[derive(Template)]
 #[template(path = "user.html")]
-#[allow(dead_code)]
 pub struct UserTemplate {
     path: &'static str,
 }
@@ -259,14 +258,12 @@ fn validate_same(text: String, text2: String) -> bool {
 
 #[derive(Template)]
 #[template(path = "errors.html")]
-#[allow(dead_code)]
 pub struct ErrorsTemplate {
     errors: Vec<&'static str>
 }
 
 #[derive(Template)]
 #[template(path = "password-validation.html")]
-#[allow(dead_code)]
 pub struct FieldTemplate {
     value: String,
     error: bool,
@@ -434,7 +431,9 @@ impl fmt::Display for HashError {
 
 #[cfg(test)]
 mod tests {
-    use crate::{validate_username, validate_password, validate_repeated_password, validate_email};
+    use std::sync::Arc;
+
+    use crate::{validate_username, validate_password, validate_repeated_password, validate_email, get_router, AppState, get_db};
 
     // Validating username
 
@@ -644,5 +643,33 @@ mod tests {
         let email = "email@email.com";
         let result = validate_email(&Some(String::from(email)));
         assert!(result.len() == 0);
+    }
+
+    // db
+    
+    // TODO: extract to integration tests
+    #[tokio::test]
+    async fn test_index() {
+        let db = get_db("postgresql://root:password@localhost:5432/rustspacetest").await;
+        
+        let app = get_router()
+            .with_state(Arc::new(AppState{db}));
+
+        let listener = tokio::net::TcpListener::bind("0.0.0.0:3001")
+            .await
+            .unwrap();
+
+        tokio::spawn(async move {
+            axum::serve(listener, app).await.unwrap();
+        });
+
+        let resp = match reqwest::get("http://localhost:3001/").await {
+            Ok(resp) => resp.text().await.unwrap(),
+            Err(err) => panic!("Error: {}", err)
+        };
+        println!("{}", resp);
+        assert!(resp.contains("Welcome!"));
+        assert!(resp.contains("Homepage"));
+
     }
 }
