@@ -48,18 +48,8 @@ async fn main() {
     info!("Initializing router...");
 
     let assets_path = std::env::current_dir().unwrap();
-    let app = Router::new()
-        .route("/", get(root))
-        .route("/index", get(root))
-        .route("/about", get(about))
-        .route("/help", get(help))
-        .route("/register", get(register_form))
-        .route("/register", post(register_user))
-        .route("/validation/psw", post(check_password))
-        .route("/validation/username", post(check_username))
-        .route("/validation/email", post(check_email))
-        .route("/validation/psw_repeat", post(check_password_repeat))
-        .route("/user", get(user))
+
+    let app = get_router()
         .with_state(Arc::new(state))
         .nest_service("/assets", ServeDir::new(format!("{}/assets/", assets_path.to_str().unwrap())));
 
@@ -74,6 +64,21 @@ async fn main() {
     axum::serve(listener, app)
         .await
         .unwrap();
+}
+
+fn get_router() -> Router<Arc<AppState>> {
+    Router::new()
+        .route("/", get(root))
+        .route("/index", get(root))
+        .route("/about", get(about))
+        .route("/help", get(help))
+        .route("/register", get(register_form))
+        .route("/register", post(register_user))
+        .route("/validation/psw", post(check_password))
+        .route("/validation/username", post(check_username))
+        .route("/validation/email", post(check_email))
+        .route("/validation/psw_repeat", post(check_password_repeat))
+        .route("/user", get(user))
 }
 
 async fn root() -> impl IntoResponse {
