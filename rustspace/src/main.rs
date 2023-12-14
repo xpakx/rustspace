@@ -432,8 +432,12 @@ impl fmt::Display for HashError {
 #[cfg(test)]
 mod tests {
     use std::sync::Arc;
+    use axum::{extract::Request, body::{Body, to_bytes}, http::StatusCode};
+    use tower::{Service, ServiceExt};
+    
 
     use crate::{validate_username, validate_password, validate_repeated_password, validate_email, get_router, AppState, get_db};
+    
 
     // Validating username
 
@@ -646,30 +650,98 @@ mod tests {
     }
 
     // db
-    
     // TODO: extract to integration tests
-    #[tokio::test]
-    async fn test_index() {
+
+    async fn prepare_server() -> axum::Router {
         let db = get_db("postgresql://root:password@localhost:5432/rustspacetest").await;
         
         let app = get_router()
             .with_state(Arc::new(AppState{db}));
+        app
+    }
 
-        let listener = tokio::net::TcpListener::bind("0.0.0.0:3001")
+    #[tokio::test]
+    async fn test_index() {
+        let response = prepare_server()
+            .await
+            .oneshot(
+                Request::builder()
+                    .uri("/")
+                    .body(Body::empty())
+                    .unwrap()
+            )
             .await
             .unwrap();
 
-        tokio::spawn(async move {
-            axum::serve(listener, app).await.unwrap();
-        });
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = to_bytes(response.into_body(), 1000).await;
+        assert!(body.is_ok());
+        let bytes = body.unwrap();
+        let content = std::str::from_utf8(&*bytes).unwrap();
+        assert!(content.contains("Welcome!"));
+        assert!(content.contains("Homepage"));
+    }
 
-        let resp = match reqwest::get("http://localhost:3001/").await {
-            Ok(resp) => resp.text().await.unwrap(),
-            Err(err) => panic!("Error: {}", err)
-        };
-        println!("{}", resp);
-        assert!(resp.contains("Welcome!"));
-        assert!(resp.contains("Homepage"));
+    #[tokio::test]
+    async fn test_about() {
+        let response = prepare_server()
+            .await
+            .oneshot(
+                Request::builder()
+                    .uri("/about")
+                    .body(Body::empty())
+                    .unwrap()
+            )
+            .await
+            .unwrap();
 
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = to_bytes(response.into_body(), 1000).await;
+        assert!(body.is_ok());
+        let bytes = body.unwrap();
+        let content = std::str::from_utf8(&*bytes).unwrap();
+        assert!(content.contains("About us"));
+    }
+
+    #[tokio::test]
+    async fn test_help() {
+        let response = prepare_server()
+            .await
+            .oneshot(
+                Request::builder()
+                    .uri("/help")
+                    .body(Body::empty())
+                    .unwrap()
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = to_bytes(response.into_body(), 1000).await;
+        assert!(body.is_ok());
+        let bytes = body.unwrap();
+        let content = std::str::from_utf8(&*bytes).unwrap();
+        assert!(content.contains("Help"));
+    }
+
+    #[tokio::test]
+    async fn test_getting_register_form() {
+        let response = prepare_server()
+            .await
+            .oneshot(
+                Request::builder()
+                    .uri("/register")
+                    .body(Body::empty())
+                    .unwrap()
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = to_bytes(response.into_body(), 2000).await;
+        assert!(body.is_ok());
+        let bytes = body.unwrap();
+        let content = std::str::from_utf8(&*bytes).unwrap();
+        assert!(content.contains("Register"));
     }
 }
