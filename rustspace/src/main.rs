@@ -3,7 +3,7 @@ use axum::response::{Html, IntoResponse, Response};
 use axum::http::{StatusCode, HeaderMap};
 use askama::Template;
 use tower_http::services::ServeDir;
-use tracing::{info, debug};
+use tracing::{info, debug, error};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use sqlx::postgres::{PgPool, PgPoolOptions};
 use regex::Regex;
@@ -294,6 +294,7 @@ async fn register_user(
     debug!("hashing password...");
     let password = hash_password(&user.psw.unwrap());
     if let Err(error) = password {
+        error!("there was an error during hashing a password!");
         let template = ErrorsTemplate { errors: vec![error.message]};
         return HtmlTemplate(template).into_response()
     }
@@ -422,5 +423,13 @@ struct HashError {
 impl fmt::Display for HashError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Hashing error")
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_truth() {
+        assert!(true)
     }
 }
