@@ -433,10 +433,12 @@ impl fmt::Display for HashError {
 mod tests {
     use std::sync::Arc;
     use axum::{extract::Request, body::{Body, to_bytes}, http::StatusCode};
-    use tower::{Service, ServiceExt};
+    use sqlx::{PgPool, Row};
+    use tower::ServiceExt;
     
 
     use crate::{validate_username, validate_password, validate_repeated_password, validate_email, get_router, AppState, get_db};
+    use serial_test::serial;
     
 
     // Validating username
@@ -764,7 +766,23 @@ mod tests {
         app
     }
 
+    async fn prepare_db() -> PgPool {
+        let db = get_db("postgresql://root:password@localhost:5432/rustspacetest").await;
+        
+        _ = sqlx::query("DELETE FROM users")
+            .execute(&db)
+            .await;
+        db
+    }
+
+    async fn prepare_server_with_db(db: PgPool) -> axum::Router {
+        let app = get_router()
+            .with_state(Arc::new(AppState{db}));
+        app
+    }
+
     #[tokio::test]
+    #[serial]
     async fn test_validating_duplicated_username() {
         let response = prepare_server_with_user()
             .await
@@ -790,6 +808,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_validating_duplicated_email() {
         let response = prepare_server_with_user()
             .await
@@ -798,7 +817,7 @@ mod tests {
                     .method("POST")
                     .header("Content-Type", "application/x-www-form-urlencoded")
                     .uri("/register")
-                    .body(Body::from("username=User&email=test%40email.com&psw=password&psw_repeat=password"))
+                    .body(Body::from("username=Username&email=test%40email.com&psw=password&psw_repeat=password"))
                     .unwrap()
                     )
             .await
@@ -812,5 +831,55 @@ mod tests {
         assert!(content.contains("error"));
         assert!(content.contains("Email"));
         assert!(content.contains("unique"));
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_redirecting_after_successful_registration() {
+        let response = prepare_server_with_user()
+            .await
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .header("Content-Type", "application/x-www-form-urlencoded")
+                    .uri("/register")
+                    .body(Body::from("username=User&email=user%40email.com&psw=password&psw_repeat=password"))
+                    .unwrap()
+                    )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        let header = response.headers().get("HX-redirect");
+        assert!(header.is_some());
+        if let Some(header) = header {
+            assert_eq!(header.to_str().unwrap(), "/user");
+        }
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_adding_user_to_db() {
+        let db = prepare_db().await;
+        _ = prepare_server_with_db(db.clone())
+            .await
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .header("Content-Type", "application/x-www-form-urlencoded")
+                    .uri("/register")
+                    .body(Body::from("username=Test&email=test%40email.com&psw=password&psw_repeat=password"))
+                    .unwrap()
+                    )
+            .await;
+
+        let result = sqlx::query("SELECT COUNT(*) FROM users")
+            .fetch_one(&db)
+            .await;
+
+        assert!(result.is_ok());
+        if let Ok(result) = result {
+            assert_eq!(result.get::<i64, _>(0), 1);
+        }
     }
 }
