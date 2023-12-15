@@ -744,4 +744,73 @@ mod tests {
         let content = std::str::from_utf8(&*bytes).unwrap();
         assert!(content.contains("Register"));
     }
+
+    async fn prepare_server_with_user() -> axum::Router {
+        let db = get_db("postgresql://root:password@localhost:5432/rustspacetest").await;
+        
+        _ = sqlx::query("DELETE FROM users")
+            .execute(&db)
+            .await;
+        
+        _ = sqlx::query("INSERT INTO users (screen_name, email, password) VALUES ($1, $2, $3)")
+            .bind("Test")
+            .bind("test@email.com")
+            .bind("password")
+            .execute(&db)
+            .await;
+        
+        let app = get_router()
+            .with_state(Arc::new(AppState{db}));
+        app
+    }
+
+    #[tokio::test]
+    async fn test_validating_duplicated_username() {
+        let response = prepare_server_with_user()
+            .await
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .header("Content-Type", "application/x-www-form-urlencoded")
+                    .uri("/register")
+                    .body(Body::from("username=Test&email=aaa%40email.com&psw=password&psw_repeat=password"))
+                    .unwrap()
+                    )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = to_bytes(response.into_body(), 1000).await;
+        assert!(body.is_ok());
+        let bytes = body.unwrap();
+        let content = std::str::from_utf8(&*bytes).unwrap();
+        assert!(content.contains("error"));
+        assert!(content.contains("Username"));
+        assert!(content.contains("unique"));
+    }
+
+    #[tokio::test]
+    async fn test_validating_duplicated_email() {
+        let response = prepare_server_with_user()
+            .await
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .header("Content-Type", "application/x-www-form-urlencoded")
+                    .uri("/register")
+                    .body(Body::from("username=User&email=test%40email.com&psw=password&psw_repeat=password"))
+                    .unwrap()
+                    )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = to_bytes(response.into_body(), 1000).await;
+        assert!(body.is_ok());
+        let bytes = body.unwrap();
+        let content = std::str::from_utf8(&*bytes).unwrap();
+        assert!(content.contains("error"));
+        assert!(content.contains("Email"));
+        assert!(content.contains("unique"));
+    }
 }
