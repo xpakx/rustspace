@@ -30,6 +30,7 @@ pub struct RegisterTemplate {
 #[template(path = "user.html")]
 pub struct UserTemplate {
     pub path: &'static str,
+    pub username: String,
 }
 
 #[derive(Template)]
@@ -47,6 +48,12 @@ pub struct FieldTemplate {
     pub name: &'static str,
     pub text: &'static str,
     pub form_type: &'static str,
+}
+
+#[derive(Template)]
+#[template(path = "unauthorized.html")]
+pub struct UnauthorizedTemplate {
+    pub message: &'static str,
 }
 
 pub struct HtmlTemplate<T>(pub T);
