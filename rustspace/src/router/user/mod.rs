@@ -63,9 +63,9 @@ pub async fn register_user(
     (headers, "Success").into_response()
 }
 
-pub async fn register_form() -> impl IntoResponse {
+pub async fn register_form(user: UserData) -> impl IntoResponse {
     info!("register form requested");
-    let template = RegisterTemplate {path: "register"};
+    let template = RegisterTemplate {path: "register", user};
     return HtmlTemplate(template)
 }
 
@@ -75,7 +75,7 @@ pub async fn user_page(user: UserData) -> impl IntoResponse {
         let template = UnauthorizedTemplate {message: "You're unauthorized!"};
         return HtmlTemplate(template).into_response()
     }
-    let template = UserTemplate {path: "user", username: user.username.unwrap()};
+    let template = UserTemplate {path: "user", user};
     return HtmlTemplate(template).into_response()
 }
 

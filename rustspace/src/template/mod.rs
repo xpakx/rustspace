@@ -2,35 +2,41 @@ use askama::Template;
 use axum::response::{Html, IntoResponse, Response};
 use axum::http::StatusCode;
 
+use crate::UserData;
+
 #[derive(Template)]
 #[template(path = "index.html")]
 pub struct RootTemplate {
-    pub path: &'static str
+    pub path: &'static str,
+    pub user: UserData
 }
 
 #[derive(Template)]
 #[template(path = "about.html")]
 pub struct AboutTemplate {
-    pub path: &'static str
+    pub path: &'static str,
+    pub user: UserData
 }
 
 #[derive(Template)]
 #[template(path = "help.html")]
 pub struct HelpTemplate {
-    pub path: &'static str
+    pub path: &'static str,
+    pub user: UserData
 }
 
 #[derive(Template)]
 #[template(path = "register.html")]
 pub struct RegisterTemplate {
     pub path: &'static str,
+    pub user: UserData
 }
 
 #[derive(Template)]
 #[template(path = "user.html")]
 pub struct UserTemplate {
     pub path: &'static str,
-    pub username: String,
+    pub user: UserData
 }
 
 #[derive(Template)]

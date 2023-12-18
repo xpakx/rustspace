@@ -74,7 +74,6 @@ pub struct UserRequest {
 
 pub struct UserData {
     username: Option<String>,
-    token: Option<String>
 }
 
 #[async_trait]
@@ -89,7 +88,7 @@ where
         let token = cookie_jar
             .get("Token")
             .map(|cookie| cookie.value().to_string());
-        Ok(UserData { username: token, token: None })
+        Ok(UserData { username: token })
     }
 }
 

@@ -17,7 +17,13 @@
 		  <a href="/" {% if path == "index" %}class="active"{% endif %}>Home</a> 
 		  <a href="/about" {% if path == "about" %}class="active"{% endif %}>About</a> 
 		  <a href="/help" {% if path == "help" %}class="active"{% endif %}>Help</a>
-		  <a href="/register" {% if path == "register" %}class="active"{% endif %}>Register</a>
+		  {% if user.username.is_some() %}
+			  <a href="/user" {% if path == "user" %}class="active"{% endif %}>User</a>
+			  <a href="#" hx-get="/logout" hx-target="nav">Logout</a>
+		  {% else %}
+			  <a href="/register" {% if path == "register" %}class="active"{% endif %}>Register</a>
+			  <a href="/login" {% if path == "login" %}class="active"{% endif %}>Login</a>
+		  {% endif %}
 	  </nav>
 	  <main>
 		  {% block content %}{% endblock %}
