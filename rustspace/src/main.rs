@@ -1,8 +1,10 @@
+use axum::{extract::FromRequestParts, http::request::Parts, async_trait};
+use axum_extra::extract::CookieJar;
 use tower_http::services::ServeDir;
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use sqlx::postgres::PgPool;
-use std::sync::Arc;
+use std::{sync::Arc, convert::Infallible};
 use serde::{Serialize, Deserialize};
 
 mod db;
@@ -68,6 +70,27 @@ pub struct UserRequest {
     psw: Option<String>,
     psw_repeat: Option<String>,
     email: Option<String>,
+}
+
+pub struct UserData {
+    username: Option<String>,
+    token: Option<String>
+}
+
+#[async_trait]
+impl<S> FromRequestParts<S> for UserData
+where
+    S: Send + Sync,
+{
+    type Rejection = Infallible;
+
+    async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
+        let cookie_jar = CookieJar::from_headers(&parts.headers);
+        let token = cookie_jar
+            .get("Token")
+            .map(|cookie| cookie.value().to_string());
+        Ok(UserData { username: token, token: None })
+    }
 }
 
 #[cfg(test)]

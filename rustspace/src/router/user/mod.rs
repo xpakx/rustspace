@@ -3,11 +3,10 @@ use std::sync::Arc;
 
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
 use axum::{extract::State, Form, http::HeaderMap, response::IntoResponse};
-use axum_extra::extract::CookieJar;
 use rand_core::OsRng;
 use tracing::{info, debug, error};
 
-use crate::{AppState, template::{ErrorsTemplate, RegisterTemplate, UserTemplate, HtmlTemplate, FieldTemplate, UnauthorizedTemplate}, UserRequest, validation::{validate_user, validate_password, validate_username, validate_email, validate_repeated_password}};
+use crate::{AppState, template::{ErrorsTemplate, RegisterTemplate, UserTemplate, HtmlTemplate, FieldTemplate, UnauthorizedTemplate}, UserRequest, validation::{validate_user, validate_password, validate_username, validate_email, validate_repeated_password}, UserData};
 
 pub async fn register_user(
     State(state): State<Arc<AppState>>,
@@ -70,16 +69,13 @@ pub async fn register_form() -> impl IntoResponse {
     return HtmlTemplate(template)
 }
 
-pub async fn user_page(cookie_jar: CookieJar) -> impl IntoResponse {
+pub async fn user_page(user: UserData) -> impl IntoResponse {
     info!("user index requested");
-    let token = cookie_jar
-        .get("Token")
-        .map(|cookie| cookie.value().to_string());
-    if token.is_none() {
+    if user.username.is_none() {
         let template = UnauthorizedTemplate {message: "You're unauthorized!"};
         return HtmlTemplate(template).into_response()
     }
-    let template = UserTemplate {path: "user", username: token.unwrap()};
+    let template = UserTemplate {path: "user", username: user.username.unwrap()};
     return HtmlTemplate(template).into_response()
 }
 
