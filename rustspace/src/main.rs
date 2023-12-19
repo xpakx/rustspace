@@ -1,5 +1,7 @@
 use axum::{extract::FromRequestParts, http::request::Parts, async_trait};
 use axum_extra::extract::CookieJar;
+use jsonwebtoken::{decode, DecodingKey, Validation};
+use security::TokenClaims;
 use tower_http::services::ServeDir;
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -96,7 +98,18 @@ where
             .get("Token")
             .map(|cookie| cookie.value().to_string())
             .filter(|value| value != "");
-        Ok(UserData { username: token })
+
+        if let Some(token) = token.clone() {
+            let claims = decode::<TokenClaims>(
+                &token,
+                &DecodingKey::from_secret("secret".as_ref()),
+                &Validation::default(),
+                );
+            if let Ok(claims) = claims {
+                return Ok(UserData { username: Some(claims.claims.sub) });
+            }
+        }
+        Ok(UserData { username: None })
     }
 }
 
@@ -115,7 +128,7 @@ mod tests {
 
     async fn prepare_server() -> axum::Router {
         let db = get_db("postgresql://root:password@localhost:5432/rustspacetest").await;
-        
+
         let app = get_router()
             .with_state(Arc::new(AppState{db}));
         app
@@ -127,10 +140,10 @@ mod tests {
             .await
             .oneshot(
                 Request::builder()
-                    .uri("/")
-                    .body(Body::empty())
-                    .unwrap()
-            )
+                .uri("/")
+                .body(Body::empty())
+                .unwrap()
+                )
             .await
             .unwrap();
 
@@ -149,10 +162,10 @@ mod tests {
             .await
             .oneshot(
                 Request::builder()
-                    .uri("/about")
-                    .body(Body::empty())
-                    .unwrap()
-            )
+                .uri("/about")
+                .body(Body::empty())
+                .unwrap()
+                )
             .await
             .unwrap();
 
@@ -170,10 +183,10 @@ mod tests {
             .await
             .oneshot(
                 Request::builder()
-                    .uri("/help")
-                    .body(Body::empty())
-                    .unwrap()
-            )
+                .uri("/help")
+                .body(Body::empty())
+                .unwrap()
+                )
             .await
             .unwrap();
 
@@ -191,7 +204,7 @@ mod tests {
             .await
             .oneshot(
                 Request::builder()
-                    .uri("/register")
+                .uri("/register")
                     .body(Body::empty())
                     .unwrap()
             )
