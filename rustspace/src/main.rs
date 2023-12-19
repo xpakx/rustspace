@@ -11,6 +11,7 @@ mod db;
 mod router;
 mod template;
 mod validation;
+mod security;
 
 use crate::router::get_router;
 

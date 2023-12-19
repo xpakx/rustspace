@@ -6,7 +6,7 @@ use axum::{extract::State, Form, http::HeaderMap, response::IntoResponse};
 use rand_core::OsRng;
 use tracing::{info, debug, error};
 
-use crate::{AppState, template::{ErrorsTemplate, RegisterTemplate, UserTemplate, HtmlTemplate, FieldTemplate, UnauthorizedTemplate}, UserRequest, validation::{validate_user, validate_password, validate_username, validate_email, validate_repeated_password}, UserData};
+use crate::{AppState, template::{ErrorsTemplate, RegisterTemplate, UserTemplate, HtmlTemplate, FieldTemplate, UnauthorizedTemplate}, UserRequest, validation::{validate_user, validate_password, validate_username, validate_email, validate_repeated_password}, UserData, security::get_token};
 
 pub async fn register_user(
     State(state): State<Arc<AppState>>,
@@ -58,7 +58,7 @@ pub async fn register_user(
 
     let mut headers = HeaderMap::new();
     headers.insert("HX-redirect", "/user".parse().unwrap());
-    let cookie = format!("Token={}", user.username.unwrap());
+    let cookie = format!("Token={}", get_token(&user.username));
     headers.insert("Set-Cookie", cookie.parse().unwrap());
     (headers, "Success").into_response()
 }
