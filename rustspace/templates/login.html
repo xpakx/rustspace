@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block head %}
+  <link href="/assets/form.css" rel="stylesheet" />
+{% endblock %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<h1>Login</h1>
+<legend>Please fill in this form to log in.</legend>
+<div id="error-container"></div>
+<form hx-post="/login" hx-target="#error-container">
+	<div class="form-row">
+		<label for="username"><b>Username</b></label>
+		<input type="text" placeholder="Enter Username" name="username" id="username" required>
+	</div>
+
+	<div class="form-row">
+		<label for="psw"><b>Password</b></label>
+		<input type="password" placeholder="Enter Password" name="psw" id="psw" required>
+	</div>
+
+	<div class="button-container">
+		<button type="submit" class="register-btn">Register</button>
+	</div>
+</form>
+
+<div class="container signin">
+	<p>Do not have an account? <a href="/register">Register</a>.</p>
+</div>
+{% endblock %}

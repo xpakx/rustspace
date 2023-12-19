@@ -33,6 +33,13 @@ pub struct RegisterTemplate {
 }
 
 #[derive(Template)]
+#[template(path = "login.html")]
+pub struct LoginTemplate {
+    pub path: &'static str,
+    pub user: UserData
+}
+
+#[derive(Template)]
 #[template(path = "user.html")]
 pub struct UserTemplate {
     pub path: &'static str,

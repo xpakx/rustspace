@@ -6,7 +6,7 @@ use axum::{extract::State, Form, http::HeaderMap, response::IntoResponse};
 use rand_core::OsRng;
 use tracing::{info, debug, error};
 
-use crate::{AppState, template::{ErrorsTemplate, RegisterTemplate, UserTemplate, HtmlTemplate, FieldTemplate, UnauthorizedTemplate}, UserRequest, validation::{validate_user, validate_password, validate_username, validate_email, validate_repeated_password}, UserData, security::get_token};
+use crate::{AppState, template::{ErrorsTemplate, RegisterTemplate, UserTemplate, HtmlTemplate, FieldTemplate, UnauthorizedTemplate, LoginTemplate}, UserRequest, validation::{validate_user, validate_password, validate_username, validate_email, validate_repeated_password}, UserData, security::get_token, LoginRequest};
 
 pub async fn register_user(
     State(state): State<Arc<AppState>>,
@@ -160,4 +160,20 @@ impl fmt::Display for HashError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Hashing error")
     }
+}
+
+pub async fn login(
+    State(state): State<Arc<AppState>>,
+    Form(user): Form<LoginRequest>) -> impl IntoResponse {
+    let mut headers = HeaderMap::new();
+    headers.insert("HX-redirect", "/user".parse().unwrap());
+    let cookie = format!("Token={}", get_token(&user.username));
+    headers.insert("Set-Cookie", cookie.parse().unwrap());
+    (headers, "Success").into_response()
+}
+
+pub async fn login_form(user: UserData) -> impl IntoResponse {
+    info!("login form requested");
+    let template = LoginTemplate {path: "login", user};
+    return HtmlTemplate(template)
 }

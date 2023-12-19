@@ -73,6 +73,12 @@ pub struct UserRequest {
     email: Option<String>,
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct LoginRequest {
+    username: Option<String>,
+    psw: Option<String>,
+}
+
 pub struct UserData {
     username: Option<String>,
 }
