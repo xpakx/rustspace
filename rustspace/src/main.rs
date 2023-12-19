@@ -94,7 +94,8 @@ where
         let cookie_jar = CookieJar::from_headers(&parts.headers);
         let token = cookie_jar
             .get("Token")
-            .map(|cookie| cookie.value().to_string());
+            .map(|cookie| cookie.value().to_string())
+            .filter(|value| value != "");
         Ok(UserData { username: token })
     }
 }

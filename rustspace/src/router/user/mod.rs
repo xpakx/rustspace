@@ -166,8 +166,6 @@ impl fmt::Display for HashError {
 pub async fn login(
     State(state): State<Arc<AppState>>,
     Form(user): Form<LoginRequest>) -> impl IntoResponse {
-
-
     let errors = validate_login(&user.username, &user.psw);
     if errors.len() > 0 {
         debug!("login input is invalid");
@@ -216,4 +214,12 @@ pub async fn login_form(user: UserData) -> impl IntoResponse {
     info!("login form requested");
     let template = LoginTemplate {path: "login", user};
     return HtmlTemplate(template)
+}
+
+pub async fn logout() -> impl IntoResponse {
+    let mut headers = HeaderMap::new();
+    headers.insert("HX-redirect", "/".parse().unwrap());
+    let cookie = String::from("Token=");
+    headers.insert("Set-Cookie", cookie.parse().unwrap());
+    (headers, "Success").into_response()
 }
