@@ -66,6 +66,17 @@ pub fn validate_email(email: &Option<String>) -> Vec<&'static str> {
     errors
 }
 
+pub fn validate_login(username: &Option<String>, password: &Option<String>) -> Vec<&'static str> {
+    let mut errors = vec![];
+    if !validate_non_empty(username) {
+        errors.push("Username cannot be empty!");
+    }
+    if !validate_non_empty(password) {
+        errors.push("Password cannot be empty!");
+    }
+    errors
+}
+
 pub fn validate_non_empty(text: &Option<String>) -> bool {
     match text {
         None => false,

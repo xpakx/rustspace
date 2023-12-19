@@ -1,12 +1,13 @@
 use core::fmt;
 use std::sync::Arc;
 
-use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
+use argon2::{password_hash::SaltString, Argon2, PasswordHasher, PasswordHash, PasswordVerifier};
 use axum::{extract::State, Form, http::HeaderMap, response::IntoResponse};
 use rand_core::OsRng;
+use sqlx::Postgres;
 use tracing::{info, debug, error};
 
-use crate::{AppState, template::{ErrorsTemplate, RegisterTemplate, UserTemplate, HtmlTemplate, FieldTemplate, UnauthorizedTemplate, LoginTemplate}, UserRequest, validation::{validate_user, validate_password, validate_username, validate_email, validate_repeated_password}, UserData, security::get_token, LoginRequest};
+use crate::{AppState, template::{ErrorsTemplate, RegisterTemplate, UserTemplate, HtmlTemplate, FieldTemplate, UnauthorizedTemplate, LoginTemplate}, UserRequest, validation::{validate_user, validate_password, validate_username, validate_email, validate_repeated_password, validate_login}, UserData, security::get_token, LoginRequest, UserModel};
 
 pub async fn register_user(
     State(state): State<Arc<AppState>>,
@@ -165,11 +166,50 @@ impl fmt::Display for HashError {
 pub async fn login(
     State(state): State<Arc<AppState>>,
     Form(user): Form<LoginRequest>) -> impl IntoResponse {
-    let mut headers = HeaderMap::new();
-    headers.insert("HX-redirect", "/user".parse().unwrap());
-    let cookie = format!("Token={}", get_token(&user.username));
-    headers.insert("Set-Cookie", cookie.parse().unwrap());
-    (headers, "Success").into_response()
+
+
+    let errors = validate_login(&user.username, &user.psw);
+    if errors.len() > 0 {
+        debug!("login input is invalid");
+        let template = ErrorsTemplate {errors};
+        return HtmlTemplate(template).into_response()
+    }
+
+    let user_db = sqlx::query_as::<Postgres, UserModel>(
+        "SELECT * FROM users WHERE screen_name = $1",
+        )
+        .bind(user.username.clone().unwrap())
+        .fetch_optional(&state.db)
+        .await;
+
+    if let Ok(user_db) = user_db {
+        if let Some(user_db) = user_db {
+            let is_valid = match PasswordHash::new(&user_db.password) {
+                Ok(parsed_hash) => Argon2::default()
+                    .verify_password(user.psw.unwrap().as_bytes(), &parsed_hash)
+                    .map_or(false, |_| true),
+                Err(_) => false,
+            };
+            if !is_valid {
+                debug!("login unsuccessful due to wrong password");
+                let template = ErrorsTemplate {errors: vec!["Wrong password!"]};
+                return HtmlTemplate(template).into_response()
+            }
+            let mut headers = HeaderMap::new();
+            headers.insert("HX-redirect", "/user".parse().unwrap());
+            let cookie = format!("Token={}", get_token(&user.username));
+            headers.insert("Set-Cookie", cookie.parse().unwrap());
+            (headers, "Success").into_response()
+        } else {
+            debug!("no such user");
+            let template = ErrorsTemplate {errors: vec!["No such user!"]};
+            return HtmlTemplate(template).into_response()
+        }
+    } else {
+        debug!("login unsuccessful due to db error");
+        let template = ErrorsTemplate {errors: vec!["Database error, please try again later"]};
+        return HtmlTemplate(template).into_response()
+    }
 }
 
 pub async fn login_form(user: UserData) -> impl IntoResponse {
