@@ -73,12 +73,14 @@ pub struct UserRequest {
     psw: Option<String>,
     psw_repeat: Option<String>,
     email: Option<String>,
+    redir: Option<String>,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct LoginRequest {
     username: Option<String>,
     psw: Option<String>,
+    redir: Option<String>,
 }
 
 pub struct UserData {

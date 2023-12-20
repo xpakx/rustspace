@@ -1,7 +1,6 @@
 use jsonwebtoken::{encode, Header, EncodingKey};
 use serde::{Serialize, Deserialize};
 
-// TODO: add JWT
 pub fn get_token(username: &Option<String>) -> String {
     let username = match &username {
         Some(username) => username.clone(),

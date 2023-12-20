@@ -29,14 +29,16 @@ pub struct HelpTemplate {
 #[template(path = "register.html")]
 pub struct RegisterTemplate {
     pub path: &'static str,
-    pub user: UserData
+    pub user: UserData,
+    pub redir: Option<String>,
 }
 
 #[derive(Template)]
 #[template(path = "login.html")]
 pub struct LoginTemplate {
     pub path: &'static str,
-    pub user: UserData
+    pub user: UserData,
+    pub redir: Option<String>,
 }
 
 #[derive(Template)]

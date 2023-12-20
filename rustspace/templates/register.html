@@ -30,6 +30,10 @@
 		<input type="password" hx-post="/validation/psw_repeat" placeholder="Repeat Password" name="psw_repeat" id="psw_repeat" required>
 	</div>
 
+	{% if redir.is_some() %}
+	<input type="hidden" id="redir" name="redir" value="{{ redir.as_ref().unwrap() }}" />
+	{% endif %}
+
 	<div class="button-container">
 		<button type="submit" class="register-btn">Register</button>
 	</div>

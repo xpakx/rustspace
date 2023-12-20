@@ -21,6 +21,10 @@
 		<input type="password" placeholder="Enter Password" name="psw" id="psw" required>
 	</div>
 
+	{% if redir.is_some() %}
+	<input type="hidden" id="redir" name="redir" value="{{ redir.as_ref().unwrap() }}" />
+	{% endif %}
+
 	<div class="button-container">
 		<button type="submit" class="register-btn">Log in</button>
 	</div>

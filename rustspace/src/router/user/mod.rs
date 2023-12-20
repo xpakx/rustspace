@@ -1,13 +1,19 @@
 use core::fmt;
 use std::sync::Arc;
+use serde::Deserialize;
 
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher, PasswordHash, PasswordVerifier};
-use axum::{extract::State, Form, http::HeaderMap, response::IntoResponse};
+use axum::{extract::{State, Query}, Form, http::HeaderMap, response::IntoResponse};
 use rand_core::OsRng;
 use sqlx::Postgres;
 use tracing::{info, debug, error};
 
 use crate::{AppState, template::{ErrorsTemplate, RegisterTemplate, UserTemplate, HtmlTemplate, FieldTemplate, UnauthorizedTemplate, LoginTemplate}, UserRequest, validation::{validate_user, validate_password, validate_username, validate_email, validate_repeated_password, validate_login}, UserData, security::get_token, LoginRequest, UserModel};
+
+#[derive(Deserialize)]
+pub struct FriendlyRedirect {
+    path: Option<String>
+}
 
 pub async fn register_user(
     State(state): State<Arc<AppState>>,
@@ -57,16 +63,22 @@ pub async fn register_user(
     }
     info!("user succesfully created.");
 
+    let mut path = String::from("/user");
+    if let Some(friendly_path) = user.redir {
+        path = friendly_path
+    }
+
     let mut headers = HeaderMap::new();
-    headers.insert("HX-redirect", "/user".parse().unwrap());
+    headers.insert("HX-redirect", path.parse().unwrap());
+    // TODO: add expiration date
     let cookie = format!("Token={}", get_token(&user.username));
     headers.insert("Set-Cookie", cookie.parse().unwrap());
     (headers, "Success").into_response()
 }
 
-pub async fn register_form(user: UserData) -> impl IntoResponse {
+pub async fn register_form(user: UserData, query: Query<FriendlyRedirect>) -> impl IntoResponse {
     info!("register form requested");
-    let template = RegisterTemplate {path: "register", user};
+    let template = RegisterTemplate {path: "register", user, redir: query.path.to_owned()};
     return HtmlTemplate(template)
 }
 
@@ -193,8 +205,13 @@ pub async fn login(
                 let template = ErrorsTemplate {errors: vec!["Wrong password!"]};
                 return HtmlTemplate(template).into_response()
             }
+            let mut path = String::from("/user");
+            if let Some(friendly_path) = user.redir {
+                path = friendly_path
+            }
             let mut headers = HeaderMap::new();
-            headers.insert("HX-redirect", "/user".parse().unwrap());
+            headers.insert("HX-redirect", path.parse().unwrap());
+            // TODO: add expiration date
             let cookie = format!("Token={}", get_token(&user.username));
             headers.insert("Set-Cookie", cookie.parse().unwrap());
             (headers, "Success").into_response()
@@ -210,9 +227,9 @@ pub async fn login(
     }
 }
 
-pub async fn login_form(user: UserData) -> impl IntoResponse {
+pub async fn login_form(user: UserData, query: Query<FriendlyRedirect>) -> impl IntoResponse {
     info!("login form requested");
-    let template = LoginTemplate {path: "login", user};
+    let template = LoginTemplate {path: "login", user, redir: query.path.to_owned()};
     return HtmlTemplate(template)
 }
 
