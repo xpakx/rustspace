@@ -71,7 +71,7 @@ pub async fn register_user(
     let mut headers = HeaderMap::new();
     headers.insert("HX-redirect", path.parse().unwrap());
     // TODO: add expiration date
-    let cookie = format!("Token={}", get_token(&user.username));
+    let cookie = format!("Token={}; SameSite=Lax", get_token(&user.username));
     headers.insert("Set-Cookie", cookie.parse().unwrap());
     (headers, "Success").into_response()
 }
@@ -212,7 +212,7 @@ pub async fn login(
             let mut headers = HeaderMap::new();
             headers.insert("HX-redirect", path.parse().unwrap());
             // TODO: add expiration date
-            let cookie = format!("Token={}", get_token(&user.username));
+            let cookie = format!("Token={}; SameSite=Lax", get_token(&user.username));
             headers.insert("Set-Cookie", cookie.parse().unwrap());
             (headers, "Success").into_response()
         } else {
