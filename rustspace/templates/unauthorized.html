@@ -1,1 +1,18 @@
-{{message}}
+ 
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Unauthorized</title>
+		<link href="/assets/site.css" rel="stylesheet" />
+		<script src="/assets/js/htmx.min.js"></script>
+	</head>
+
+	<body>
+		<div class="message" hx-get="/to_login?path={{redir.as_ref().unwrap()}}" hx-trigger="load delay:2s once">
+			{{message}}
+		</div>
+	</body>
+</html>

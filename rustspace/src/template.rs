@@ -69,6 +69,7 @@ pub struct FieldTemplate {
 #[template(path = "unauthorized.html")]
 pub struct UnauthorizedTemplate {
     pub message: &'static str,
+    pub redir: Option<String>,
 }
 
 pub struct HtmlTemplate<T>(pub T);

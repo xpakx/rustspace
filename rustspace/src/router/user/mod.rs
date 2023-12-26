@@ -85,7 +85,7 @@ pub async fn register_form(user: UserData, query: Query<FriendlyRedirect>) -> im
 pub async fn user_page(user: UserData) -> impl IntoResponse {
     info!("user index requested");
     if user.username.is_none() {
-        let template = UnauthorizedTemplate {message: "You're unauthorized!"};
+        let template = UnauthorizedTemplate {message: "You're unauthorized!", redir: Some(String::from("/user"))};
         return HtmlTemplate(template).into_response()
     }
     let template = UserTemplate {path: "user", user};
@@ -238,5 +238,13 @@ pub async fn logout() -> impl IntoResponse {
     headers.insert("HX-redirect", "/".parse().unwrap());
     let cookie = String::from("Token=");
     headers.insert("Set-Cookie", cookie.parse().unwrap());
+    (headers, "Success").into_response()
+}
+
+pub async fn to_login(query: Query<FriendlyRedirect>) -> impl IntoResponse {
+    info!("redit to login requested");
+    let mut headers = HeaderMap::new();
+    let path = format!("/login?path={}", query.path.to_owned().unwrap());
+    headers.insert("HX-redirect", path.parse().unwrap());
     (headers, "Success").into_response()
 }
