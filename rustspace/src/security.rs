@@ -6,10 +6,10 @@ pub fn get_token(username: &Option<String>) -> (String, i64) {
         Some(username) => username.clone(),
         None => String::from("")
     };
+    let max_age = 60;
     let now = chrono::Utc::now();
     let iat = now.timestamp() as usize;
-    let date = (now + chrono::Duration::minutes(60)).timestamp();
-    let exp = date as usize;
+    let exp = (now + chrono::Duration::minutes(max_age)).timestamp() as usize;
     let claims: TokenClaims = TokenClaims {
         sub: String::from(&username),
         exp,
@@ -23,8 +23,8 @@ pub fn get_token(username: &Option<String>) -> (String, i64) {
     );
 
     match token {
-        Ok(token) => (token, date),
-        Err(_) => (String::from(""), date)
+        Ok(token) => (token, max_age*60),
+        Err(_) => (String::from(""), max_age*60)
     }
 }
 

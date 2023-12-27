@@ -1,6 +1,5 @@
 use core::fmt;
 use std::sync::Arc;
-use chrono::{DateTime, Utc};
 use serde::Deserialize;
 
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher, PasswordHash, PasswordVerifier};
@@ -217,11 +216,9 @@ pub async fn login(
                 Some(true) => true
             };
             let (token, date) = get_token(&user.username);
-            let date: DateTime<Utc> = DateTime::from_timestamp(date, 0).unwrap();
-            let date = date.format("%a, %d %b %Y %T GMT");
             let cookie = match remember {
-                true => format!("Token={}; SameSite=Lax", token),
-                false => format!("Token={}; Expires={}; SameSite=Lax", token, date),
+                false => format!("Token={}; SameSite=Lax", token),
+                true => format!("Token={}; Max-Age={}; SameSite=Lax", token, date),
             };
             debug!("cookie: {}", cookie);
             headers.insert("Set-Cookie", cookie.parse().unwrap());
