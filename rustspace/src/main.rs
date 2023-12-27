@@ -81,6 +81,7 @@ pub struct LoginRequest {
     username: Option<String>,
     psw: Option<String>,
     redir: Option<String>,
+    remember_me: Option<bool>,
 }
 
 pub struct UserData {

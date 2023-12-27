@@ -1,14 +1,15 @@
 use jsonwebtoken::{encode, Header, EncodingKey};
 use serde::{Serialize, Deserialize};
 
-pub fn get_token(username: &Option<String>) -> String {
+pub fn get_token(username: &Option<String>) -> (String, i64) {
     let username = match &username {
         Some(username) => username.clone(),
         None => String::from("")
     };
     let now = chrono::Utc::now();
     let iat = now.timestamp() as usize;
-    let exp = (now + chrono::Duration::minutes(60)).timestamp() as usize;
+    let date = (now + chrono::Duration::minutes(60)).timestamp();
+    let exp = date as usize;
     let claims: TokenClaims = TokenClaims {
         sub: String::from(&username),
         exp,
@@ -22,8 +23,8 @@ pub fn get_token(username: &Option<String>) -> String {
     );
 
     match token {
-        Ok(token) => token,
-        Err(_) => String::from("")
+        Ok(token) => (token, date),
+        Err(_) => (String::from(""), date)
     }
 }
 
