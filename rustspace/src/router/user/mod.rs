@@ -215,7 +215,9 @@ pub async fn login(
                 None | Some(false) => false,
                 Some(true) => true
             };
+            debug!("remember_me={}", remember);
             let (token, date) = get_token(&user.username);
+
             let cookie = match remember {
                 false => format!("Token={}; SameSite=Lax", token),
                 true => format!("Token={}; Max-Age={}; SameSite=Lax", token, date),

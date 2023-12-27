@@ -21,6 +21,11 @@
 		<input type="password" placeholder="Enter Password" name="psw" id="psw" required>
 	</div>
 
+	<div class="form-row">
+		<label for="remember_me"><b>Remeber Me</b></label>
+		<input type="checkbox" id="remember_me" name="remember_me" value="true">
+	</div>
+
 	{% if redir.is_some() %}
 	<input type="hidden" id="redir" name="redir" value="{{ redir.as_ref().unwrap() }}" />
 	{% endif %}
