@@ -316,4 +316,9 @@ async fn test_authentication() {
     if let Some(header) = header {
         assert_eq!(header.to_str().unwrap(), "/user");
     }
+    let header = response.headers().get("Set-Cookie");
+    assert!(header.is_some());
+    if let Some(header) = header {
+        assert!(header.to_str().unwrap().contains("Token="));
+    }
 }
