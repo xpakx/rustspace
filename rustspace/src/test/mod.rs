@@ -1,5 +1,7 @@
 use std::sync::Arc;
+use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
 use axum::{extract::Request, body::{Body, to_bytes}, http::StatusCode};
+use rand_core::OsRng;
 use sqlx::{PgPool, Row};
 use tower::ServiceExt;
 
@@ -99,17 +101,26 @@ async fn test_getting_register_form() {
     assert!(content.contains("Register"));
 }
 
-async fn prepare_server_with_user() -> axum::Router {
+async fn prepare_server_with_user(hash_password: bool) -> axum::Router {
     let db = get_db("postgresql://root:password@localhost:5432/rustspacetest").await;
 
     _ = sqlx::query("DELETE FROM users")
         .execute(&db)
         .await;
 
+
+    let salt = SaltString::generate(&mut OsRng);
+    let password = match hash_password {
+        true => Argon2::default()
+            .hash_password("password".as_bytes(), &salt)
+            .map(|hash| hash.to_string()).unwrap(),
+        false => String::from("password")
+    };
+
     _ = sqlx::query("INSERT INTO users (screen_name, email, password) VALUES ($1, $2, $3)")
         .bind("Test")
         .bind("test@email.com")
-        .bind("password")
+        .bind(password)
         .execute(&db)
         .await;
 
@@ -136,7 +147,7 @@ async fn prepare_server_with_db(db: PgPool) -> axum::Router {
 #[tokio::test]
 #[serial]
 async fn test_validating_duplicated_username() {
-    let response = prepare_server_with_user()
+    let response = prepare_server_with_user(false)
         .await
         .oneshot(
             Request::builder()
@@ -162,7 +173,7 @@ async fn test_validating_duplicated_username() {
 #[tokio::test]
 #[serial]
 async fn test_validating_duplicated_email() {
-    let response = prepare_server_with_user()
+    let response = prepare_server_with_user(false)
         .await
         .oneshot(
             Request::builder()
@@ -188,7 +199,7 @@ async fn test_validating_duplicated_email() {
 #[tokio::test]
 #[serial]
 async fn test_redirecting_after_successful_registration() {
-    let response = prepare_server_with_user()
+    let response = prepare_server_with_user(false)
         .await
         .oneshot(
             Request::builder()
@@ -238,7 +249,7 @@ async fn test_adding_user_to_db() {
 #[tokio::test]
 #[serial]
 async fn test_authentication_for_nonexistent_user() {
-    let response = prepare_server_with_user()
+    let response = prepare_server_with_user(false)
         .await
         .oneshot(
             Request::builder()
@@ -257,4 +268,52 @@ async fn test_authentication_for_nonexistent_user() {
     let bytes = body.unwrap();
     let content = std::str::from_utf8(&*bytes).unwrap();
     assert!(content.contains("No such user"));
+}
+
+#[tokio::test]
+#[serial]
+async fn test_authentication_with_wrong_password() {
+    let response = prepare_server_with_user(true)
+        .await
+        .oneshot(
+            Request::builder()
+            .method("POST")
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .uri("/login")
+            .body(Body::from("username=Test&psw=tst"))
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = to_bytes(response.into_body(), 1000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    assert!(content.contains("password"));
+}
+
+#[tokio::test]
+#[serial]
+async fn test_authentication() {
+    let response = prepare_server_with_user(true)
+        .await
+        .oneshot(
+            Request::builder()
+            .method("POST")
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .uri("/login")
+            .body(Body::from("username=Test&psw=password"))
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let header = response.headers().get("HX-redirect");
+    assert!(header.is_some());
+    if let Some(header) = header {
+        assert_eq!(header.to_str().unwrap(), "/user");
+    }
 }
