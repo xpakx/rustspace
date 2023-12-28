@@ -234,3 +234,27 @@ async fn test_adding_user_to_db() {
         assert_eq!(result.get::<i64, _>(0), 1);
     }
 }
+
+#[tokio::test]
+#[serial]
+async fn test_authentication_for_nonexistent_user() {
+    let response = prepare_server_with_user()
+        .await
+        .oneshot(
+            Request::builder()
+            .method("POST")
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .uri("/login")
+            .body(Body::from("username=User&psw=password"))
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = to_bytes(response.into_body(), 1000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    assert!(content.contains("No such user"));
+}
