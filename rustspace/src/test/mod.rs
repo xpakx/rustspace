@@ -322,3 +322,32 @@ async fn test_authentication() {
         assert!(header.to_str().unwrap().contains("Token="));
     }
 }
+
+#[tokio::test]
+#[serial]
+async fn test_logging_out() {
+    let response = prepare_server_with_user(false)
+        .await
+        .oneshot(
+            Request::builder()
+            .method("GET")
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .uri("/logout")
+            .body(Body::empty())
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let header = response.headers().get("HX-redirect");
+    assert!(header.is_some());
+    if let Some(header) = header {
+        assert_eq!(header.to_str().unwrap(), "/");
+    }
+    let header = response.headers().get("Set-Cookie");
+    assert!(header.is_some());
+    if let Some(header) = header {
+        assert_eq!(header.to_str().unwrap(), "Token=");
+    }
+}
