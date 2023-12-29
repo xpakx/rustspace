@@ -430,6 +430,7 @@ async fn test_user_redir_for_unauthenticated() {
     let bytes = body.unwrap();
     let content = std::str::from_utf8(&*bytes).unwrap();
     assert!(content.contains("Unauthorized"));
+    assert!(content.contains("/to_login?path=/user"));
 }
 
 #[tokio::test]
@@ -456,4 +457,76 @@ async fn test_user_redir_for_authenticated() {
     let bytes = body.unwrap();
     let content = std::str::from_utf8(&*bytes).unwrap();
     assert!(!content.contains("Unauthorized"));
+}
+
+#[tokio::test]
+#[serial]
+async fn test_login_page_add_friendly_redirect_to_form() {
+    let response = prepare_server_with_user(false)
+        .await
+        .oneshot(
+            Request::builder()
+            .method("GET")
+            .uri("/login?path=/home")
+            .body(Body::empty())
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = to_bytes(response.into_body(), 2000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    assert!(content.contains("name=\"redir\""));
+    assert!(content.contains("value=\"/home\""));
+}
+
+#[tokio::test]
+#[serial]
+async fn test_friendly_redir_after_authentication() {
+    let response = prepare_server_with_user(true)
+        .await
+        .oneshot(
+            Request::builder()
+            .method("POST")
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .uri("/login")
+            .body(Body::from("username=Test&psw=password&redir=/home"))
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let header = response.headers().get("HX-redirect");
+    assert!(header.is_some());
+    if let Some(header) = header {
+        assert_eq!(header.to_str().unwrap(), "/home");
+    }
+}
+
+#[tokio::test]
+#[serial]
+async fn test_friendly_redir_after_registration() {
+    let response = prepare_server_with_user(false)
+        .await
+        .oneshot(
+            Request::builder()
+            .method("POST")
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .uri("/register")
+            .body(Body::from("username=User&email=user%40email.com&psw=password&psw_repeat=password&redir=/home"))
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let header = response.headers().get("HX-redirect");
+    assert!(header.is_some());
+    if let Some(header) = header {
+        assert_eq!(header.to_str().unwrap(), "/home");
+    }
 }
