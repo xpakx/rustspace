@@ -5,7 +5,7 @@ use rand_core::OsRng;
 use sqlx::{PgPool, Row};
 use tower::ServiceExt;
 
-use crate::{get_router, AppState, db::get_db};
+use crate::{get_router, AppState, db::get_db, security::get_token};
 use serial_test::serial;
 
 async fn prepare_server() -> axum::Router {
@@ -350,4 +350,60 @@ async fn test_logging_out() {
     if let Some(header) = header {
         assert_eq!(header.to_str().unwrap(), "Token=");
     }
+}
+
+#[tokio::test]
+#[serial]
+async fn test_navigation_for_guest() {
+    let response = prepare_server_with_user(false)
+        .await
+        .oneshot(
+            Request::builder()
+            .method("GET")
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .uri("/")
+            .body(Body::empty())
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = to_bytes(response.into_body(), 2000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    assert!(content.contains("/register"));
+    assert!(content.contains("/login"));
+    assert!(!content.contains("/logout"));
+    assert!(!content.contains("/user"));
+}
+
+#[tokio::test]
+#[serial]
+async fn test_navigation_for_authorized_user() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let response = prepare_server_with_user(false)
+        .await
+        .oneshot(
+            Request::builder()
+            .method("GET")
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .header("Cookie", format!("Token={};", token))
+            .uri("/")
+            .body(Body::empty())
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = to_bytes(response.into_body(), 2000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    assert!(!content.contains("/register"));
+    assert!(!content.contains("/login"));
+    assert!(content.contains("/logout"));
+    assert!(content.contains("/user"));
 }
