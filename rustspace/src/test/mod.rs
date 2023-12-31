@@ -530,3 +530,33 @@ async fn test_friendly_redir_after_registration() {
         assert_eq!(header.to_str().unwrap(), "/home");
     }
 }
+
+
+#[tokio::test]
+#[serial]
+async fn test_remembering() {
+    let response = prepare_server_with_user(true)
+        .await
+        .oneshot(
+            Request::builder()
+            .method("POST")
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .uri("/login")
+            .body(Body::from("username=Test&psw=password&remember_me=true"))
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let header = response.headers().get("HX-redirect");
+    assert!(header.is_some());
+    if let Some(header) = header {
+        assert_eq!(header.to_str().unwrap(), "/user");
+    }
+    let header = response.headers().get("Set-Cookie");
+    assert!(header.is_some());
+    if let Some(header) = header {
+        assert!(header.to_str().unwrap().contains("Max-Age=3600"));
+    }
+}
