@@ -4,7 +4,7 @@ use axum::{Router, routing::{get, post}};
 
 use crate::AppState;
 
-use self::{main::{root, about, help}, user::{user_page, register_form, register_user, check_password, check_username, check_email, check_password_repeat, login_form, login, logout, to_login}};
+use self::{main::{root, about, help}, user::{user_page, register_form, register_user, check_password, check_username, check_email, check_password_repeat, login_form, login, logout, to_login, edit_email, edit_password}};
 mod main;
 mod user;
 
@@ -25,4 +25,6 @@ pub fn get_router() -> Router<Arc<AppState>> {
         .route("/validation/email", post(check_email))
         .route("/validation/psw_repeat", post(check_password_repeat))
         .route("/user", get(user_page))
+        .route("/forms/email", get(edit_email))
+        .route("/forms/password", get(edit_password))
 }

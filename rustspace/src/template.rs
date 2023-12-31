@@ -73,6 +73,16 @@ pub struct UnauthorizedTemplate {
     pub redir: Option<String>,
 }
 
+#[derive(Template)]
+#[template(path = "email-form.html")]
+pub struct EmailFormTemplate {
+}
+
+#[derive(Template)]
+#[template(path = "password-form.html")]
+pub struct PasswordFormTemplate {
+}
+
 pub struct HtmlTemplate<T>(pub T);
 
 impl<T> IntoResponse for HtmlTemplate<T> where T: Template, {

@@ -8,7 +8,7 @@ use rand_core::OsRng;
 use sqlx::Postgres;
 use tracing::{info, debug, error};
 
-use crate::{AppState, template::{ErrorsTemplate, RegisterTemplate, UserTemplate, HtmlTemplate, FieldTemplate, UnauthorizedTemplate, LoginTemplate}, UserRequest, validation::{validate_user, validate_password, validate_username, validate_email, validate_repeated_password, validate_login}, UserData, security::get_token, LoginRequest, UserModel};
+use crate::{AppState, template::{ErrorsTemplate, RegisterTemplate, UserTemplate, HtmlTemplate, FieldTemplate, UnauthorizedTemplate, LoginTemplate, EmailFormTemplate, PasswordFormTemplate}, UserRequest, validation::{validate_user, validate_password, validate_username, validate_email, validate_repeated_password, validate_login}, UserData, security::get_token, LoginRequest, UserModel};
 
 #[derive(Deserialize)]
 pub struct FriendlyRedirect {
@@ -279,4 +279,14 @@ pub async fn to_login(query: Query<FriendlyRedirect>) -> impl IntoResponse {
     let path = format!("/login?path={}", query.path.to_owned().unwrap());
     headers.insert("HX-redirect", path.parse().unwrap());
     (headers, "Success").into_response()
+}
+
+pub async fn edit_email() -> impl IntoResponse {
+    let template = EmailFormTemplate {};
+    return HtmlTemplate(template)
+}
+
+pub async fn edit_password() -> impl IntoResponse {
+    let template = PasswordFormTemplate {};
+    return HtmlTemplate(template)
 }
