@@ -6,5 +6,12 @@
 <h1>Hello, {{user_db.screen_name}}!</h1>
 <div>email: {{user_db.email}}</div>
 <div>password: *****</div>
+
+{% if user_db.created_at.is_some() %}
+<div>account created at: {{ user_db.created_at.as_ref().unwrap() }}</div>
+{% endif %}
+{% if user_db.updated_at.is_some() %}
+<div>last changed at: {{ user_db.updated_at.as_ref().unwrap() }}</div>
+{% endif %}
 <p>…</p>
 {% endblock %}

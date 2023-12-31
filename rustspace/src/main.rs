@@ -58,7 +58,7 @@ async fn main() {
         .unwrap();
 }
 
-#[derive(sqlx::FromRow)]
+#[derive(Serialize, Deserialize, sqlx::FromRow)]
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 struct UserModel {
@@ -66,8 +66,8 @@ struct UserModel {
     screen_name: String,
     email: String,
     password: String,
-    // created_at: Option<chrono::DateTime<chrono::Utc>>,
-    // updated_at: Option<chrono::DateTime<chrono::Utc>>,
+    created_at: Option<chrono::DateTime<chrono::Utc>>,
+    updated_at: Option<chrono::DateTime<chrono::Utc>>,
 }
 
 #[derive(Serialize, Deserialize)]
