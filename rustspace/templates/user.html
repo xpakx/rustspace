@@ -3,6 +3,8 @@
 {% block title %}User homepage{% endblock %}
 
 {% block content %}
-<h1>Hello, {{user.username.as_ref().unwrap()}}!</h1>
+<h1>Hello, {{user_db.screen_name}}!</h1>
+<div>email: {{user_db.email}}</div>
+<div>password: *****</div>
 <p>…</p>
 {% endblock %}

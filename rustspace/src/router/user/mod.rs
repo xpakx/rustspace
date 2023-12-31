@@ -82,14 +82,36 @@ pub async fn register_form(user: UserData, query: Query<FriendlyRedirect>) -> im
     return HtmlTemplate(template)
 }
 
-pub async fn user_page(user: UserData) -> impl IntoResponse {
+pub async fn user_page(user: UserData,
+    State(state): State<Arc<AppState>>) -> impl IntoResponse {
     info!("user index requested");
     if user.username.is_none() {
         let template = UnauthorizedTemplate {message: "You're unauthorized!", redir: Some(String::from("/user"))};
         return HtmlTemplate(template).into_response()
     }
-    let template = UserTemplate {path: "user", user};
-    return HtmlTemplate(template).into_response()
+
+    let user_db = sqlx::query_as::<Postgres, UserModel>(
+        "SELECT * FROM users WHERE screen_name = $1",
+        )
+        .bind(user.username.clone().unwrap())
+        .fetch_optional(&state.db)
+        .await;
+
+    if let Ok(user_db) = user_db {
+        if let Some(user_db) = user_db {
+            // TODO
+            let template = UserTemplate {path: "user", user, user_db};
+            return HtmlTemplate(template).into_response()
+        } else {
+            debug!("no such user");
+            let template = ErrorsTemplate {errors: vec!["No such user!"]};
+            return HtmlTemplate(template).into_response()
+        }
+    } else {
+        debug!("login unsuccessful due to db error");
+        let template = ErrorsTemplate {errors: vec!["Database error, please try again later"]};
+        return HtmlTemplate(template).into_response()
+    }
 }
 
 pub async fn check_password(Form(user): Form<UserRequest>) -> impl IntoResponse {

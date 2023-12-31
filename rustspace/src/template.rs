@@ -2,7 +2,7 @@ use askama::Template;
 use axum::response::{Html, IntoResponse, Response};
 use axum::http::StatusCode;
 
-use crate::UserData;
+use crate::{UserData, UserModel};
 
 #[derive(Template)]
 #[template(path = "index.html")]
@@ -45,7 +45,8 @@ pub struct LoginTemplate {
 #[template(path = "user.html")]
 pub struct UserTemplate {
     pub path: &'static str,
-    pub user: UserData
+    pub user: UserData,
+    pub user_db: UserModel
 }
 
 #[derive(Template)]
