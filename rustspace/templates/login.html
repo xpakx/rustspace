@@ -36,6 +36,6 @@
 </form>
 
 <div class="container signin">
-	<p>Do not have an account? <a href="/register">Register</a>.</p>
+	<p>Do not have an account? <a href="/register{% if redir.is_some() %}?path={{redir.as_ref().unwrap()}}{% endif %}">Register</a>.</p>
 </div>
 {% endblock %}
