@@ -200,6 +200,7 @@ impl fmt::Display for HashError {
 pub async fn login(
     State(state): State<Arc<AppState>>,
     Form(user): Form<LoginRequest>) -> impl IntoResponse {
+    info!("request to login");
     let errors = validate_login(&user.username, &user.psw);
     if errors.len() > 0 {
         debug!("login input is invalid");
@@ -266,6 +267,7 @@ pub async fn login_form(user: UserData, query: Query<FriendlyRedirect>) -> impl 
 }
 
 pub async fn logout() -> impl IntoResponse {
+    info!("request to logout");
     let mut headers = HeaderMap::new();
     headers.insert("HX-redirect", "/".parse().unwrap());
     let cookie = String::from("Token=");
@@ -274,7 +276,7 @@ pub async fn logout() -> impl IntoResponse {
 }
 
 pub async fn to_login(query: Query<FriendlyRedirect>) -> impl IntoResponse {
-    info!("redit to login requested");
+    info!("redir to login requested");
     let mut headers = HeaderMap::new();
     let path = format!("/login?path={}", query.path.to_owned().unwrap());
     headers.insert("HX-redirect", path.parse().unwrap());
@@ -282,11 +284,13 @@ pub async fn to_login(query: Query<FriendlyRedirect>) -> impl IntoResponse {
 }
 
 pub async fn edit_email() -> impl IntoResponse {
+    info!("email form requested");
     let template = EmailFormTemplate {};
     return HtmlTemplate(template)
 }
 
 pub async fn edit_password() -> impl IntoResponse {
+    info!("password form requested");
     let template = PasswordFormTemplate {};
     return HtmlTemplate(template)
 }
@@ -295,6 +299,7 @@ pub async fn update_email(
     user: UserData,
     State(state): State<Arc<AppState>>,
     Form(request): Form<EmailRequest>) -> impl IntoResponse {
+    info!("request to update email");
     let errors = validate_email(&request.email);
     if errors.len() > 0 {
         debug!("email is invalid");
@@ -323,6 +328,7 @@ pub async fn update_password(
     user: UserData,
     State(state): State<Arc<AppState>>,
     Form(request): Form<PasswordRequest>) -> impl IntoResponse {
+    info!("request to update password");
     let mut errors = validate_password(&request.new_psw);
     errors.append(&mut validate_repeated_password(&request.new_psw, &request.psw_repeat));
     if errors.len() > 0 {
@@ -371,7 +377,7 @@ pub async fn update_password(
                 let template = PasswordFieldTemplate{};
                 return HtmlTemplate(template).into_response()
             } else {
-                debug!("changing password unsuccessful due to db error");
+                debug!("password change unsuccessful due to db error");
                 let template = ErrorsTemplate {errors: vec!["Database error, please try again later"]};
                 return HtmlTemplate(template).into_response()
             }
