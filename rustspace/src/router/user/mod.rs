@@ -8,7 +8,7 @@ use rand_core::OsRng;
 use sqlx::Postgres;
 use tracing::{info, debug, error};
 
-use crate::{AppState, template::{ErrorsTemplate, RegisterTemplate, UserTemplate, HtmlTemplate, FieldTemplate, UnauthorizedTemplate, LoginTemplate, EmailFormTemplate, PasswordFormTemplate}, UserRequest, validation::{validate_user, validate_password, validate_username, validate_email, validate_repeated_password, validate_login}, UserData, security::get_token, LoginRequest, UserModel};
+use crate::{AppState, template::{ErrorsTemplate, RegisterTemplate, UserTemplate, HtmlTemplate, FieldTemplate, UnauthorizedTemplate, LoginTemplate, EmailFormTemplate, PasswordFormTemplate}, UserRequest, validation::{validate_user, validate_password, validate_username, validate_email, validate_repeated_password, validate_login}, UserData, security::get_token, LoginRequest, UserModel, EmailRequest};
 
 #[derive(Deserialize)]
 pub struct FriendlyRedirect {
@@ -289,4 +289,34 @@ pub async fn edit_email() -> impl IntoResponse {
 pub async fn edit_password() -> impl IntoResponse {
     let template = PasswordFormTemplate {};
     return HtmlTemplate(template)
+}
+
+pub async fn update_email(
+    user: UserData,
+    State(state): State<Arc<AppState>>,
+    Form(request): Form<EmailRequest>) -> impl IntoResponse {
+    let errors = validate_email(&request.email);
+    if errors.len() > 0 {
+        debug!("email is invalid");
+        let template = ErrorsTemplate {errors};
+        return HtmlTemplate(template).into_response()
+    }
+
+    let result = sqlx::query("UPDATE users SET email= $1 WHERE screen_name = $2")
+        .bind(request.email.clone().unwrap())
+        .bind(user.username.clone().unwrap())
+        .execute(&state.db)
+        .await
+        .map_err(|err: sqlx::Error| err.to_string());
+
+    if let Ok(_) = result {
+            // TODO 
+            let mut headers = HeaderMap::new();
+            headers.insert("HX-redirect", "/user".parse().unwrap());
+            (headers, "Success").into_response()
+    } else {
+        debug!("changing email unsuccessful due to db error");
+        let template = ErrorsTemplate {errors: vec!["Database error, please try again later"]};
+        return HtmlTemplate(template).into_response()
+    }
 }

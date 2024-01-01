@@ -80,6 +80,18 @@ pub struct UserRequest {
 }
 
 #[derive(Serialize, Deserialize)]
+pub struct EmailRequest {
+    email: Option<String>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct PasswordRequest {
+    psw: Option<String>,
+    new_psw: Option<String>,
+    psw_repeat: Option<String>,
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct LoginRequest {
     username: Option<String>,
     psw: Option<String>,
