@@ -1,11 +1,13 @@
-<div id="email-error-container"></div>
-<form hx-put="/email" hx-target="#email-error-container">
-	<div class="form-row">
-		<label for="email"><b>New email</b></label>
-		<input type="text" placeholder="Enter New Email" name="email" id="email" required>
-	</div>
+<div class="form-container">
+	<div id="email-error-container" class="error-container"></div>
+	<form hx-put="/email" hx-target="#email-error-container" class="edit-form">
+		<div class="form-row">
+			<label for="email"><b>New email</b></label>
+			<input type="text" placeholder="Enter New Email" name="email" id="email" required>
+		</div>
 
-	<div class="button-container">
-		<button type="submit" class="form-btn">Send</button>
-	</div>
-</form>
+		<div class="button-container">
+			<button type="submit" class="form-btn">Send</button>
+		</div>
+	</form>
+</div>

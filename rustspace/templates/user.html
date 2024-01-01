@@ -2,29 +2,43 @@
 
 {% block title %}User homepage{% endblock %}
 
+{% block head %}
+  <link href="/assets/user.css" rel="stylesheet" />
+{% endblock %}
+
 {% block content %}
 <h1>Hello, {{user_db.screen_name}}!</h1>
-<div id="email">
-	<div class="field-name">email:</div> 
-	<div class="field">
+<div class="user-field">
+	<div class="field-name">email</div> 
+	<div class="field" id="email">
 		<div class="field-content">{{user_db.email}}</div>
 		<button class="field-btn" hx-target="#email" hx-get="/forms/email">Edit</button>
 	</div>
 </div>
 
-<div id="password">
-	<div class="field-name">password:</div> 
-	<div class="field">
+<div class="user-field">
+	<div class="field-name">password</div> 
+	<div id="password" class="field">
 		<div class="field-content">*****</div>
 		<button class="field-btn" hx-target="#password" hx-get="/forms/password">Edit</button>
 	</div>
 </div>
 
 {% if user_db.created_at.is_some() %}
-<div>account created at: {{ user_db.created_at.as_ref().unwrap() }}</div>
+<div class="user-field">
+	<div class="field-name">account created at</div> 
+	<div class="field">
+		<div class="field-content">{{ user_db.created_at.as_ref().unwrap() }}</div>
+	</div>
+</div>
 {% endif %}
 {% if user_db.updated_at.is_some() %}
-<div>last changed at: {{ user_db.updated_at.as_ref().unwrap() }}</div>
+<div class="user-field">
+	<div class="field-name">last changes</div> 
+	<div class="field">
+		<div class="field-content">{{ user_db.updated_at.as_ref().unwrap() }}</div>
+	</div>
+</div>
 {% endif %}
 <p>…</p>
 {% endblock %}
