@@ -8,7 +8,7 @@ use rand_core::OsRng;
 use sqlx::Postgres;
 use tracing::{info, debug, error};
 
-use crate::{AppState, template::{ErrorsTemplate, RegisterTemplate, UserTemplate, HtmlTemplate, FieldTemplate, UnauthorizedTemplate, LoginTemplate, EmailFormTemplate, PasswordFormTemplate}, UserRequest, validation::{validate_user, validate_password, validate_username, validate_email, validate_repeated_password, validate_login}, UserData, security::get_token, LoginRequest, UserModel, EmailRequest, PasswordRequest};
+use crate::{AppState, template::{ErrorsTemplate, RegisterTemplate, UserTemplate, HtmlTemplate, FieldTemplate, UnauthorizedTemplate, LoginTemplate, EmailFormTemplate, PasswordFormTemplate, EmailFieldTemplate, PasswordFieldTemplate}, UserRequest, validation::{validate_user, validate_password, validate_username, validate_email, validate_repeated_password, validate_login}, UserData, security::get_token, LoginRequest, UserModel, EmailRequest, PasswordRequest};
 
 #[derive(Deserialize)]
 pub struct FriendlyRedirect {
@@ -310,10 +310,8 @@ pub async fn update_email(
         .map_err(|err: sqlx::Error| err.to_string());
 
     if let Ok(_) = result {
-            // TODO 
-            let mut headers = HeaderMap::new();
-            headers.insert("HX-redirect", "/user".parse().unwrap());
-            (headers, "Success").into_response()
+        let template = EmailFieldTemplate {email: request.email.unwrap()};
+        return HtmlTemplate(template).into_response()
     } else {
         debug!("changing email unsuccessful due to db error");
         let template = ErrorsTemplate {errors: vec!["Database error, please try again later"]};
@@ -370,10 +368,8 @@ pub async fn update_password(
                 .map_err(|err: sqlx::Error| err.to_string());
 
             if let Ok(_) = result {
-                // TODO 
-                let mut headers = HeaderMap::new();
-                headers.insert("HX-redirect", "/user".parse().unwrap());
-                (headers, "Success").into_response()
+                let template = PasswordFieldTemplate{};
+                return HtmlTemplate(template).into_response()
             } else {
                 debug!("changing password unsuccessful due to db error");
                 let template = ErrorsTemplate {errors: vec!["Database error, please try again later"]};

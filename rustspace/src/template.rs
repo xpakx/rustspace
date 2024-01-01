@@ -79,8 +79,19 @@ pub struct EmailFormTemplate {
 }
 
 #[derive(Template)]
+#[template(path = "email-field.html")]
+pub struct EmailFieldTemplate {
+    pub email: String,
+}
+
+#[derive(Template)]
 #[template(path = "password-form.html")]
 pub struct PasswordFormTemplate {
+}
+
+#[derive(Template)]
+#[template(path = "password-field.html")]
+pub struct PasswordFieldTemplate {
 }
 
 pub struct HtmlTemplate<T>(pub T);
