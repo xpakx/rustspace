@@ -8,7 +8,7 @@ use rand_core::OsRng;
 use sqlx::Postgres;
 use tracing::{info, debug, error};
 
-use crate::{AppState, template::{ErrorsTemplate, RegisterTemplate, UserTemplate, HtmlTemplate, FieldTemplate, UnauthorizedTemplate, LoginTemplate, EmailFormTemplate, PasswordFormTemplate}, UserRequest, validation::{validate_user, validate_password, validate_username, validate_email, validate_repeated_password, validate_login}, UserData, security::get_token, LoginRequest, UserModel, EmailRequest};
+use crate::{AppState, template::{ErrorsTemplate, RegisterTemplate, UserTemplate, HtmlTemplate, FieldTemplate, UnauthorizedTemplate, LoginTemplate, EmailFormTemplate, PasswordFormTemplate}, UserRequest, validation::{validate_user, validate_password, validate_username, validate_email, validate_repeated_password, validate_login}, UserData, security::get_token, LoginRequest, UserModel, EmailRequest, PasswordRequest};
 
 #[derive(Deserialize)]
 pub struct FriendlyRedirect {
@@ -316,6 +316,76 @@ pub async fn update_email(
             (headers, "Success").into_response()
     } else {
         debug!("changing email unsuccessful due to db error");
+        let template = ErrorsTemplate {errors: vec!["Database error, please try again later"]};
+        return HtmlTemplate(template).into_response()
+    }
+}
+
+pub async fn update_password(
+    user: UserData,
+    State(state): State<Arc<AppState>>,
+    Form(request): Form<PasswordRequest>) -> impl IntoResponse {
+    let mut errors = validate_password(&request.new_psw);
+    errors.append(&mut validate_repeated_password(&request.new_psw, &request.psw_repeat));
+    if errors.len() > 0 {
+        debug!("password input is invalid");
+        let template = ErrorsTemplate {errors};
+        return HtmlTemplate(template).into_response()
+    }
+
+    let user_db = sqlx::query_as::<Postgres, UserModel>(
+        "SELECT * FROM users WHERE screen_name = $1",
+        )
+        .bind(user.username.clone().unwrap())
+        .fetch_optional(&state.db)
+        .await;
+
+    if let Ok(user_db) = user_db {
+        if let Some(user_db) = user_db {
+            let is_valid = match PasswordHash::new(&user_db.password) {
+                Ok(parsed_hash) => Argon2::default()
+                    .verify_password(request.psw.unwrap().as_bytes(), &parsed_hash)
+                    .map_or(false, |_| true),
+                Err(_) => false,
+            };
+            if !is_valid {
+                debug!("password change unsuccessful due to wrong password");
+                let template = ErrorsTemplate {errors: vec!["Old is wrong password!"]};
+                return HtmlTemplate(template).into_response()
+            }
+
+            debug!("hashing password...");
+            let password = hash_password(&request.new_psw.unwrap());
+            if let Err(error) = password {
+                error!("there was an error during hashing a password!");
+                let template = ErrorsTemplate { errors: vec![error.message]};
+                return HtmlTemplate(template).into_response()
+            }
+
+            let result = sqlx::query("UPDATE users SET password = $1 WHERE screen_name = $2")
+                .bind(password.unwrap())
+                .bind(user.username.clone().unwrap())
+                .execute(&state.db)
+                .await
+                .map_err(|err: sqlx::Error| err.to_string());
+
+            if let Ok(_) = result {
+                // TODO 
+                let mut headers = HeaderMap::new();
+                headers.insert("HX-redirect", "/user".parse().unwrap());
+                (headers, "Success").into_response()
+            } else {
+                debug!("changing password unsuccessful due to db error");
+                let template = ErrorsTemplate {errors: vec!["Database error, please try again later"]};
+                return HtmlTemplate(template).into_response()
+            }
+        } else {
+            debug!("no such user");
+            let template = ErrorsTemplate {errors: vec!["No such user!"]};
+            return HtmlTemplate(template).into_response()
+        }
+    } else {
+        debug!("password change unsuccessful due to db error");
         let template = ErrorsTemplate {errors: vec!["Database error, please try again later"]};
         return HtmlTemplate(template).into_response()
     }
