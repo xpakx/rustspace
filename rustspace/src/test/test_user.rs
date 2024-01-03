@@ -166,3 +166,107 @@ async fn test_changing_email_while_unauthenticated() {
     assert!(content.contains("error"));
     assert!(content.contains("Unauthenticated"));
 }
+
+#[tokio::test]
+#[serial]
+async fn test_changing_password_to_wrong_value() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let response = prepare_server_with_user(true)
+        .await
+        .oneshot(
+            Request::builder()
+            .method("PUT")
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .header("Cookie", format!("Token={};", token))
+            .uri("/password")
+            .body(Body::from("psw=password&new_psw=new&psw_repeat=new"))
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = to_bytes(response.into_body(), 1000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    assert!(content.contains("error"));
+}
+
+#[tokio::test]
+#[serial]
+async fn test_changing_password() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let response = prepare_server_with_user(true)
+        .await
+        .oneshot(
+            Request::builder()
+            .method("PUT")
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .header("Cookie", format!("Token={};", token))
+            .uri("/password")
+            .body(Body::from("psw=password&new_psw=new_password&psw_repeat=new_password"))
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = to_bytes(response.into_body(), 1000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    assert!(content.contains("*****"));
+}
+
+#[tokio::test]
+#[serial]
+async fn test_changing_password_while_unauthenticated() {
+    let response = prepare_server_with_user(false)
+        .await
+        .oneshot(
+            Request::builder()
+            .method("PUT")
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .uri("/password")
+            .body(Body::from("psw=password&new_psw=new_password&psw_repeat=new_password"))
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = to_bytes(response.into_body(), 1000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    assert!(content.contains("error"));
+    assert!(content.contains("Unauthenticated"));
+}
+
+#[tokio::test]
+#[serial]
+async fn test_changing_password_with_wrong_password() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let response = prepare_server_with_user(true)
+        .await
+        .oneshot(
+            Request::builder()
+            .method("PUT")
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .header("Cookie", format!("Token={};", token))
+            .uri("/password")
+            .body(Body::from("psw=wrong_password&new_psw=new_password&psw_repeat=new_password"))
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = to_bytes(response.into_body(), 1000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    assert!(content.contains("error"));
+    assert!(content.contains("wrong"));
+}
