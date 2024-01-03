@@ -300,7 +300,7 @@ pub async fn update_email(
     State(state): State<Arc<AppState>>,
     Form(request): Form<EmailRequest>) -> impl IntoResponse {
     info!("request to update email");
-    let errors = validate_email(&request.email);
+    let mut errors = validate_email(&request.email);
     if errors.len() > 0 {
         debug!("email is invalid");
         let template = ErrorsTemplate {errors};
@@ -314,13 +314,22 @@ pub async fn update_email(
         .await
         .map_err(|err: sqlx::Error| err.to_string());
 
-    if let Ok(_) = result {
-        let template = EmailFieldTemplate {email: request.email.unwrap()};
-        return HtmlTemplate(template).into_response()
-    } else {
-        debug!("changing email unsuccessful due to db error");
-        let template = ErrorsTemplate {errors: vec!["Database error, please try again later"]};
-        return HtmlTemplate(template).into_response()
+    match result {
+        Err(err) => {
+            debug!("changing email unsuccessful due to db error");
+            if err.contains("duplicate key") && err.contains("email") {
+                errors.push("Email must be unique!");
+            } else {
+                errors.push("Couldn't update due to database error!");
+            }
+            debug!(err);
+            let template = ErrorsTemplate {errors};
+            return HtmlTemplate(template).into_response()
+        },
+        Ok(_) => {
+            let template = EmailFieldTemplate {email: request.email.unwrap()};
+            return HtmlTemplate(template).into_response()
+        }
     }
 }
 
