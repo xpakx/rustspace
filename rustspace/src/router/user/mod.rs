@@ -306,6 +306,11 @@ pub async fn update_email(
         let template = ErrorsTemplate {errors};
         return HtmlTemplate(template).into_response()
     }
+    if user.username.is_none() {
+        errors.push("Unauthenticated!");
+        let template = ErrorsTemplate {errors};
+        return HtmlTemplate(template).into_response()
+    }
 
     let result = sqlx::query("UPDATE users SET email= $1 WHERE screen_name = $2")
         .bind(request.email.clone().unwrap())
@@ -342,6 +347,11 @@ pub async fn update_password(
     errors.append(&mut validate_repeated_password(&request.new_psw, &request.psw_repeat));
     if errors.len() > 0 {
         debug!("password input is invalid");
+        let template = ErrorsTemplate {errors};
+        return HtmlTemplate(template).into_response()
+    }
+    if user.username.is_none() {
+        errors.push("Unauthenticated!");
         let template = ErrorsTemplate {errors};
         return HtmlTemplate(template).into_response()
     }
