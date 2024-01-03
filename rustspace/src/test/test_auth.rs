@@ -415,7 +415,6 @@ async fn test_friendly_redir_after_registration() {
     }
 }
 
-
 #[tokio::test]
 #[serial]
 async fn test_remembering() {

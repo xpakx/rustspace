@@ -7,6 +7,7 @@ use crate::{get_router, AppState, db::get_db};
 
 mod test_routes;
 mod test_auth;
+mod test_user;
 
 async fn prepare_server() -> axum::Router {
     let db = get_db("postgresql://root:password@localhost:5432/rustspacetest").await;
