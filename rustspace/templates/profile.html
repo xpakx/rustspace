@@ -5,4 +5,16 @@
 {% block content %}
 <h1>{{username}}'s profile</h1>
 
+
+<section class="profile">
+{% if profile.is_some() %}
+	<div>Profile (TODO)</div>
+{% else %}
+	<div>No profile data</div>
+{% endif %}
+{% if owner %}
+	<a href="/user" class="btn">Edit</a>
+{% endif %}
+</section>
+
 {% endblock %}

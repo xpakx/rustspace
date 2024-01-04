@@ -19,12 +19,17 @@ pub async fn profile(
         .bind(&username)
         .fetch_optional(&state.db)
         .await;
+    let owner = match &user.username {
+        None => false,
+        Some(current_user) => current_user == &username
+    };
+
     let Ok(Some(user_db)) = user_db else {
         let template = UserNotFoundTemplate {};
         return HtmlTemplate(template).into_response()
     };
     let Some(user_id) = user_db.id else {
-        let template = ProfileTemplate {path: "index", user, username, profile: None};
+        let template = ProfileTemplate {path: "index", user, username, profile: None, owner};
         return HtmlTemplate(template).into_response()
     };
 
@@ -36,10 +41,10 @@ pub async fn profile(
         .await;
 
     let Ok(profile) = profile else {
-        let template = ProfileTemplate {path: "index", user, username, profile: None};
+        let template = ProfileTemplate {path: "index", user, username, profile: None, owner};
         return HtmlTemplate(template).into_response()
     };
 
-   let template = ProfileTemplate {path: "index", user, username, profile};
+   let template = ProfileTemplate {path: "index", user, username, profile, owner};
    return HtmlTemplate(template).into_response()
 }
