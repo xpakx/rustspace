@@ -94,6 +94,14 @@ pub struct PasswordFormTemplate {
 pub struct PasswordFieldTemplate {
 }
 
+#[derive(Template)]
+#[template(path = "profile.html")]
+pub struct ProfileTemplate {
+    pub path: &'static str,
+    pub user: UserData,
+    pub username: String,
+}
+
 pub struct HtmlTemplate<T>(pub T);
 
 impl<T> IntoResponse for HtmlTemplate<T> where T: Template, {
