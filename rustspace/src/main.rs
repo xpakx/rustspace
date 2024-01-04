@@ -70,6 +70,20 @@ struct UserModel {
     updated_at: Option<chrono::DateTime<chrono::Utc>>,
 }
 
+#[derive(Serialize, Deserialize, sqlx::FromRow)]
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+struct ProfileModel {
+    id: Option<i32>,
+    user_id: i32,
+    gender: Option<String>,
+    city: Option<String>,
+    description: Option<String>,
+    real_name: Option<String>,
+    created_at: Option<chrono::DateTime<chrono::Utc>>,
+    updated_at: Option<chrono::DateTime<chrono::Utc>>,
+}
+
 #[derive(Serialize, Deserialize)]
 pub struct UserRequest {
     username: Option<String>,
