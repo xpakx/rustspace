@@ -6,30 +6,28 @@
 <h1>{{username}}'s profile</h1>
 
 
-<section class="profile">
+<section class="profile" id="profile">
 {% if profile.is_some() %}
 	<div>
 		{% let profile = profile.as_ref().unwrap() %} 
 		{% if profile.real_name.is_some() %}
-			{{ profile.real_name.as_ref().unwrap()}}		
+			{{ profile.real_name.as_ref().unwrap()}}
 		{% endif %}
 		{% if profile.description.is_some() %}
-			{{ profile.description.as_ref().unwrap()}}		
+			{{ profile.description.as_ref().unwrap()}}
 		{% endif %}
 		{% if profile.gender.is_some() %}
-			{{ profile.gender.as_ref().unwrap()}}		
+			{{ profile.gender.as_ref().unwrap()}}
 		{% endif %}
 		{% if profile.city.is_some() %}
-			{{ profile.city.as_ref().unwrap()}}		
+			{{ profile.city.as_ref().unwrap()}}
 		{% endif %}
-
-
 	</div>
 {% else %}
 	<div>No profile data</div>
 {% endif %}
 {% if owner %}
-	<a href="/user" class="btn">Edit</a>
+	<button class="field-btn" hx-target="#profile" hx-get="/forms/profile">Edit</button>
 {% endif %}
 </section>
 

@@ -4,7 +4,7 @@ use axum::{response::IntoResponse, extract::{Path, State}};
 use sqlx::Postgres;
 use tracing::info;
 
-use crate::{template::{ProfileTemplate, HtmlTemplate, UserNotFoundTemplate}, UserData, UserModel, AppState, ProfileModel};
+use crate::{template::{ProfileTemplate, HtmlTemplate, UserNotFoundTemplate, ProfileFormTemplate}, UserData, UserModel, AppState, ProfileModel};
 
 pub async fn profile(
     user: UserData,
@@ -47,4 +47,10 @@ pub async fn profile(
 
    let template = ProfileTemplate {path: "index", user, username, profile, owner};
    return HtmlTemplate(template).into_response()
+}
+
+pub async fn edit_profile() -> impl IntoResponse {
+    info!("profile form requested");
+    let template = ProfileFormTemplate {};
+    return HtmlTemplate(template)
 }

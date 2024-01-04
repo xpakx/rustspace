@@ -1,0 +1,25 @@
+<div class="form-container">
+	<div id="error-container" class="error-container"></div>
+	<form hx-put="/profile" hx-target="#error-container" class="edit-form">
+		<div class="form-row">
+			<label for="gender"><b>Gender</b></label>
+			<input type="text" placeholder="Enter Gender" name="gender" id="gender">
+		</div>
+		<div class="form-row">
+			<label for="city"><b>City</b></label>
+			<input type="text" placeholder="Enter City" name="city" id="city">
+		</div>
+		<div class="form-row">
+			<label for="description"><b>Description</b></label>
+			<input type="text" placeholder="Enter Description" name="description" id="description">
+		</div>
+		<div class="form-row">
+			<label for="name"><b>Real name</b></label>
+			<input type="text" placeholder="Enter Name" name="name" id="name">
+		</div>
+
+		<div class="button-container">
+			<button type="submit" class="form-btn">Send</button>
+		</div>
+	</form>
+</div>

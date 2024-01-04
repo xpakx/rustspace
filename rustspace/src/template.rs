@@ -109,6 +109,11 @@ pub struct ProfileTemplate {
 pub struct UserNotFoundTemplate {
 }
 
+#[derive(Template)]
+#[template(path = "profile-form.html")]
+pub struct ProfileFormTemplate {
+}
+
 pub struct HtmlTemplate<T>(pub T);
 
 impl<T> IntoResponse for HtmlTemplate<T> where T: Template, {
