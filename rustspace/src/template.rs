@@ -2,7 +2,7 @@ use askama::Template;
 use axum::response::{Html, IntoResponse, Response};
 use axum::http::StatusCode;
 
-use crate::{UserData, UserModel};
+use crate::{UserData, UserModel, ProfileModel};
 
 #[derive(Template)]
 #[template(path = "index.html")]
@@ -100,6 +100,12 @@ pub struct ProfileTemplate {
     pub path: &'static str,
     pub user: UserData,
     pub username: String,
+    pub profile: Option<ProfileModel>,
+}
+
+#[derive(Template)]
+#[template(path = "profile_error.html")]
+pub struct UserNotFoundTemplate {
 }
 
 pub struct HtmlTemplate<T>(pub T);
