@@ -8,7 +8,23 @@
 
 <section class="profile">
 {% if profile.is_some() %}
-	<div>Profile (TODO)</div>
+	<div>
+		{% let profile = profile.as_ref().unwrap() %} 
+		{% if profile.real_name.is_some() %}
+			{{ profile.real_name.as_ref().unwrap()}}		
+		{% endif %}
+		{% if profile.description.is_some() %}
+			{{ profile.description.as_ref().unwrap()}}		
+		{% endif %}
+		{% if profile.gender.is_some() %}
+			{{ profile.gender.as_ref().unwrap()}}		
+		{% endif %}
+		{% if profile.city.is_some() %}
+			{{ profile.city.as_ref().unwrap()}}		
+		{% endif %}
+
+
+	</div>
 {% else %}
 	<div>No profile data</div>
 {% endif %}
