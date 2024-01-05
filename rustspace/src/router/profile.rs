@@ -97,15 +97,19 @@ pub async fn update_profile(
         return HtmlTemplate(template).into_response()
     };
 
+    let gender = clear_empty(request.gender);
+    let city = clear_empty(request.city);
+    let description = clear_empty(request.description);
+    let name = clear_empty(request.name);
     
     let Some(_) = profile else {
         debug!("profile doesn't exists, creating new one");
         let query_result =
             sqlx::query("INSERT INTO profiles (gender, city, description, real_name, user_id) VALUES ($1, $2, $3, $4, $5)")
-            .bind(request.gender.unwrap())
-            .bind(request.city.unwrap())
-            .bind(request.description.unwrap())
-            .bind(request.name.unwrap())
+            .bind(gender)
+            .bind(city)
+            .bind(description)
+            .bind(name)
             .bind(user_id)
             .execute(&state.db)
             .await
@@ -123,10 +127,10 @@ pub async fn update_profile(
 
     debug!("profile already exists, updating");
     let result = sqlx::query("UPDATE profiles SET gender = $1, city = $2, description = $3, real_name = $4 WHERE user_id = $5")
-        .bind(request.gender.unwrap())
-        .bind(request.city.unwrap())
-        .bind(request.description.unwrap())
-        .bind(request.name.unwrap())
+        .bind(gender)
+        .bind(city)
+        .bind(description)
+        .bind(name)
         .bind(user_id)
         .execute(&state.db)
         .await
@@ -142,3 +146,10 @@ pub async fn update_profile(
     }
 }
 
+fn clear_empty(field: Option<String>) -> Option<String> {
+    match field {
+        None => None,
+        Some(field) if field == "" => None,
+        Some(field) => Some(field)
+    }
+}
