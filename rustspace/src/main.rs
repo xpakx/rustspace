@@ -113,6 +113,14 @@ pub struct LoginRequest {
     remember_me: Option<bool>,
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct ProfileRequest {
+    gender: Option<String>,
+    city: Option<String>,
+    description: Option<String>,
+    name: Option<String>,
+}
+
 pub struct UserData {
     username: Option<String>,
 }
