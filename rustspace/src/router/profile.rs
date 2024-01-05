@@ -59,11 +59,13 @@ pub async fn update_profile(
     user: UserData,
     State(state): State<Arc<AppState>>,
     Form(request): Form<ProfileRequest>) -> impl IntoResponse {
+    info!("profile update requested");
     if user.username.is_none() {
         let template = ErrorsTemplate {errors: vec!["Unauthenticated!"]};
         return HtmlTemplate(template).into_response()
     }
 
+    debug!("getting user from database");
     let user_db = sqlx::query_as::<Postgres, UserModel>(
         "SELECT * FROM users WHERE screen_name = $1",
         )
@@ -72,14 +74,54 @@ pub async fn update_profile(
         .await;
 
     let Ok(Some(user_db)) = user_db else {
+        debug!("couldn't get user from database");
         let template = ErrorsTemplate {errors: vec!["There was a problem with database!"]};
         return HtmlTemplate(template).into_response()
     };
     let Some(user_id) = user_db.id else {
+        debug!("user has not id!");
         let template = ErrorsTemplate {errors: vec!["There was a problem with database!"]};
         return HtmlTemplate(template).into_response()
     };
 
+    debug!("getting user's profile from db");
+    let profile = sqlx::query_as::<Postgres, ProfileModel>(
+        "SELECT * FROM profiles WHERE user_id = $1",
+        )
+        .bind(user_id)
+        .fetch_optional(&state.db)
+        .await;
+    let Ok(profile) = profile else {
+        debug!("errors while getting profile");
+        let template = ErrorsTemplate {errors: vec!["There was a problem with database!"]};
+        return HtmlTemplate(template).into_response()
+    };
+
+    
+    let Some(_) = profile else {
+        debug!("profile doesn't exists, creating new one");
+        let query_result =
+            sqlx::query("INSERT INTO profiles (gender, city, description, real_name, user_id) VALUES ($1, $2, $3, $4, $5)")
+            .bind(request.gender.unwrap())
+            .bind(request.city.unwrap())
+            .bind(request.description.unwrap())
+            .bind(request.name.unwrap())
+            .bind(user_id)
+            .execute(&state.db)
+            .await
+            .map_err(|err: sqlx::Error| err.to_string());
+
+        if let Err(_) = query_result {
+            let template = ErrorsTemplate {errors: vec!["Couldn't create profile!"]};
+            return HtmlTemplate(template).into_response()
+        }
+        info!("profile succesfully created.");
+        let template = ProfileFormTemplate {}; //field template
+        return HtmlTemplate(template).into_response()
+
+    };
+
+    debug!("profile already exists, updating");
     let result = sqlx::query("UPDATE profiles SET gender = $1, city = $2, description = $3, real_name = $4 WHERE user_id = $5")
         .bind(request.gender.unwrap())
         .bind(request.city.unwrap())
@@ -89,8 +131,8 @@ pub async fn update_profile(
         .execute(&state.db)
         .await
         .map_err(|err: sqlx::Error| err.to_string());
-
     if let Ok(_) = result {
+        info!("profile succesfully updated.");
         let template = ProfileFormTemplate {}; //field template
         return HtmlTemplate(template).into_response()
     } else {
