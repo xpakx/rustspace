@@ -72,3 +72,49 @@ async fn test_getting_profile_by_owner() {
     assert!(content.contains("Test's profile"));
     assert!(content.contains("Edit"));
 }
+
+#[tokio::test]
+async fn test_getting_profile_form() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let response = prepare_server_with_user(false)
+        .await
+        .oneshot(
+            Request::builder()
+            .uri("/forms/profile")
+            .header("Cookie", format!("Token={};", token))
+            .body(Body::empty())
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = to_bytes(response.into_body(), 1000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    assert!(content.contains("<form"));
+    assert!(content.contains("profile"));
+}
+
+#[tokio::test]
+async fn test_getting_profile_form_for_unauthenticated_user() {
+    let response = prepare_server_with_user(false)
+        .await
+        .oneshot(
+            Request::builder()
+            .uri("/forms/profile")
+            .body(Body::empty())
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = to_bytes(response.into_body(), 1000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    assert!(content.contains("error"));
+    assert!(content.contains("Unauthenticated"));
+}
