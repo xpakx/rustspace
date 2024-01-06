@@ -49,10 +49,15 @@ pub async fn profile(
    return HtmlTemplate(template).into_response()
 }
 
-pub async fn edit_profile() -> impl IntoResponse {
+pub async fn edit_profile(user: UserData) -> impl IntoResponse {
     info!("profile form requested");
+    if user.username.is_none() {
+        let template = ErrorsTemplate {errors: vec!["Unauthenticated!"]};
+        return HtmlTemplate(template).into_response()
+    }
+    // TODO get fields form db
     let template = ProfileFormTemplate {};
-    return HtmlTemplate(template)
+    return HtmlTemplate(template).into_response()
 }
 
 pub async fn update_profile(
