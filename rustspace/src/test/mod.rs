@@ -13,6 +13,10 @@ mod test_profile;
 async fn prepare_server() -> axum::Router {
     let db = get_db("postgresql://root:password@localhost:5432/rustspacetest").await;
 
+    _ = sqlx::query("DELETE FROM users")
+        .execute(&db)
+        .await;
+
     let app = get_router()
         .with_state(Arc::new(AppState{db}));
     app
@@ -24,7 +28,6 @@ async fn prepare_server_with_user(hash_password: bool) -> axum::Router {
     _ = sqlx::query("DELETE FROM users")
         .execute(&db)
         .await;
-
 
     let salt = SaltString::generate(&mut OsRng);
     let password = match hash_password {
