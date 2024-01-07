@@ -49,14 +49,36 @@ pub async fn profile(
    return HtmlTemplate(template).into_response()
 }
 
-pub async fn edit_profile(user: UserData) -> impl IntoResponse {
+pub async fn edit_profile(user: UserData,
+    State(state): State<Arc<AppState>>) -> impl IntoResponse {
     info!("profile form requested");
     if user.username.is_none() {
         let template = ErrorsTemplate {errors: vec!["Unauthenticated!"]};
         return HtmlTemplate(template).into_response()
     }
-    // TODO get fields form db
-    let template = ProfileFormTemplate {};
+
+    debug!("getting user from database");
+    let user_db = sqlx::query_as::<Postgres, UserModel>("SELECT * FROM users WHERE screen_name = $1")
+        .bind(&user.username.unwrap())
+        .fetch_optional(&state.db)
+        .await;
+
+    let mut profile = None;
+
+    if let Ok(Some(user_db)) = user_db {
+        if let Some(user_id) = user_db.id {
+            debug!("getting user's profile from db");
+            let profile_db = sqlx::query_as::<Postgres, ProfileModel>("SELECT * FROM profiles WHERE user_id = $1")
+                .bind(user_id)
+                .fetch_optional(&state.db)
+                .await;
+            if let Ok(profile_db) = profile_db  {
+                profile = profile_db;
+            }
+        }
+    }
+
+    let template = ProfileFormTemplate {profile};
     return HtmlTemplate(template).into_response()
 }
 
@@ -125,7 +147,7 @@ pub async fn update_profile(
             return HtmlTemplate(template).into_response()
         }
         info!("profile succesfully created.");
-        let template = ProfileFormTemplate {}; //field template
+        let template = ProfileFormTemplate {profile}; //field template
         return HtmlTemplate(template).into_response()
 
     };
@@ -142,7 +164,7 @@ pub async fn update_profile(
         .map_err(|err: sqlx::Error| err.to_string());
     if let Ok(_) = result {
         info!("profile succesfully updated.");
-        let template = ProfileFormTemplate {}; //field template
+        let template = ProfileFormTemplate {profile}; //field template
         return HtmlTemplate(template).into_response()
     } else {
         debug!("password change unsuccessful due to db error");

@@ -112,6 +112,7 @@ pub struct UserNotFoundTemplate {
 #[derive(Template)]
 #[template(path = "profile-form.html")]
 pub struct ProfileFormTemplate {
+    pub profile: Option<ProfileModel>,
 }
 
 pub struct HtmlTemplate<T>(pub T);
