@@ -74,6 +74,7 @@ async fn test_getting_profile_by_owner() {
 }
 
 #[tokio::test]
+#[serial]
 async fn test_getting_profile_form() {
     let (token, _) = get_token(&Some(String::from("Test")));
     let response = prepare_server_with_user(false)
@@ -98,6 +99,7 @@ async fn test_getting_profile_form() {
 }
 
 #[tokio::test]
+#[serial]
 async fn test_getting_profile_form_for_unauthenticated_user() {
     let response = prepare_server_with_user(false)
         .await

@@ -8,6 +8,7 @@ use serial_test::serial;
 use crate::test::{prepare_server, prepare_db, prepare_server_with_db, prepare_server_with_user};
 
 #[tokio::test]
+#[serial]
 async fn test_getting_register_form() {
     let response = prepare_server()
         .await

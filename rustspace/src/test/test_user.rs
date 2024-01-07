@@ -5,6 +5,7 @@ use serial_test::serial;
 use crate::{test::{prepare_server, prepare_server_with_user, prepare_server_with_db}, security::get_token, db::get_db};
 
 #[tokio::test]
+#[serial]
 async fn test_getting_email_form() {
     let response = prepare_server()
         .await
@@ -27,6 +28,7 @@ async fn test_getting_email_form() {
 }
 
 #[tokio::test]
+#[serial]
 async fn test_getting_password_form() {
     let response = prepare_server()
         .await
