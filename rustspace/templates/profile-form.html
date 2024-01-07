@@ -3,19 +3,19 @@
 	<form hx-put="/profile" hx-target="#error-container" class="edit-form">
 		<div class="form-row">
 			<label for="gender"><b>Gender</b></label>
-			<input type="text" placeholder="Enter Gender" name="gender" id="gender">
+			<input type="text" placeholder="Enter Gender" name="gender" id="gender"{%if gender.is_some() %} value="{{gender.as_ref().unwrap()}}"{% endif %}>
 		</div>
 		<div class="form-row">
 			<label for="city"><b>City</b></label>
-			<input type="text" placeholder="Enter City" name="city" id="city">
+			<input type="text" placeholder="Enter City" name="city" id="city"{%if city.is_some() %} value="{{city.as_ref().unwrap()}}"{% endif %}>
 		</div>
 		<div class="form-row">
 			<label for="description"><b>Description</b></label>
-			<input type="text" placeholder="Enter Description" name="description" id="description">
+			<input type="text" placeholder="Enter Description" name="description" id="description"{%if description.is_some() %} value="{{description.as_ref().unwrap()}}"{% endif %}>
 		</div>
 		<div class="form-row">
 			<label for="name"><b>Real name</b></label>
-			<input type="text" placeholder="Enter Name" name="name" id="name">
+			<input type="text" placeholder="Enter Name" name="name" id="name"{%if real_name.is_some() %} value="{{real_name.as_ref().unwrap()}}"{% endif %}>
 		</div>
 
 		<div class="button-container">

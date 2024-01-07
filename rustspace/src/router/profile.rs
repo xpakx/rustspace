@@ -63,7 +63,10 @@ pub async fn edit_profile(user: UserData,
         .fetch_optional(&state.db)
         .await;
 
-    let mut profile = None;
+    let mut gender = None;
+    let mut city = None;
+    let mut description = None;
+    let mut real_name = None;
 
     if let Ok(Some(user_db)) = user_db {
         if let Some(user_id) = user_db.id {
@@ -72,13 +75,16 @@ pub async fn edit_profile(user: UserData,
                 .bind(user_id)
                 .fetch_optional(&state.db)
                 .await;
-            if let Ok(profile_db) = profile_db  {
-                profile = profile_db;
+            if let Ok(Some(profile_db)) = profile_db  {
+                gender = profile_db.gender;
+                city = profile_db.city;
+                description = profile_db.description;
+                real_name = profile_db.real_name;
             }
         }
     }
 
-    let template = ProfileFormTemplate {profile};
+    let template = ProfileFormTemplate {gender, city, description, real_name};
     return HtmlTemplate(template).into_response()
 }
 
@@ -147,7 +153,7 @@ pub async fn update_profile(
             return HtmlTemplate(template).into_response()
         }
         info!("profile succesfully created.");
-        let template = ProfileFormTemplate {profile}; //field template
+        let template = ErrorsTemplate {errors: vec!["TODO"]};
         return HtmlTemplate(template).into_response()
 
     };
@@ -164,7 +170,7 @@ pub async fn update_profile(
         .map_err(|err: sqlx::Error| err.to_string());
     if let Ok(_) = result {
         info!("profile succesfully updated.");
-        let template = ProfileFormTemplate {profile}; //field template
+        let template = ErrorsTemplate {errors: vec!["TODO"]};
         return HtmlTemplate(template).into_response()
     } else {
         debug!("password change unsuccessful due to db error");
