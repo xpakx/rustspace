@@ -4,7 +4,7 @@ use axum::{response::IntoResponse, extract::{Path, State}, Form};
 use sqlx::Postgres;
 use tracing::{info, debug};
 
-use crate::{template::{ProfileTemplate, HtmlTemplate, UserNotFoundTemplate, ProfileFormTemplate, ErrorsTemplate}, UserData, UserModel, AppState, ProfileModel, ProfileRequest};
+use crate::{template::{ProfileTemplate, HtmlTemplate, UserNotFoundTemplate, ProfileFormTemplate, ErrorsTemplate, ProfileFieldTemplate}, UserData, UserModel, AppState, ProfileModel, ProfileRequest};
 
 pub async fn profile(
     user: UserData,
@@ -139,10 +139,10 @@ pub async fn update_profile(
         debug!("profile doesn't exists, creating new one");
         let query_result =
             sqlx::query("INSERT INTO profiles (gender, city, description, real_name, user_id) VALUES ($1, $2, $3, $4, $5)")
-            .bind(gender)
-            .bind(city)
-            .bind(description)
-            .bind(name)
+            .bind(gender.clone())
+            .bind(city.clone())
+            .bind(description.clone())
+            .bind(name.clone())
             .bind(user_id)
             .execute(&state.db)
             .await
@@ -153,24 +153,26 @@ pub async fn update_profile(
             return HtmlTemplate(template).into_response()
         }
         info!("profile succesfully created.");
-        let template = ErrorsTemplate {errors: vec!["TODO"]};
+        let profile_some = gender.is_some() || city.is_some() || description.is_some() || name.is_some();
+        let template = ProfileFieldTemplate {profile: profile_some, gender, city, description, real_name: name};
         return HtmlTemplate(template).into_response()
 
     };
 
     debug!("profile already exists, updating");
     let result = sqlx::query("UPDATE profiles SET gender = $1, city = $2, description = $3, real_name = $4 WHERE user_id = $5")
-        .bind(gender)
-        .bind(city)
-        .bind(description)
-        .bind(name)
+        .bind(gender.clone())
+        .bind(city.clone())
+        .bind(description.clone())
+        .bind(name.clone())
         .bind(user_id)
         .execute(&state.db)
         .await
         .map_err(|err: sqlx::Error| err.to_string());
     if let Ok(_) = result {
         info!("profile succesfully updated.");
-        let template = ErrorsTemplate {errors: vec!["TODO"]};
+        let profile_some = gender.is_some() || city.is_some() || description.is_some() || name.is_some();
+        let template = ProfileFieldTemplate {profile: profile_some, gender, city, description, real_name: name};
         return HtmlTemplate(template).into_response()
     } else {
         debug!("password change unsuccessful due to db error");

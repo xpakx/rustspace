@@ -1,0 +1,18 @@
+{% if profile %}
+	<div>
+		{% if real_name.is_some() %}
+			{{ real_name.as_ref().unwrap()}}
+		{% endif %}
+		{% if description.is_some() %}
+			{{ description.as_ref().unwrap()}}
+		{% endif %}
+		{% if gender.is_some() %}
+			{{ gender.as_ref().unwrap()}}
+		{% endif %}
+		{% if city.is_some() %}
+			{{ city.as_ref().unwrap()}}
+		{% endif %}
+	</div>
+{% else %}
+	<div>No profile data</div>
+{% endif %}

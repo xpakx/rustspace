@@ -118,6 +118,16 @@ pub struct ProfileFormTemplate {
     pub real_name: Option<String>,
 }
 
+#[derive(Template)]
+#[template(path = "profile_field.html")]
+pub struct ProfileFieldTemplate {
+    pub profile: bool,
+    pub gender: Option<String>,
+    pub city: Option<String>,
+    pub description: Option<String>,
+    pub real_name: Option<String>,
+}
+
 pub struct HtmlTemplate<T>(pub T);
 
 impl<T> IntoResponse for HtmlTemplate<T> where T: Template, {
