@@ -1,9 +1,11 @@
 use axum::{extract::Request, body::{Body, to_bytes}, http::StatusCode};
 use tower::ServiceExt;
+use serial_test::serial;
 
 use crate::test::prepare_server;
 
 #[tokio::test]
+#[serial]
 async fn test_index() {
     let response = prepare_server()
         .await
@@ -26,6 +28,7 @@ async fn test_index() {
 }
 
 #[tokio::test]
+#[serial]
 async fn test_about() {
     let response = prepare_server()
         .await
@@ -47,6 +50,7 @@ async fn test_about() {
 }
 
 #[tokio::test]
+#[serial]
 async fn test_help() {
     let response = prepare_server()
         .await
