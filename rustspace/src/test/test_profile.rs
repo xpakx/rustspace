@@ -3,7 +3,7 @@ use sqlx::{PgPool, Postgres};
 use tower::ServiceExt;
 use serial_test::serial;
 
-use crate::{test::{prepare_server, prepare_server_with_user, prepare_server_with_db, prepare_db, insert_default_user, clear_profiles}, security::get_token, UserModel};
+use crate::{test::{prepare_server, prepare_server_with_user, prepare_server_with_db, prepare_db, insert_default_user, clear_profiles}, security::get_token, UserModel, ProfileModel};
 
 #[tokio::test]
 #[serial]
@@ -196,6 +196,25 @@ async fn insert_default_profile(db: &PgPool) {
         .await;
 }
 
+async fn get_profile(db: &PgPool) -> Option<ProfileModel> {
+    let user_db = sqlx::query_as::<Postgres, UserModel>(
+        "SELECT * FROM users WHERE screen_name = $1",
+        )
+        .bind("Test")
+        .fetch_optional(db)
+        .await;
+    let user_id = user_db.unwrap().unwrap().id.unwrap();
+
+    let profile = sqlx::query_as::<Postgres, ProfileModel>(
+        "SELECT * FROM profiles WHERE user_id = $1",
+        )
+        .bind(user_id)
+        .fetch_optional(db)
+        .await;
+
+    return profile.unwrap();
+}
+
 #[tokio::test]
 #[serial]
 async fn test_changing_profile_with_existing_profile() {
@@ -224,4 +243,37 @@ async fn test_changing_profile_with_existing_profile() {
     let bytes = body.unwrap();
     let content = std::str::from_utf8(&*bytes).unwrap();
     assert!(content.contains("Cambridge"));
+}
+
+#[tokio::test]
+#[serial]
+async fn test_changing_profile_in_db() {
+    let db = prepare_db().await;
+    insert_default_user(false, &db).await;
+    insert_default_profile(&db).await;
+    let (token, _) = get_token(&Some(String::from("Test")));
+    _ = prepare_server_with_db(db.clone())
+        .await
+        .oneshot(
+            Request::builder()
+            .method("PUT")
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .header("Cookie", format!("Token={};", token))
+            .uri("/profile")
+            .body(Body::from("gender=&city=Cambridge&description=&real_name="))
+            .unwrap()
+            )
+        .await
+        .unwrap();
+    let profile = get_profile(&db).await;
+    clear_profiles(&db).await;
+    
+    assert!(profile.is_some());
+    let profile = profile.unwrap();
+    assert!(profile.gender.is_none());
+    assert!(profile.city.is_some());
+    let city = profile.city.unwrap();
+    assert_eq!(city, "Cambridge");
+    assert!(profile.description.is_none());
+    assert!(profile.real_name.is_none());
 }
