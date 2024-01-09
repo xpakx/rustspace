@@ -2,7 +2,7 @@ use axum::{extract::Request, body::{Body, to_bytes}, http::StatusCode};
 use tower::ServiceExt;
 use serial_test::serial;
 
-use crate::{test::{prepare_server, prepare_server_with_user}, security::get_token};
+use crate::{test::{prepare_server, prepare_server_with_user, prepare_server_with_db, prepare_db, insert_default_user, clear_profiles}, security::get_token};
 
 #[tokio::test]
 #[serial]
@@ -144,4 +144,33 @@ async fn test_changing_profile_while_unauthenticated() {
     let content = std::str::from_utf8(&*bytes).unwrap();
     assert!(content.contains("error"));
     assert!(content.contains("Unauthenticated"));
+}
+
+#[tokio::test]
+#[serial]
+async fn test_changing_profile_without_profile() {
+    let db = prepare_db().await;
+    insert_default_user(false, &db).await;
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let response = prepare_server_with_db(db.clone())
+        .await
+        .oneshot(
+            Request::builder()
+            .method("PUT")
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .header("Cookie", format!("Token={};", token))
+            .uri("/profile")
+            .body(Body::from("gender=&city=London&description=&real_name="))
+            .unwrap()
+            )
+        .await
+        .unwrap();
+    
+    clear_profiles(&db).await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = to_bytes(response.into_body(), 1000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    assert!(content.contains("London"));
 }
