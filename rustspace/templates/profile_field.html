@@ -1,3 +1,6 @@
+<div>
+</div>
+<section id="profile" hx-swap-oob="true" class="profile">
 {% if profile %}
 	<div>
 		{% if real_name.is_some() %}
@@ -16,3 +19,5 @@
 {% else %}
 	<div>No profile data</div>
 {% endif %}
+<button class="field-btn" hx-target="#profile" hx-get="/forms/profile">Edit</button>
+</section>
