@@ -4,6 +4,7 @@
 
 {% block head %}
   <link href="/assets/user.css" rel="stylesheet" />
+  <link href="/assets/profile.css" rel="stylesheet" />
 {% endblock %}
  
 {% block content %}
@@ -12,23 +13,31 @@
 
 <section class="profile" id="profile">
 {% if profile.is_some() %}
-	<div>
+	<div class="profile-fields">
 		{% let profile = profile.as_ref().unwrap() %} 
 		{% if profile.real_name.is_some() %}
+		<div class="profile-field name">
 			{{ profile.real_name.as_ref().unwrap()}}
+			{% if profile.gender.is_some() %}
+			<span class="gender">
+				({{ profile.gender.as_ref().unwrap()}})
+			</span>
+			{% endif %}
+		</div>
+		{% if profile.city.is_some() %}
+		<div class="profile-field city">
+			{{ profile.city.as_ref().unwrap()}}
+		</div>
 		{% endif %}
 		{% if profile.description.is_some() %}
+		<div class="profile-field desc">
 			{{ profile.description.as_ref().unwrap()}}
+		</div>
 		{% endif %}
-		{% if profile.gender.is_some() %}
-			{{ profile.gender.as_ref().unwrap()}}
-		{% endif %}
-		{% if profile.city.is_some() %}
-			{{ profile.city.as_ref().unwrap()}}
 		{% endif %}
 	</div>
 {% else %}
-	<div>No profile data</div>
+	<div class="profile-empty">No profile data</div>
 {% endif %}
 {% if owner %}
 	<button class="field-btn" hx-target="#profile" hx-get="/forms/profile">Edit</button>

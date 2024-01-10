@@ -1,0 +1,42 @@
+.profile-fields {
+  padding: 20px;
+}
+
+.profile-field {
+  margin-bottom: 15px;
+}
+
+.profile-empty {
+  padding: 20px;
+  text-align: center;
+  color: #777;
+}
+
+.profile-field.name {
+  color: #333;
+  font-weight: bold;
+  border-bottom: 1px solid #ddd;
+}
+
+.gender {
+  color: #666;
+  font-weight: normal;
+}
+
+.profile-field.desc {
+  background-color: #f9f9f9;
+  color: #333;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.profile-field.city {
+  font-style: italic;
+}
+
+.profile-empty {
+  padding: 20px;
+  text-align: center;
+  color: #555;
+}

@@ -2,22 +2,30 @@
 </div>
 <section id="profile" hx-swap-oob="true" class="profile">
 {% if profile %}
-	<div>
+	<div class="profile-fields">
 		{% if real_name.is_some() %}
+		<div class="profile-field name">
 			{{ real_name.as_ref().unwrap()}}
-		{% endif %}
-		{% if description.is_some() %}
-			{{ description.as_ref().unwrap()}}
-		{% endif %}
-		{% if gender.is_some() %}
-			{{ gender.as_ref().unwrap()}}
+			{% if gender.is_some() %}
+			<span class="gender">
+				({{ gender.as_ref().unwrap()}})
+			</span>
+			{% endif %}
+		</div>
 		{% endif %}
 		{% if city.is_some() %}
+		<div class="profile-field city">
 			{{ city.as_ref().unwrap()}}
+		</div>
+		{% endif %}
+		{% if description.is_some() %}
+		<div class="profile-field desc">
+			{{ description.as_ref().unwrap()}}
+		</div>
 		{% endif %}
 	</div>
 {% else %}
-	<div>No profile data</div>
+	<div class="profile-empty">No profile data</div>
 {% endif %}
 <button class="field-btn" hx-target="#profile" hx-get="/forms/profile">Edit</button>
 </section>
