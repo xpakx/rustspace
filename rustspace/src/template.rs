@@ -2,7 +2,7 @@ use askama::Template;
 use axum::response::{Html, IntoResponse, Response};
 use axum::http::StatusCode;
 
-use crate::{UserData, UserModel, ProfileModel};
+use crate::{UserData, UserModel, ProfileModel, UserDetails};
 
 #[derive(Template)]
 #[template(path = "index.html")]
@@ -133,6 +133,7 @@ pub struct ProfileFieldTemplate {
 pub struct CommunityTemplate {
     pub path: &'static str,
     pub user: UserData,
+    pub users: Vec<UserDetails>,
 }
 
 pub struct HtmlTemplate<T>(pub T);
