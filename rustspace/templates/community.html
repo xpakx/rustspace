@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+ 
+{% block title %}RustSpace: Community{% endblock %}
+ 
+{% block content %}
+<h1>Community</h1>
+
+{% if user.username.is_some() %}
+<a href="/profile/{{user.username.as_ref().unwrap()}}">Profile</a>
+{% endif %}
+
+<section class="community" id="community">
+</section>
+
+{% endblock %}

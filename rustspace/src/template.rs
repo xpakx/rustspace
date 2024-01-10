@@ -128,6 +128,13 @@ pub struct ProfileFieldTemplate {
     pub real_name: Option<String>,
 }
 
+#[derive(Template)]
+#[template(path = "community.html")]
+pub struct CommunityTemplate {
+    pub path: &'static str,
+    pub user: UserData,
+}
+
 pub struct HtmlTemplate<T>(pub T);
 
 impl<T> IntoResponse for HtmlTemplate<T> where T: Template, {
