@@ -1,6 +1,10 @@
 {% extends "base.html" %}
  
 {% block title %}RustSpace: {{username}}'s profile{% endblock %}
+
+{% block head %}
+  <link href="/assets/user.css" rel="stylesheet" />
+{% endblock %}
  
 {% block content %}
 <h1>{{username}}'s profile</h1>
