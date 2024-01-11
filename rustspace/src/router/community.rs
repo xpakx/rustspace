@@ -4,14 +4,14 @@ use axum::{response::IntoResponse, extract::State};
 use sqlx::{Postgres, PgPool};
 use tracing::{info, debug};
 
-use crate::{template::{CommunityTemplate, HtmlTemplate, ErrorsTemplate}, UserData, AppState, UserDetails};
+use crate::{template::{CommunityTemplate, HtmlTemplate, ErrorsTemplate, UnauthorizedTemplate}, UserData, AppState, UserDetails};
 
 pub async fn community(
     user: UserData,
     State(state): State<Arc<AppState>>) -> impl IntoResponse {
     info!("community page requested");
     if user.username.is_none() {
-        let template = ErrorsTemplate {errors: vec!["Unauthenticated!"]};
+        let template = UnauthorizedTemplate {message: "You're unauthorized!", redir: Some(String::from("/community"))};
         return HtmlTemplate(template).into_response()
     }
 
