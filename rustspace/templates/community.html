@@ -2,18 +2,25 @@
  
 {% block title %}RustSpace: Community{% endblock %}
  
+{% block head %}
+  <link href="/assets/community.css" rel="stylesheet" />
+{% endblock %}
+
 {% block content %}
 <h1>Community</h1>
 
-{% if user.username.is_some() %}
-<a href="/profile/{{user.username.as_ref().unwrap()}}">Profile</a>
-{% endif %}
-
 <section class="community" id="community">
 {% for u in users %}
-<li>{{ u.screen_name }} | {% if u.real_name.is_some() %}{{u.real_name.as_ref().unwrap()}}{% endif %}</li>
+<li>
+	<span class="at">@</span><a href="/profile/{{u.screen_name}}"><span class="screen_name">{{ u.screen_name }}</span></a>  
+	{% if u.real_name.is_some() %}| <span class="name">{{u.real_name.as_ref().unwrap()}}</span>{% endif %}
+	{% if u.gender.is_some() %}<span class="gender">({{u.gender.as_ref().unwrap()}})</span>{% endif %}
+	{% if u.city.is_some() %}from <span class="city">{{u.city.as_ref().unwrap()}}</span>{% endif %}
+</li>
 {% endfor %}
 </section>
+<section class="record-count">
 {{ records }} users found
+</section>
 
 {% endblock %}

@@ -1,0 +1,35 @@
+.community {
+  list-style: none;
+  padding: 0;
+}
+
+.community li {
+  margin-bottom: 10px;
+  padding: 5px;
+}
+
+.at {
+  color: #777;
+}
+
+.screen_name {
+  color: #e44d26;
+  text-decoration: none;
+}
+
+.screen_name:hover {
+  text-decoration: underline;
+}
+
+.name {
+  font-weight: bold;
+}
+
+.gender {
+  color: #555;
+}
+
+.city {
+  color: #777;
+  font-style: italic;
+}

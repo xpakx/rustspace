@@ -41,11 +41,11 @@ pub async fn profile(
         .await;
 
     let Ok(profile) = profile else {
-        let template = ProfileTemplate {path: "index", user, username, profile: None, owner};
+        let template = ProfileTemplate {path: "profile", user, username, profile: None, owner};
         return HtmlTemplate(template).into_response()
     };
 
-   let template = ProfileTemplate {path: "index", user, username, profile, owner};
+   let template = ProfileTemplate {path: "profile", user, username, profile, owner};
    return HtmlTemplate(template).into_response()
 }
 
