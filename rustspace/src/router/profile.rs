@@ -139,10 +139,10 @@ pub async fn update_profile(
         debug!("profile doesn't exists, creating new one");
         let query_result =
             sqlx::query("INSERT INTO profiles (gender, city, description, real_name, user_id) VALUES ($1, $2, $3, $4, $5)")
-            .bind(gender.clone())
-            .bind(city.clone())
-            .bind(description.clone())
-            .bind(name.clone())
+            .bind(&gender)
+            .bind(&city)
+            .bind(&description)
+            .bind(&name)
             .bind(user_id)
             .execute(&state.db)
             .await
@@ -161,10 +161,10 @@ pub async fn update_profile(
 
     debug!("profile already exists, updating");
     let result = sqlx::query("UPDATE profiles SET gender = $1, city = $2, description = $3, real_name = $4 WHERE user_id = $5")
-        .bind(gender.clone())
-        .bind(city.clone())
-        .bind(description.clone())
-        .bind(name.clone())
+        .bind(&gender)
+        .bind(&city)
+        .bind(&description)
+        .bind(&name)
         .bind(user_id)
         .execute(&state.db)
         .await

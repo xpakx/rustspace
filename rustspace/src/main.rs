@@ -150,7 +150,7 @@ where
             .map(|cookie| cookie.value().to_string())
             .filter(|value| value != "");
 
-        if let Some(token) = token.clone() {
+        if let Some(token) = token {
             let claims = decode::<TokenClaims>(
                 &token,
                 &DecodingKey::from_secret("secret".as_ref()),

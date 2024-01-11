@@ -39,9 +39,9 @@ pub async fn register_user(
     debug!("trying to add user to db...");
     let query_result =
         sqlx::query("INSERT INTO users (screen_name, email, password) VALUES ($1, $2, $3)")
-        .bind(user.username.clone().unwrap())
-        .bind(user.email.unwrap())
-        .bind(password.unwrap())
+        .bind(&user.username)
+        .bind(&user.email)
+        .bind(&password.unwrap())
         .execute(&state.db)
         .await
         .map_err(|err: sqlx::Error| err.to_string());
@@ -93,7 +93,7 @@ pub async fn user_page(user: UserData,
     let user_db = sqlx::query_as::<Postgres, UserModel>(
         "SELECT * FROM users WHERE screen_name = $1",
         )
-        .bind(user.username.clone().unwrap())
+        .bind(&user.username)
         .fetch_optional(&state.db)
         .await;
 
@@ -211,7 +211,7 @@ pub async fn login(
     let user_db = sqlx::query_as::<Postgres, UserModel>(
         "SELECT * FROM users WHERE screen_name = $1",
         )
-        .bind(user.username.clone().unwrap())
+        .bind(&user.username)
         .fetch_optional(&state.db)
         .await;
 
@@ -313,8 +313,8 @@ pub async fn update_email(
     }
 
     let result = sqlx::query("UPDATE users SET email= $1 WHERE screen_name = $2")
-        .bind(request.email.clone().unwrap())
-        .bind(user.username.clone().unwrap())
+        .bind(&request.email)
+        .bind(&user.username)
         .execute(&state.db)
         .await
         .map_err(|err: sqlx::Error| err.to_string());
@@ -359,7 +359,7 @@ pub async fn update_password(
     let user_db = sqlx::query_as::<Postgres, UserModel>(
         "SELECT * FROM users WHERE screen_name = $1",
         )
-        .bind(user.username.clone().unwrap())
+        .bind(&user.username)
         .fetch_optional(&state.db)
         .await;
 
@@ -387,7 +387,7 @@ pub async fn update_password(
 
             let result = sqlx::query("UPDATE users SET password = $1 WHERE screen_name = $2")
                 .bind(password.unwrap())
-                .bind(user.username.clone().unwrap())
+                .bind(&user.username)
                 .execute(&state.db)
                 .await
                 .map_err(|err: sqlx::Error| err.to_string());

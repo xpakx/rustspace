@@ -30,7 +30,7 @@ pub fn validate_repeated_password(password: &Option<String>, password_re: &Optio
         errors.push("Password cannot be empty!");
     }
     if let (Some(password), Some(password_re)) = (password, password_re) {
-        if !validate_same(password.clone(), password_re.clone()) {
+        if !validate_same(&password, &password_re) {
             errors.push("Passwords must match!");
         }
     }
@@ -105,7 +105,7 @@ pub fn validate_alphanumeric(text: &String) -> bool {
     true
 }
 
-pub fn validate_same(text: String, text2: String) -> bool {
+pub fn validate_same(text: &String, text2: &String) -> bool {
     text == text2
 }
 
