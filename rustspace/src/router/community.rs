@@ -15,26 +15,36 @@ pub async fn community(
         return HtmlTemplate(template).into_response()
     }
 
-    let users = get_users(&state.db).await;
+    let users = get_users(&state.db, 0).await;
     match users {
         Err(err) => {
             debug!("Database error: {}", err);
             let template = ErrorsTemplate {errors: vec!["Db error!"]};
             return HtmlTemplate(template).into_response()
         },
-        Ok(users) => {
-            let template = CommunityTemplate {path: "community", user, users};
+        Ok((users, records)) => {
+            let template = CommunityTemplate {path: "community", user, users, records};
             return HtmlTemplate(template).into_response()
         }
     };
 }
 
-async fn get_users(db: &PgPool) -> Result<Vec<UserDetails>, sqlx::Error> {
-    sqlx::query_as::<Postgres, UserDetails>(
+async fn get_users(db: &PgPool, page: i32) -> Result<(Vec<UserDetails>, i64), sqlx::Error> {
+    let page_size = 25;
+    let offset = page_size * page;
+    let users = sqlx::query_as::<Postgres, UserDetails>(
         "SELECT u.id, u.screen_name, p.real_name, p.gender, p.city
         FROM users u
-        LEFT JOIN profiles p ON u.id = p.user_id",
+        LEFT JOIN profiles p ON u.id = p.user_id
+        LIMIT $1 OFFSET $2",
         )
+        .bind(page_size)
+        .bind(offset)
         .fetch_all(db)
-        .await
+        .await?;
+    let records: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM users")
+        .fetch_one(db)
+        .await?;
+    
+    Ok((users, records))
 }

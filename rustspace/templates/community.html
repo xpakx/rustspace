@@ -14,5 +14,6 @@
 <li>{{ u.screen_name }} | {% if u.real_name.is_some() %}{{u.real_name.as_ref().unwrap()}}{% endif %}</li>
 {% endfor %}
 </section>
+{{ records }} users found
 
 {% endblock %}

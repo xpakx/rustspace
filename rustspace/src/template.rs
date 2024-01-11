@@ -134,6 +134,7 @@ pub struct CommunityTemplate {
     pub path: &'static str,
     pub user: UserData,
     pub users: Vec<UserDetails>,
+    pub records: i64,
 }
 
 pub struct HtmlTemplate<T>(pub T);
