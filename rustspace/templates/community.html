@@ -9,6 +9,13 @@
 {% block content %}
 <h1>Community</h1>
 
+
+<section class="letters">
+{% for letter in "ABCDEFGHJKLMNOPQRSTUVWXYZ".chars() %}
+<button class="letter" hx-get="/community/search?page=0&letter={{letter}}" hx-target="#community">{{letter}}</button>
+{% endfor %}
+</section>
+
 <section class="community" id="community">
 {% for u in users %}
 <li>
