@@ -5,7 +5,7 @@ use sqlx::{Postgres, PgPool};
 use tracing::{info, debug};
 use serde::Deserialize;
 
-use crate::{template::{CommunityTemplate, HtmlTemplate, ErrorsTemplate, UnauthorizedTemplate, CommunityResultsTemplate}, UserData, AppState, UserDetails};
+use crate::{template::{CommunityTemplate, HtmlTemplate, ErrorsTemplate, UnauthorizedTemplate, CommunityResultsTemplate}, UserData, AppState, UserDetails, validation::{validate_length, validate_alphanumeric}};
 
 pub async fn community(
     user: UserData,
@@ -76,6 +76,13 @@ pub async fn get_users_page(
         return HtmlTemplate(template).into_response()
     }
 
+    let errors = validate_users_query(&query);
+    if errors.len() > 0 {
+        debug!("user input is invalid");
+        let template = ErrorsTemplate {errors};
+        return HtmlTemplate(template).into_response()
+    }
+
     let letter = query.letter + "%";
 
     let users = get_users(&state.db, letter.as_str(), query.page, false).await;
@@ -92,4 +99,17 @@ pub async fn get_users_page(
             return HtmlTemplate(template).into_response()
         }
     };
+}
+
+pub fn validate_users_query(query: &SearchQuery) -> Vec<&'static str> {
+    let mut errors = vec![];
+    let single_letter = validate_length(&query.letter, 1, 1);
+    let valid_char = validate_alphanumeric(&query.letter);
+    if !(single_letter && valid_char) {
+        errors.push("Must be single letter or digit!");
+    }
+    if query.page < 0 {
+        errors.push("Page cannot be nagative!");
+    }
+    return errors;
 }
