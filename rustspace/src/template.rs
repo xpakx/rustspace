@@ -134,7 +134,14 @@ pub struct CommunityTemplate {
     pub path: &'static str,
     pub user: UserData,
     pub users: Vec<UserDetails>,
-    pub records: i64,
+    pub records: Option<i64>,
+}
+
+#[derive(Template)]
+#[template(path = "community_result.html")]
+pub struct CommunityResultsTemplate {
+    pub users: Vec<UserDetails>,
+    pub records: Option<i64>,
 }
 
 pub struct HtmlTemplate<T>(pub T);

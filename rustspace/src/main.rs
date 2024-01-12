@@ -84,7 +84,7 @@ struct ProfileModel {
     updated_at: Option<chrono::DateTime<chrono::Utc>>,
 }
 
-#[derive(Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Serialize, Deserialize, sqlx::FromRow, Debug)]
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 struct UserDetails {

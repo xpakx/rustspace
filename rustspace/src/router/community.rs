@@ -1,10 +1,11 @@
 use std::sync::Arc;
 
-use axum::{response::IntoResponse, extract::State};
+use axum::{response::IntoResponse, extract::{State, Query}};
 use sqlx::{Postgres, PgPool};
 use tracing::{info, debug};
+use serde::Deserialize;
 
-use crate::{template::{CommunityTemplate, HtmlTemplate, ErrorsTemplate, UnauthorizedTemplate}, UserData, AppState, UserDetails};
+use crate::{template::{CommunityTemplate, HtmlTemplate, ErrorsTemplate, UnauthorizedTemplate, CommunityResultsTemplate}, UserData, AppState, UserDetails};
 
 pub async fn community(
     user: UserData,
@@ -15,7 +16,7 @@ pub async fn community(
         return HtmlTemplate(template).into_response()
     }
 
-    let users = get_users(&state.db, "a%", 0).await;
+    let users = get_users(&state.db, "a%", 0, true).await;
     match users {
         Err(err) => {
             debug!("Database error: {}", err);
@@ -29,7 +30,7 @@ pub async fn community(
     };
 }
 
-async fn get_users(db: &PgPool, pattern: &str, page: i32) -> Result<(Vec<UserDetails>, i64), sqlx::Error> {
+async fn get_users(db: &PgPool, pattern: &str, page: i32, get_count: bool) -> Result<(Vec<UserDetails>, Option<i64>), sqlx::Error> {
     let page_size = 25;
     let offset = page_size * page;
     let users = sqlx::query_as::<Postgres, UserDetails>(
@@ -45,9 +46,50 @@ async fn get_users(db: &PgPool, pattern: &str, page: i32) -> Result<(Vec<UserDet
         .bind(pattern)
         .fetch_all(db)
         .await?;
-    let records: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM users")
+    if !get_count {
+        return Ok((users, None));
+    }
+
+    let records: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM users u
+        WHERE u.screen_name ILIKE $1")
+        .bind(pattern)
         .fetch_one(db)
         .await?;
     
-    Ok((users, records))
+    Ok((users, Some(records)))
+}
+
+#[derive(Deserialize)]
+pub struct SearchQuery {
+    page: i32,
+    letter: String,
+}
+
+pub async fn get_users_page(
+    user: UserData,
+    Query(query): Query<SearchQuery>,
+    State(state): State<Arc<AppState>>) -> impl IntoResponse {
+    info!("community results requested, page {}, letter {}", &query.page, &query.letter);
+    if user.username.is_none() {
+        let template = ErrorsTemplate {errors: vec!["You're unauthorized"]};
+        return HtmlTemplate(template).into_response()
+    }
+
+    let letter = query.letter + "%";
+
+    let users = get_users(&state.db, letter.as_str(), query.page, false).await;
+    match users {
+        Err(err) => {
+            debug!("Database error: {}", err);
+            let template = ErrorsTemplate {errors: vec!["Db error!"]};
+            return HtmlTemplate(template).into_response()
+        },
+        Ok((users, records)) => {
+            debug!("Users fetched from db");
+            debug!("{:?}", users);
+            let template = CommunityResultsTemplate {users, records};
+            return HtmlTemplate(template).into_response()
+        }
+    };
 }
