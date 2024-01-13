@@ -18,7 +18,7 @@
 
 <section class="community" id="community">
 {% for u in users %}
-<div>
+<div class="user">
 	<span class="at">@</span><a href="/profile/{{u.screen_name}}"><span class="screen_name">{{ u.screen_name }}</span></a>  
 	{% if u.real_name.is_some() %}| <span class="name">{{u.real_name.as_ref().unwrap()}}</span>{% endif %}
 	{% if u.gender.is_some() %}<span class="gender">({{u.gender.as_ref().unwrap()}})</span>{% endif %}
