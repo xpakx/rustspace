@@ -84,7 +84,7 @@ pub async fn get_users_page(
         return HtmlTemplate(template).into_response()
     }
 
-    let letter = query.letter + "%";
+    let letter = format!("{}%", &query.letter);
 
     let users = get_users(&state.db, letter.as_str(), query.page, query.update_count).await;
     match users {
@@ -96,7 +96,7 @@ pub async fn get_users_page(
         Ok((users, records)) => {
             debug!("Users fetched from db");
             debug!("{:?}", users);
-            let template = CommunityResultsTemplate {users, records};
+            let template = CommunityResultsTemplate {users, records, page: query.page, letter: query.letter};
             return HtmlTemplate(template).into_response()
         }
     };

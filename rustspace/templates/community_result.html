@@ -1,12 +1,20 @@
 {% for u in users %}
-<li>
+<div>
 	<span class="at">@</span><a href="/profile/{{u.screen_name}}"><span class="screen_name">{{ u.screen_name }}</span></a>  
 	{% if u.real_name.is_some() %}| <span class="name">{{u.real_name.as_ref().unwrap()}}</span>{% endif %}
 	{% if u.gender.is_some() %}<span class="gender">({{u.gender.as_ref().unwrap()}})</span>{% endif %}
 	{% if u.city.is_some() %}from <span class="city">{{u.city.as_ref().unwrap()}}</span>{% endif %}
-</li>
+</div>
 {% endfor %}
 
+<section hx-swap-oob="true" class="page-nav" id="page-nav">
+	{% if page > 0 %}
+	<button hx-get="/community/search?page={{page-1}}&letter={{letter}}&update_count=false" hx-target="#community">Previous</button>
+	{% endif %}
+	{% if users.len() == 25 %}
+	<button hx-get="/community/search?page={{page+1}}&letter={{letter}}&update_count=false" hx-target="#community">Next</button>
+	{% endif %}
+</section>
 {% if records.is_some() %}
 <section hx-swap-oob="true"  class="record-count" id="count">
 {{ records.as_ref().unwrap() }} users found
