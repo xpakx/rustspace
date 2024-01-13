@@ -64,6 +64,7 @@ async fn get_users(db: &PgPool, pattern: &str, page: i32, get_count: bool) -> Re
 pub struct SearchQuery {
     page: i32,
     letter: String,
+    update_count: bool,
 }
 
 pub async fn get_users_page(
@@ -85,7 +86,7 @@ pub async fn get_users_page(
 
     let letter = query.letter + "%";
 
-    let users = get_users(&state.db, letter.as_str(), query.page, false).await;
+    let users = get_users(&state.db, letter.as_str(), query.page, query.update_count).await;
     match users {
         Err(err) => {
             debug!("Database error: {}", err);

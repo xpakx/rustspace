@@ -12,7 +12,7 @@
 
 <section class="letters">
 {% for letter in "ABCDEFGHJKLMNOPQRSTUVWXYZ".chars() %}
-<button class="letter" hx-get="/community/search?page=0&letter={{letter}}" hx-target="#community">{{letter}}</button>
+<button class="letter" hx-get="/community/search?page=0&letter={{letter}}&update_count=true" hx-target="#community">{{letter}}</button>
 {% endfor %}
 </section>
 
