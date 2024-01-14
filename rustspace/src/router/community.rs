@@ -24,7 +24,15 @@ pub async fn community(
             return HtmlTemplate(template).into_response()
         },
         Ok((users, records)) => {
-            let template = CommunityTemplate {path: "community", user, users, records};
+            let pages = match records {
+                None => 0,
+                Some(count) => {
+                    let count = (count as f64)/25.0;
+                    let count = count.ceil() as i32;
+                    count
+                }
+            };
+            let template = CommunityTemplate {path: "community", user, users, records, pages};
             return HtmlTemplate(template).into_response()
         }
     };

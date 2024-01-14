@@ -135,6 +135,7 @@ pub struct CommunityTemplate {
     pub user: UserData,
     pub users: Vec<UserDetails>,
     pub records: Option<i64>,
+    pub pages: i32,
 }
 
 #[derive(Template)]
