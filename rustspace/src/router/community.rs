@@ -65,6 +65,7 @@ pub struct SearchQuery {
     page: i32,
     letter: String,
     update_count: bool,
+    pages: Option<i32>,
 }
 
 pub async fn get_users_page(
@@ -96,7 +97,18 @@ pub async fn get_users_page(
         Ok((users, records)) => {
             debug!("Users fetched from db");
             debug!("{:?}", users);
-            let template = CommunityResultsTemplate {users, records, page: query.page, query: query.letter};
+            let pages = match records {
+                None => match query.pages {
+                    None => 0,
+                    Some(p) => p
+                },
+                Some(count) => {
+                    let count = (count as f64)/25.0;
+                    let count = count.ceil() as i32;
+                    count
+                }
+            };
+            let template = CommunityResultsTemplate {users, records, page: query.page, pages, query: query.letter};
             return HtmlTemplate(template).into_response()
         }
     };
@@ -131,6 +143,7 @@ pub struct SearchUsersQuery {
     page: i32,
     search: String,
     update_count: bool,
+    pages: Option<i32>
 }
 
 pub fn validate_search_users_query(query: &SearchUsersQuery) -> Vec<&'static str> {
@@ -170,7 +183,19 @@ pub async fn get_search_users_page(
         Ok((users, records)) => {
             debug!("Users fetched from db");
             debug!("{:?}", users);
-            let template = CommunityResultsTemplate {users, records, page: query.page, query: query.search};
+            let pages = match records {
+                None => match query.pages {
+                    None => 0,
+                    Some(p) => p
+                },
+                Some(count) => {
+                    let count = (count as f64)/25.0;
+                    let count = count.ceil() as i32;
+                    count
+                }
+            };
+            
+            let template = CommunityResultsTemplate {users, records, page: query.page, pages, query: query.search};
             return HtmlTemplate(template).into_response()
         }
     };
