@@ -143,7 +143,7 @@ pub struct CommunityResultsTemplate {
     pub users: Vec<UserDetails>,
     pub records: Option<i64>,
     pub page: i32,
-    pub letter: String,
+    pub query: String,
 }
 
 #[derive(Template)]

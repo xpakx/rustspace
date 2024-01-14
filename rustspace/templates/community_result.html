@@ -9,10 +9,10 @@
 
 <section hx-swap-oob="true" class="page-nav" id="page-nav">
 	{% if page > 0 %}
-	<button hx-get="/community/search?page={{page-1}}&letter={{letter}}&update_count=false" hx-target="#community">Previous</button>
+	<button hx-get="/community/search?page={{page-1}}&letter={{query}}&update_count=false" hx-target="#community">Previous</button>
 	{% endif %}
 	{% if users.len() == 25 %}
-	<button hx-get="/community/search?page={{page+1}}&letter={{letter}}&update_count=false" hx-target="#community">Next</button>
+	<button hx-get="/community/search?page={{page+1}}&letter={{query}}&update_count=false" hx-target="#community">Next</button>
 	{% endif %}
 </section>
 {% if records.is_some() %}

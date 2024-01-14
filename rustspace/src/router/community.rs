@@ -96,7 +96,7 @@ pub async fn get_users_page(
         Ok((users, records)) => {
             debug!("Users fetched from db");
             debug!("{:?}", users);
-            let template = CommunityResultsTemplate {users, records, page: query.page, letter: query.letter};
+            let template = CommunityResultsTemplate {users, records, page: query.page, query: query.letter};
             return HtmlTemplate(template).into_response()
         }
     };
@@ -124,4 +124,54 @@ pub async fn search_users(user: UserData) -> impl IntoResponse {
 
     let template = SearchTemplate {path: "community", user};
     return HtmlTemplate(template).into_response()
+}
+
+#[derive(Deserialize)]
+pub struct SearchUsersQuery {
+    page: i32,
+    search: String,
+    update_count: bool,
+}
+
+pub fn validate_search_users_query(query: &SearchUsersQuery) -> Vec<&'static str> {
+    let mut errors = vec![];
+    if query.page < 0 {
+        errors.push("Page cannot be nagative!");
+    }
+    return errors;
+}
+
+pub async fn get_search_users_page(
+    user: UserData,
+    Query(query): Query<SearchUsersQuery>,
+    State(state): State<Arc<AppState>>) -> impl IntoResponse {
+    info!("search user results requested, page {}, query {}", &query.page, &query.search);
+    if user.username.is_none() {
+        let template = ErrorsTemplate {errors: vec!["You're unauthorized"]};
+        return HtmlTemplate(template).into_response()
+    }
+
+    let errors = validate_search_users_query(&query);
+    if errors.len() > 0 {
+        debug!("user input is invalid");
+        let template = ErrorsTemplate {errors};
+        return HtmlTemplate(template).into_response()
+    }
+
+    let search_string = format!("%{}%", &query.search);
+
+    let users = get_users(&state.db, search_string.as_str(), query.page, query.update_count).await;
+    match users {
+        Err(err) => {
+            debug!("Database error: {}", err);
+            let template = ErrorsTemplate {errors: vec!["Db error!"]};
+            return HtmlTemplate(template).into_response()
+        },
+        Ok((users, records)) => {
+            debug!("Users fetched from db");
+            debug!("{:?}", users);
+            let template = CommunityResultsTemplate {users, records, page: query.page, query: query.search};
+            return HtmlTemplate(template).into_response()
+        }
+    };
 }

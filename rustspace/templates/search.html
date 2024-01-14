@@ -8,14 +8,14 @@
 
 {% block content %}
 <h1>Find user</h1>
-<form class="search-form">
+<form class="search-form" hx-get="/community/users/search" hx-target="#community">
 	<div class="form-row">
 		<label for="search"><b>Search</b></label>
 		<input type="text" placeholder="Search for user" name="search" id="search" required>
 	</div>
 	<input type="hidden" id="page" name="page" value="0" />
 	<input type="hidden" id="update_count" name="update_count" value="true" />
-<button type="submit" class="search-btn" hx-get="/community/users/search" hx-target="#community">Search</button>
+	<button type="submit" class="search-btn">Search</button>
 </form>
 
 <section class="community" id="community">
