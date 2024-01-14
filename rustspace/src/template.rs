@@ -146,6 +146,13 @@ pub struct CommunityResultsTemplate {
     pub letter: String,
 }
 
+#[derive(Template)]
+#[template(path = "search.html")]
+pub struct SearchTemplate {
+    pub path: &'static str,
+    pub user: UserData,
+}
+
 pub struct HtmlTemplate<T>(pub T);
 
 impl<T> IntoResponse for HtmlTemplate<T> where T: Template, {

@@ -7,7 +7,7 @@ use crate::AppState;
 use self::{
     main::{root, about, help},
     user::{user_page, register_form, register_user, check_password, check_username, check_email, check_password_repeat, login_form, login, logout, to_login, edit_email, edit_password, update_email, update_password}, 
-    profile::{profile, edit_profile, update_profile}, community::{community, get_users_page}
+    profile::{profile, edit_profile, update_profile}, community::{community, get_users_page, search_users}
 };
 mod main;
 mod user;
@@ -40,4 +40,5 @@ pub fn get_router() -> Router<Arc<AppState>> {
         .route("/profile", put(update_profile))
         .route("/community", get(community))
         .route("/community/search", get(get_users_page))
+        .route("/community/users", get(search_users))
 }

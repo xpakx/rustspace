@@ -5,7 +5,7 @@ use sqlx::{Postgres, PgPool};
 use tracing::{info, debug};
 use serde::Deserialize;
 
-use crate::{template::{CommunityTemplate, HtmlTemplate, ErrorsTemplate, UnauthorizedTemplate, CommunityResultsTemplate}, UserData, AppState, UserDetails, validation::{validate_length, validate_alphanumeric}};
+use crate::{template::{CommunityTemplate, HtmlTemplate, ErrorsTemplate, UnauthorizedTemplate, CommunityResultsTemplate, SearchTemplate}, UserData, AppState, UserDetails, validation::{validate_length, validate_alphanumeric}};
 
 pub async fn community(
     user: UserData,
@@ -113,4 +113,15 @@ pub fn validate_users_query(query: &SearchQuery) -> Vec<&'static str> {
         errors.push("Page cannot be nagative!");
     }
     return errors;
+}
+
+pub async fn search_users(user: UserData) -> impl IntoResponse {
+    info!("user search page requested");
+    if user.username.is_none() {
+        let template = UnauthorizedTemplate {message: "You're unauthorized!", redir: Some(String::from("/community/users"))};
+        return HtmlTemplate(template).into_response()
+    }
+
+    let template = SearchTemplate {path: "community", user};
+    return HtmlTemplate(template).into_response()
 }
