@@ -9,25 +9,25 @@
 
 <section hx-swap-oob="true" class="page-nav" id="page-nav">
 	{% if page >= 2 %}
-	<button hx-get="/community/search?page=0&letter={{query}}&update_count=false&pages={{pages}}" hx-target="#community">0</button>
+	<button hx-get="{{search_path}}?page=0&search={{query}}&update_count=false&pages={{pages}}" hx-target="#community">0</button>
 	{% endif %}
 	{% if page > 2 %}
 	…
 	{% endif %}
 
 	{% if page > 0 %}
-	<button hx-get="/community/search?page={{page-1}}&letter={{query}}&update_count=false&pages={{pages}}" hx-target="#community">{{page-1}}</button>
+	<button hx-get="{{search_path}}?page={{page-1}}&search={{query}}&update_count=false&pages={{pages}}" hx-target="#community">{{page-1}}</button>
 	{% endif %}
 	<span class="current">{{page}}</span>
 	{% if page < pages-1 %}
-	<button hx-get="/community/search?page={{page+1}}&letter={{query}}&update_count=false&pages={{pages}}" hx-target="#community">{{page+1}}</button>
+	<button hx-get="{{search_path}}?page={{page+1}}&search={{query}}&update_count=false&pages={{pages}}" hx-target="#community">{{page+1}}</button>
 	{% endif %}
 
 	{% if page < pages-3 %}
 	…
 	{% endif %}
 	{% if page <= pages-3 %}
-	<button hx-get="/community/search?page={{pages-1}}&letter={{query}}&update_count=false&pages={{pages}}" hx-target="#community">{{pages-1}}</button>
+	<button hx-get="{{search_path}}?page={{pages-1}}&search={{query}}&update_count=false&pages={{pages}}" hx-target="#community">{{pages-1}}</button>
 	{% endif %}
 </section>
 {% if records.is_some() %}

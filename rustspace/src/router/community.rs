@@ -71,7 +71,7 @@ async fn get_users(db: &PgPool, pattern: &str, page: i32, get_count: bool) -> Re
 #[derive(Deserialize)]
 pub struct SearchQuery {
     page: i32,
-    letter: String,
+    search: String,
     update_count: bool,
     pages: Option<i32>,
 }
@@ -80,7 +80,7 @@ pub async fn get_users_page(
     user: UserData,
     Query(query): Query<SearchQuery>,
     State(state): State<Arc<AppState>>) -> impl IntoResponse {
-    info!("community results requested, page {}, letter {}", &query.page, &query.letter);
+    info!("community results requested, page {}, letter {}", &query.page, &query.search);
     if user.username.is_none() {
         let template = ErrorsTemplate {errors: vec!["You're unauthorized"]};
         return HtmlTemplate(template).into_response()
@@ -93,7 +93,7 @@ pub async fn get_users_page(
         return HtmlTemplate(template).into_response()
     }
 
-    let letter = format!("{}%", &query.letter);
+    let letter = format!("{}%", &query.search);
 
     let users = get_users(&state.db, letter.as_str(), query.page, query.update_count).await;
     match users {
@@ -116,7 +116,7 @@ pub async fn get_users_page(
                     count
                 }
             };
-            let template = CommunityResultsTemplate {users, records, page: query.page, pages, query: query.letter};
+            let template = CommunityResultsTemplate {users, records, page: query.page, pages, query: query.search, search_path: "/community/search"};
             return HtmlTemplate(template).into_response()
         }
     };
@@ -124,8 +124,8 @@ pub async fn get_users_page(
 
 pub fn validate_users_query(query: &SearchQuery) -> Vec<&'static str> {
     let mut errors = vec![];
-    let single_letter = validate_length(&query.letter, 1, 1);
-    let valid_char = validate_alphanumeric(&query.letter);
+    let single_letter = validate_length(&query.search, 1, 1);
+    let valid_char = validate_alphanumeric(&query.search);
     if !(single_letter && valid_char) {
         errors.push("Must be single letter or digit!");
     }
@@ -138,7 +138,7 @@ pub fn validate_users_query(query: &SearchQuery) -> Vec<&'static str> {
 pub async fn search_users(user: UserData) -> impl IntoResponse {
     info!("user search page requested");
     if user.username.is_none() {
-        let template = UnauthorizedTemplate {message: "You're unauthorized!", redir: Some(String::from("/community/users"))};
+        let template = UnauthorizedTemplate {message: "You're unauthorized!", redir: Some(String::from("/community/search"))};
         return HtmlTemplate(template).into_response()
     }
 
@@ -146,15 +146,7 @@ pub async fn search_users(user: UserData) -> impl IntoResponse {
     return HtmlTemplate(template).into_response()
 }
 
-#[derive(Deserialize)]
-pub struct SearchUsersQuery {
-    page: i32,
-    search: String,
-    update_count: bool,
-    pages: Option<i32>
-}
-
-pub fn validate_search_users_query(query: &SearchUsersQuery) -> Vec<&'static str> {
+pub fn validate_search_users_query(query: &SearchQuery) -> Vec<&'static str> {
     let mut errors = vec![];
     if query.page < 0 {
         errors.push("Page cannot be nagative!");
@@ -164,7 +156,7 @@ pub fn validate_search_users_query(query: &SearchUsersQuery) -> Vec<&'static str
 
 pub async fn get_search_users_page(
     user: UserData,
-    Query(query): Query<SearchUsersQuery>,
+    Query(query): Query<SearchQuery>,
     State(state): State<Arc<AppState>>) -> impl IntoResponse {
     info!("search user results requested, page {}, query {}", &query.page, &query.search);
     if user.username.is_none() {
@@ -203,7 +195,7 @@ pub async fn get_search_users_page(
                 }
             };
             
-            let template = CommunityResultsTemplate {users, records, page: query.page, pages, query: query.search};
+            let template = CommunityResultsTemplate {users, records, page: query.page, pages, query: query.search, search_path: "/community/users/search"};
             return HtmlTemplate(template).into_response()
         }
     };

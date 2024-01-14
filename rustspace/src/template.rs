@@ -146,6 +146,7 @@ pub struct CommunityResultsTemplate {
     pub page: i32,
     pub pages: i32,
     pub query: String,
+    pub search_path: &'static str,
 }
 
 #[derive(Template)]
