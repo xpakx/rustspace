@@ -24,14 +24,7 @@ pub async fn community(
             return HtmlTemplate(template).into_response()
         },
         Ok((users, records)) => {
-            let pages = match records {
-                None => 0,
-                Some(count) => {
-                    let count = (count as f64)/25.0;
-                    let count = count.ceil() as i32;
-                    count
-                }
-            };
+            let pages = records_to_count(records, None);
             let template = CommunityTemplate {path: "community", user, users, records, pages};
             return HtmlTemplate(template).into_response()
         }
@@ -105,17 +98,7 @@ pub async fn get_users_page(
         Ok((users, records)) => {
             debug!("Users fetched from db");
             debug!("{:?}", users);
-            let pages = match records {
-                None => match query.pages {
-                    None => 0,
-                    Some(p) => p
-                },
-                Some(count) => {
-                    let count = (count as f64)/25.0;
-                    let count = count.ceil() as i32;
-                    count
-                }
-            };
+            let pages = records_to_count(records, query.pages);
             let template = CommunityResultsTemplate {users, records, page: query.page, pages, query: query.search, search_path: "/community/search"};
             return HtmlTemplate(template).into_response()
         }
@@ -183,20 +166,23 @@ pub async fn get_search_users_page(
         Ok((users, records)) => {
             debug!("Users fetched from db");
             debug!("{:?}", users);
-            let pages = match records {
-                None => match query.pages {
-                    None => 0,
-                    Some(p) => p
-                },
-                Some(count) => {
-                    let count = (count as f64)/25.0;
-                    let count = count.ceil() as i32;
-                    count
-                }
-            };
-            
+            let pages = records_to_count(records, query.pages);
             let template = CommunityResultsTemplate {users, records, page: query.page, pages, query: query.search, search_path: "/community/users/search"};
             return HtmlTemplate(template).into_response()
         }
     };
+}
+
+fn records_to_count(records: Option<i64>, from_query: Option<i32>) -> i32 {
+    match records {
+        None => match from_query {
+            None => 0,
+            Some(p) => p
+        },
+        Some(count) => {
+            let count = (count as f64)/25.0;
+            let count = count.ceil() as i32;
+            count
+        }
+    }
 }
