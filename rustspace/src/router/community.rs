@@ -12,7 +12,7 @@ pub async fn community(
     State(state): State<Arc<AppState>>) -> impl IntoResponse {
     info!("community page requested");
     if user.username.is_none() {
-        let template = UnauthorizedTemplate {message: "You're unauthorized!", redir: Some(String::from("/community"))};
+        let template = UnauthorizedTemplate {message: "You're unauthenticated!", redir: Some(String::from("/community"))};
         return HtmlTemplate(template).into_response()
     }
 
