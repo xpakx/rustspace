@@ -111,3 +111,56 @@ async fn test_getting_community_page_with_two_pages() {
     assert_eq!(count, 25*2); // link and username
     assert!(content.contains("30 users found"));
 }
+
+#[tokio::test]
+#[serial]
+async fn test_getting_users_catalogue_by_unauthenticated_user() {
+    let response = prepare_server_with_user(false)
+        .await
+        .oneshot(
+            Request::builder()
+            .uri("/community/search?page=0&search=t&update_count=false&pages=1")
+            .body(Body::empty())
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    let body = to_bytes(response.into_body(), 1000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    assert!(content.contains("error"));
+    println!("{}", content);
+    assert!(content.contains("unauthorized"));
+}
+
+#[tokio::test]
+#[serial]
+async fn test_getting_users_catalogue() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let db = prepare_db().await;
+    insert_new_user("Test", "test@mail.com", &db).await;
+    insert_new_user("Test2", "test2@mail.com", &db).await;
+    insert_new_user("Aaa", "aaa@mail.com", &db).await;
+    let response = prepare_server_with_db(db)
+        .await
+        .oneshot(
+            Request::builder()
+            .uri("/community/search?page=0&search=t&update_count=false&pages=1")
+            .header("Cookie", format!("Token={};", token))
+            .body(Body::empty())
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = to_bytes(response.into_body(), 9000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    assert!(content.contains("Test"));
+    assert!(content.contains("Test2"));
+    assert!(!content.contains("Aaa"));
+}
