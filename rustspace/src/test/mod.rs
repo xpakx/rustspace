@@ -79,12 +79,13 @@ async fn insert_new_user(username: &str, password: &str, db: &PgPool) {
     insert_user(username, password, false, db).await;
 }
 
-async fn insert_users(amount: i32, db: &PgPool) {
+async fn insert_users(amount: i32, username_prefix: &str, db: &PgPool) {
     _ = sqlx::query("INSERT INTO users (screen_name, email, password) 
-                    SELECT concat('user', a), concat('u', concat(a, '@mail.com')), 'password' 
+                    SELECT concat($2, a), concat($2, concat(a, '@mail.com')), 'password' 
                     FROM generate_series(1, $1) as s(a);
                     ")
         .bind(amount)
+        .bind(username_prefix)
         .execute(db)
         .await;
 }
