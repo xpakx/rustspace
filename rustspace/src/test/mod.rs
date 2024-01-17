@@ -53,10 +53,10 @@ async fn prepare_server_with_db(db: PgPool) -> axum::Router {
 }
 
 async fn insert_default_user(hash_password: bool, db: &PgPool) {
-    insert_user("Test", hash_password, db).await;
+    insert_user("Test", "test@email.com", hash_password, db).await;
 }
 
-async fn insert_user(username: &str, hash_password: bool, db: &PgPool) {
+async fn insert_user(username: &str, email: &str, hash_password: bool, db: &PgPool) {
     let password = match hash_password {
         true => {
             let salt = SaltString::generate(&mut OsRng);
@@ -69,17 +69,17 @@ async fn insert_user(username: &str, hash_password: bool, db: &PgPool) {
 
     _ = sqlx::query("INSERT INTO users (screen_name, email, password) VALUES ($1, $2, $3)")
         .bind(username)
-        .bind("test@email.com")
+        .bind(email)
         .bind(password)
         .execute(db)
         .await;
 }
 
-async fn insert_new_user(username: &str, db: &PgPool) {
-    insert_user(username, false, db).await;
+async fn insert_new_user(username: &str, password: &str, db: &PgPool) {
+    insert_user(username, password, false, db).await;
 }
 
-async fn insert_users_(amount: i32, db: &PgPool) {
+async fn insert_users(amount: i32, db: &PgPool) {
     _ = sqlx::query("INSERT INTO users (screen_name, email, password) 
                     SELECT concat('user', a), concat('u', concat(a, '@mail.com')), 'password' 
                     FROM generate_series(1, $1) as s(a);

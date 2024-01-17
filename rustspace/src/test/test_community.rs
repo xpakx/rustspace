@@ -2,7 +2,7 @@ use axum::{extract::Request, body::{Body, to_bytes}, http::StatusCode};
 use tower::ServiceExt;
 use serial_test::serial;
 
-use crate::{test::prepare_server_with_user, security::get_token};
+use crate::{test::{prepare_server_with_user, prepare_db, prepare_server_with_db, insert_users, insert_new_user}, security::get_token};
 
 #[tokio::test]
 #[serial]
@@ -48,4 +48,35 @@ async fn test_getting_community_page() {
     let bytes = body.unwrap();
     let content = std::str::from_utf8(&*bytes).unwrap();
     assert!(content.contains("Community"));
+}
+
+#[tokio::test]
+#[serial]
+async fn test_getting_community_page_with_correct_users() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let db = prepare_db().await;
+    insert_new_user("Test", "test@mail.com", &db).await;
+    insert_new_user("Aaa", "aaa@mail.com", &db).await;
+    insert_new_user("Aaa2", "aaa2@mail.com", &db).await;
+    let response = prepare_server_with_db(db)
+        .await
+        .oneshot(
+            Request::builder()
+            .uri("/community")
+            .header("Cookie", format!("Token={};", token))
+            .body(Body::empty())
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = to_bytes(response.into_body(), 9000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    assert!(content.contains("Aaa"));
+    assert!(content.contains("Aaa2"));
+    assert!(content.contains("2 users found"));
+    assert!(!content.contains("Test"));
 }
