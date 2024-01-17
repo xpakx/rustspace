@@ -164,3 +164,36 @@ async fn test_getting_users_catalogue() {
     assert!(content.contains("Test2"));
     assert!(!content.contains("Aaa"));
 }
+
+#[tokio::test]
+#[serial]
+async fn test_getting_users_catalogue_with_two_pages() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let db = prepare_db().await;
+    insert_users(30, "user", &db).await;
+    let response = prepare_server_with_db(db)
+        .await
+        .oneshot(
+            Request::builder()
+            .uri("/community/search?page=0&search=u&update_count=true")
+            .header("Cookie", format!("Token={};", token))
+            .body(Body::empty())
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = to_bytes(response.into_body(), 9000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    println!("{}", content);
+    let re = Regex::new(r"user[0-9]").unwrap();
+    let count = re.find_iter(content).count();
+    assert_eq!(count, 25*2); // link and username
+    assert!(content.contains("30 users found"));
+    assert!(content.contains("page=1"));
+    assert!(!content.contains("page=2"));
+}
+
