@@ -578,3 +578,58 @@ async fn test_getting_last_page_of_user_search_result() {
     assert!(!content.contains("page=11"));
     assert!(content.contains("\"current\">11<"));
 }
+
+#[tokio::test]
+#[serial]
+async fn test_requesting_negative_page_of_catalogue() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let db = prepare_db().await;
+    let response = prepare_server_with_db(db)
+        .await
+        .oneshot(
+            Request::builder()
+            .uri("/community/search?page=-1&search=u&update_count=false")
+            .header("Cookie", format!("Token={};", token))
+            .body(Body::empty())
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = to_bytes(response.into_body(), 9000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    println!("{}", content);
+    assert!(content.contains("error"));
+    assert!(content.contains("negative"));
+}
+
+#[tokio::test]
+#[serial]
+async fn test_requesting_negative_page_of_user_search_results() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let db = prepare_db().await;
+    let response = prepare_server_with_db(db)
+        .await
+        .oneshot(
+            Request::builder()
+            .uri("/community/users/search?page=-1&search=user&update_count=false")
+            .header("Cookie", format!("Token={};", token))
+            .body(Body::empty())
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = to_bytes(response.into_body(), 9000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    println!("{}", content);
+    assert!(content.contains("error"));
+    assert!(content.contains("negative"));
+}
+

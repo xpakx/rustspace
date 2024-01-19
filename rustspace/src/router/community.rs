@@ -113,7 +113,7 @@ pub fn validate_users_query(query: &SearchQuery) -> Vec<&'static str> {
         errors.push("Must be single letter or digit!");
     }
     if query.page < 0 {
-        errors.push("Page cannot be nagative!");
+        errors.push("Page cannot be negative!");
     }
     return errors;
 }
@@ -132,7 +132,7 @@ pub async fn search_users(user: UserData) -> impl IntoResponse {
 pub fn validate_search_users_query(query: &SearchQuery) -> Vec<&'static str> {
     let mut errors = vec![];
     if query.page < 0 {
-        errors.push("Page cannot be nagative!");
+        errors.push("Page cannot be negative!");
     }
     return errors;
 }
