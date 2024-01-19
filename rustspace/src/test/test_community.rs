@@ -376,3 +376,39 @@ async fn test_getting_search_page() {
     let content = std::str::from_utf8(&*bytes).unwrap();
     assert!(content.contains("Search for user"));
 }
+
+#[tokio::test]
+#[serial]
+async fn test_searching_users() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let db = prepare_db().await;
+    insert_new_user("user1", "user1@mail.com", &db).await;
+    insert_new_user("auser", "user2@mail.com", &db).await;
+    insert_new_user("aaauser55", "user3@mail.com", &db).await;
+    insert_new_user("User", "user4@mail.com", &db).await;
+    insert_new_user("aaaaa", "user5@mail.com", &db).await;
+    let response = prepare_server_with_db(db)
+        .await
+        .oneshot(
+            Request::builder()
+            .uri("/community/users/search?page=0&search=user&update_count=true")
+            .header("Cookie", format!("Token={};", token))
+            .body(Body::empty())
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = to_bytes(response.into_body(), 9000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    assert!(content.contains("4 users found"));
+    assert!(!content.contains("Test"));
+    assert!(content.contains("user1"));
+    assert!(content.contains("auser"));
+    assert!(content.contains("aaauser55"));
+    assert!(content.contains("User"));
+    assert!(!content.contains("aaaaa"));
+}
