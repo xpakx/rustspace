@@ -633,3 +633,29 @@ async fn test_requesting_negative_page_of_user_search_results() {
     assert!(content.contains("negative"));
 }
 
+#[tokio::test]
+#[serial]
+async fn test_requesting_too_long_search_query_in_catalogue() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let db = prepare_db().await;
+    let response = prepare_server_with_db(db)
+        .await
+        .oneshot(
+            Request::builder()
+            .uri("/community/search?page=0&search=user&update_count=false")
+            .header("Cookie", format!("Token={};", token))
+            .body(Body::empty())
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = to_bytes(response.into_body(), 9000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    println!("{}", content);
+    assert!(content.contains("error"));
+    assert!(content.contains("single letter"));
+}
