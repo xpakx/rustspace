@@ -412,3 +412,169 @@ async fn test_searching_users() {
     assert!(content.contains("User"));
     assert!(!content.contains("aaaaa"));
 }
+
+#[tokio::test]
+#[serial]
+async fn test_getting_users_search_results_with_two_pages() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let db = prepare_db().await;
+    insert_users(30, "user", &db).await;
+    let response = prepare_server_with_db(db)
+        .await
+        .oneshot(
+            Request::builder()
+            .uri("/community/users/search?page=0&search=user&update_count=true")
+            .header("Cookie", format!("Token={};", token))
+            .body(Body::empty())
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = to_bytes(response.into_body(), 9000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    let re = Regex::new(r"user[0-9]").unwrap();
+    let count = re.find_iter(content).count();
+    assert_eq!(count, 25*2); // link and username
+    assert!(content.contains("30 users found"));
+    assert!(content.contains("page=1"));
+    assert!(!content.contains("page=2"));
+}
+
+#[tokio::test]
+#[serial]
+async fn test_getting_second_page_of_user_search_results() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let db = prepare_db().await;
+    insert_users(300, "user", &db).await;
+    let response = prepare_server_with_db(db)
+        .await
+        .oneshot(
+            Request::builder()
+            .uri("/community/users/search?page=1&search=user&update_count=true")
+            .header("Cookie", format!("Token={};", token))
+            .body(Body::empty())
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = to_bytes(response.into_body(), 9000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    println!("{}", content);
+    assert!(content.contains("300 users found"));
+    assert!(content.contains("page=0"));
+    assert!(!content.contains("page=1&"));
+    assert!(content.contains("\"current\">1<"));
+    assert!(content.contains("page=2"));
+    assert!(!content.contains("page=3"));
+    assert!(content.contains("page=11"));
+}
+
+#[tokio::test]
+#[serial]
+async fn test_getting_third_page_of_user_search_results() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let db = prepare_db().await;
+    insert_users(300, "user", &db).await;
+    let response = prepare_server_with_db(db)
+        .await
+        .oneshot(
+            Request::builder()
+            .uri("/community/users/search?page=2&search=user&update_count=true")
+            .header("Cookie", format!("Token={};", token))
+            .body(Body::empty())
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = to_bytes(response.into_body(), 9000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    println!("{}", content);
+    assert!(content.contains("300 users found"));
+    assert!(content.contains("page=0"));
+    assert!(content.contains("page=1"));
+    assert!(!content.contains("page=2"));
+    assert!(content.contains("\"current\">2<"));
+    assert!(content.contains("page=3"));
+    assert!(!content.contains("page=4"));
+    assert!(content.contains("page=11"));
+}
+
+#[tokio::test]
+#[serial]
+async fn test_getting_page_of_user_search_results_in_the_middle() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let db = prepare_db().await;
+    insert_users(300, "user", &db).await;
+    let response = prepare_server_with_db(db)
+        .await
+        .oneshot(
+            Request::builder()
+            .uri("/community/users/search?page=7&search=user&update_count=true")
+            .header("Cookie", format!("Token={};", token))
+            .body(Body::empty())
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = to_bytes(response.into_body(), 9000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    println!("{}", content);
+    assert!(content.contains("300 users found"));
+    assert!(content.contains("page=0"));
+    assert!(!content.contains("page=1&"));
+    assert!(!content.contains("page=5"));
+    assert!(content.contains("page=6"));
+    assert!(!content.contains("page=7"));
+    assert!(content.contains("\"current\">7<"));
+    assert!(content.contains("page=8"));
+    assert!(!content.contains("page=9"));
+    assert!(content.contains("page=11"));
+}
+
+#[tokio::test]
+#[serial]
+async fn test_getting_last_page_of_user_search_result() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let db = prepare_db().await;
+    insert_users(300, "user", &db).await;
+    let response = prepare_server_with_db(db)
+        .await
+        .oneshot(
+            Request::builder()
+            .uri("/community/users/search?page=11&search=user&update_count=true")
+            .header("Cookie", format!("Token={};", token))
+            .body(Body::empty())
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = to_bytes(response.into_body(), 9000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    println!("{}", content);
+    assert!(content.contains("300 users found"));
+    assert!(content.contains("page=0"));
+    assert!(!content.contains("page=1&"));
+    assert!(content.contains("page=10"));
+    assert!(!content.contains("page=11"));
+    assert!(content.contains("\"current\">11<"));
+}
