@@ -156,6 +156,11 @@ pub struct SearchTemplate {
     pub user: UserData,
 }
 
+#[derive(Template)]
+#[template(path = "avatar-form.html")]
+pub struct AvatarFormTemplate {
+}
+
 pub struct HtmlTemplate<T>(pub T);
 
 impl<T> IntoResponse for HtmlTemplate<T> where T: Template, {

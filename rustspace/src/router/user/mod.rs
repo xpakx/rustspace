@@ -8,7 +8,7 @@ use rand_core::OsRng;
 use sqlx::Postgres;
 use tracing::{info, debug, error};
 
-use crate::{AppState, template::{ErrorsTemplate, RegisterTemplate, UserTemplate, HtmlTemplate, FieldTemplate, UnauthorizedTemplate, LoginTemplate, EmailFormTemplate, PasswordFormTemplate, EmailFieldTemplate, PasswordFieldTemplate}, UserRequest, validation::{validate_user, validate_password, validate_username, validate_email, validate_repeated_password, validate_login}, UserData, security::get_token, LoginRequest, UserModel, EmailRequest, PasswordRequest};
+use crate::{AppState, template::{ErrorsTemplate, RegisterTemplate, UserTemplate, HtmlTemplate, FieldTemplate, UnauthorizedTemplate, LoginTemplate, EmailFormTemplate, PasswordFormTemplate, EmailFieldTemplate, PasswordFieldTemplate, AvatarFormTemplate}, UserRequest, validation::{validate_user, validate_password, validate_username, validate_email, validate_repeated_password, validate_login}, UserData, security::get_token, LoginRequest, UserModel, EmailRequest, PasswordRequest};
 
 #[derive(Deserialize)]
 pub struct FriendlyRedirect {
@@ -410,4 +410,10 @@ pub async fn update_password(
         let template = ErrorsTemplate {errors: vec!["Database error, please try again later"]};
         return HtmlTemplate(template).into_response()
     }
+}
+
+pub async fn edit_avatar() -> impl IntoResponse {
+    info!("avatar form requested");
+    let template = AvatarFormTemplate {};
+    return HtmlTemplate(template)
 }
