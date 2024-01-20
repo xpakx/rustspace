@@ -4,6 +4,7 @@ use serde::Deserialize;
 
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher, PasswordHash, PasswordVerifier};
 use axum::{extract::{State, Query}, Form, http::HeaderMap, response::IntoResponse};
+use axum_extra::extract::Multipart;
 use rand_core::OsRng;
 use sqlx::Postgres;
 use tracing::{info, debug, error};
@@ -416,4 +417,31 @@ pub async fn edit_avatar() -> impl IntoResponse {
     info!("avatar form requested");
     let template = AvatarFormTemplate {};
     return HtmlTemplate(template)
+}
+
+pub async fn upload_avatar(user: UserData, mut multipart: Multipart) -> impl IntoResponse {
+    let Some(username) = user.username else {
+        let template = ErrorsTemplate {errors: vec!["You're unauthenticated!"]};
+        return HtmlTemplate(template).into_response()
+    };
+    let Ok(Some(field)) = multipart.next_field().await else {
+        println!("No fields in form!");
+        let template = ErrorsTemplate {errors: vec!["Form is empty!"]};
+        return HtmlTemplate(template).into_response()
+    };
+
+    let Ok(data) = field.bytes().await else {
+        println!("No avatar data!");
+        let template = ErrorsTemplate {errors: vec!["No avatar data!"]};
+        return HtmlTemplate(template).into_response()
+    };
+
+    println!("Length of avatar for user {} is {} bytes", username, data.len());
+    let filename = format!("assets/avatars/{}.png", username);
+    if let Ok(_) = std::fs::write(filename, data) {
+        let template = ErrorsTemplate {errors: vec!["TODO"]};
+        return HtmlTemplate(template).into_response()
+    };
+    let template = ErrorsTemplate {errors: vec!["Couldn't save file!"]};
+    return HtmlTemplate(template).into_response()
 }
