@@ -3,7 +3,7 @@ use std::sync::Arc;
 use serde::Deserialize;
 
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher, PasswordHash, PasswordVerifier};
-use axum::{extract::{State, Query}, Form, http::HeaderMap, response::IntoResponse};
+use axum::{extract::{State, Query}, Form, http::HeaderMap, response::IntoResponse, body::Bytes};
 use axum_extra::extract::Multipart;
 use rand_core::OsRng;
 use sqlx::Postgres;
@@ -435,6 +435,11 @@ pub async fn upload_avatar(user: UserData, mut multipart: Multipart) -> impl Int
         let template = ErrorsTemplate {errors: vec!["No avatar data!"]};
         return HtmlTemplate(template).into_response()
     };
+    if !validate_filetype(&data) {
+        println!("Wrong format!");
+        let template = ErrorsTemplate {errors: vec!["Avatar must be either JPG or PNG!"]};
+        return HtmlTemplate(template).into_response()
+    }
 
     println!("Length of avatar for user {} is {} bytes", username, data.len());
     let filename = format!("assets/avatars/{}.png", username);
@@ -444,4 +449,12 @@ pub async fn upload_avatar(user: UserData, mut multipart: Multipart) -> impl Int
     };
     let template = ErrorsTemplate {errors: vec!["Couldn't save file!"]};
     return HtmlTemplate(template).into_response()
+}
+
+fn validate_filetype(file: &Bytes) -> bool {
+    match imghdr::from_bytes(file) {
+        Some(imghdr::Type::Png) => true,
+        Some(imghdr::Type::Jpeg) => true,
+        _ => false,
+    }
 }
