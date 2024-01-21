@@ -40,6 +40,7 @@ async fn main() {
 
     let assets_path = std::env::current_dir().unwrap();
     info!("Assets path: {}", assets_path.to_str().unwrap());
+    _ = std::fs::create_dir("assets/avatars");
 
     info!("Initializing router...");
     let app = get_router()
