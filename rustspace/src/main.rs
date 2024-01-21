@@ -67,6 +67,7 @@ struct UserModel {
     screen_name: String,
     email: String,
     password: String,
+    avatar: Option<bool>,
     created_at: Option<chrono::DateTime<chrono::Utc>>,
     updated_at: Option<chrono::DateTime<chrono::Utc>>,
 }

@@ -109,7 +109,7 @@ pub async fn user_page(user: UserData,
             return HtmlTemplate(template).into_response()
         }
     } else {
-        debug!("login unsuccessful due to db error");
+        debug!("db error");
         let template = ErrorsTemplate {errors: vec!["Database error, please try again later"]};
         return HtmlTemplate(template).into_response()
     }
