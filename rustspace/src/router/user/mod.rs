@@ -419,7 +419,9 @@ pub async fn edit_avatar() -> impl IntoResponse {
     return HtmlTemplate(template)
 }
 
-pub async fn upload_avatar(user: UserData, mut multipart: Multipart) -> impl IntoResponse {
+pub async fn upload_avatar(user: UserData,
+    State(state): State<Arc<AppState>>,
+    mut multipart: Multipart) -> impl IntoResponse {
     let Some(username) = user.username else {
         let template = ErrorsTemplate {errors: vec!["You're unauthenticated!"]};
         return HtmlTemplate(template).into_response()
@@ -444,8 +446,23 @@ pub async fn upload_avatar(user: UserData, mut multipart: Multipart) -> impl Int
     println!("Length of avatar for user {} is {} bytes", username, data.len());
     let filename = format!("assets/avatars/{}.png", username);
     if let Ok(_) = std::fs::write(filename, data) {
-        let template = ErrorsTemplate {errors: vec!["TODO"]};
-        return HtmlTemplate(template).into_response()
+
+        let result = sqlx::query("UPDATE users SET avatar=true WHERE screen_name = $1")
+            .bind(username)
+            .execute(&state.db)
+            .await
+            .map_err(|err: sqlx::Error| err.to_string());
+
+        match result {
+            Err(_) => {
+                let template = ErrorsTemplate {errors: vec!["Db error! Please try again later."]};
+                return HtmlTemplate(template).into_response()
+            },
+            Ok(_) => {
+                let template = ErrorsTemplate {errors: vec!["TODO"]};
+                return HtmlTemplate(template).into_response()
+            }
+        };
     };
     let template = ErrorsTemplate {errors: vec!["Couldn't save file!"]};
     return HtmlTemplate(template).into_response()
