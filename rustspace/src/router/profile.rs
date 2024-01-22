@@ -28,8 +28,13 @@ pub async fn profile(
         let template = UserNotFoundTemplate {};
         return HtmlTemplate(template).into_response()
     };
+
+    let avatar = match user_db.avatar {
+        Some(true) => true,
+        _ => false
+    };
     let Some(user_id) = user_db.id else {
-        let template = ProfileTemplate {path: "index", user, username, profile: None, owner};
+        let template = ProfileTemplate {path: "profile", user, username, profile: None, owner, avatar};
         return HtmlTemplate(template).into_response()
     };
 
@@ -41,11 +46,11 @@ pub async fn profile(
         .await;
 
     let Ok(profile) = profile else {
-        let template = ProfileTemplate {path: "profile", user, username, profile: None, owner};
+        let template = ProfileTemplate {path: "profile", user, username, profile: None, owner, avatar};
         return HtmlTemplate(template).into_response()
     };
 
-   let template = ProfileTemplate {path: "profile", user, username, profile, owner};
+   let template = ProfileTemplate {path: "profile", user, username, profile, owner, avatar};
    return HtmlTemplate(template).into_response()
 }
 

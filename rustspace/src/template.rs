@@ -101,7 +101,8 @@ pub struct ProfileTemplate {
     pub user: UserData,
     pub username: String,
     pub profile: Option<ProfileModel>,
-    pub owner: bool
+    pub owner: bool,
+    pub avatar: bool
 }
 
 #[derive(Template)]

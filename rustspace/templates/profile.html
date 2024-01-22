@@ -15,6 +15,11 @@
 {% if profile.is_some() %}
 	<div class="profile-fields">
 		{% let profile = profile.as_ref().unwrap() %} 
+		{% if avatar %}
+		<div class="avatar-container">
+			<img src="/assets/avatars/{{username}}.png" />
+		</div>
+		{% endif %}
 		{% if profile.real_name.is_some() %}
 		<div class="profile-field name">
 			{{ profile.real_name.as_ref().unwrap()}}
