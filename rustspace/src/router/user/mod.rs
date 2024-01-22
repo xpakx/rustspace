@@ -432,7 +432,7 @@ pub async fn upload_avatar(user: UserData,
         return HtmlTemplate(template).into_response()
     };
 
-    let Ok(data) = field.bytes().await else {
+    let Ok(mut data) = field.bytes().await else {
         println!("No avatar data!");
         let template = ErrorsTemplate {errors: vec!["No avatar data!"]};
         return HtmlTemplate(template).into_response()
@@ -441,6 +441,17 @@ pub async fn upload_avatar(user: UserData,
         println!("Wrong format!");
         let template = ErrorsTemplate {errors: vec!["Avatar must be either JPG or PNG!"]};
         return HtmlTemplate(template).into_response()
+    }
+
+    if is_jpg(&data) {
+        let png = convert_jpg_to_png(&data);
+        if let Ok(png) = png {
+            data = png;
+        } else {
+            println!("Couldn't convert to png!");
+            let template = ErrorsTemplate {errors: vec!["There was an error while converting JPG to PNG!"]};
+            return HtmlTemplate(template).into_response()
+        }
     }
 
     println!("Length of avatar for user {} is {} bytes", username, data.len());
@@ -474,6 +485,22 @@ fn validate_filetype(file: &Bytes) -> bool {
         Some(imghdr::Type::Jpeg) => true,
         _ => false,
     }
+}
+
+fn is_jpg(file: &Bytes) -> bool {
+    match imghdr::from_bytes(file) {
+        Some(imghdr::Type::Jpeg) => true,
+        _ => false,
+    }
+}
+
+fn convert_jpg_to_png(image: &Bytes) -> Result<Bytes, image::ImageError> {
+    let img = image::load_from_memory(image)?;
+    let rgba_img = img.to_rgba8();
+    let mut bytes = Vec::new();
+    rgba_img.write_to(&mut std::io::Cursor::new(&mut bytes), image::ImageFormat::Png)?;
+    let bytes = Bytes::from(bytes);
+    Ok(bytes)
 }
 
 pub async fn delete_avatar(user: UserData,
