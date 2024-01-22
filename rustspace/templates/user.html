@@ -48,6 +48,7 @@
 		<img src="/assets/avatars/{{user_db.screen_name}}.png" />
 	</div>
 	<button class="field-btn" hx-target="#avatar" hx-get="/forms/avatar">Change avatar</button>
+	<button class="field-btn" hx-target="#avatar" hx-delete="/avatar">Delete avatar</button>
 	{% else %}
 	<button class="field-btn" hx-target="#avatar" hx-get="/forms/avatar">Upload avatar</button>
 	{% endif %}
