@@ -475,3 +475,34 @@ fn validate_filetype(file: &Bytes) -> bool {
         _ => false,
     }
 }
+
+pub async fn delete_avatar(user: UserData,
+    State(state): State<Arc<AppState>>) -> impl IntoResponse {
+    let Some(username) = user.username else {
+        let template = ErrorsTemplate {errors: vec!["You're unauthenticated!"]};
+        return HtmlTemplate(template).into_response()
+    };
+
+    let filename = format!("assets/avatars/{}.png", username);
+    if let Ok(_) = std::fs::remove_file(filename) {
+
+        let result = sqlx::query("UPDATE users SET avatar=false WHERE screen_name = $1")
+            .bind(username)
+            .execute(&state.db)
+            .await
+            .map_err(|err: sqlx::Error| err.to_string());
+
+        match result {
+            Err(_) => {
+                let template = ErrorsTemplate {errors: vec!["Db error! Please try again later."]};
+                return HtmlTemplate(template).into_response()
+            },
+            Ok(_) => {
+                let template = ErrorsTemplate {errors: vec!["TODO"]};
+                return HtmlTemplate(template).into_response()
+            }
+        };
+    };
+    let template = ErrorsTemplate {errors: vec!["Couldn't delete avatar!"]};
+    return HtmlTemplate(template).into_response()
+}
