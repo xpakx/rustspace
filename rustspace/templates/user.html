@@ -24,6 +24,28 @@
 	</div>
 </div>
 
+{% if user_db.avatar.is_some() %}
+{% let avatar = user_db.avatar.as_ref().unwrap() %}
+<div class="user-field">
+	<div class="field-name">Avatar</div> 
+	<div class="field avatar-field" id="avatar">
+	{% if avatar %}
+	<div class="avatar-container">
+		<img src="/assets/avatars/{{user_db.screen_name}}.png" />
+	</div>
+	<div class="buttons">
+	<button class="field-btn" hx-target="#avatar" hx-get="/forms/avatar">Change avatar</button>
+	<button class="field-btn" hx-target="#avatar" hx-delete="/avatar">Delete avatar</button>
+	</div>
+	{% else %}
+	<div class="buttons">
+	<button class="field-btn" hx-target="#avatar" hx-get="/forms/avatar">Upload avatar</button>
+	</div>
+	{% endif %}
+	</div>
+</div>
+{% endif %}
+
 {% if user_db.created_at.is_some() %}
 <div class="user-field">
 	<div class="field-name">account created at</div> 
@@ -40,19 +62,6 @@
 	</div>
 </div>
 {% endif %}
-{% if user_db.avatar.is_some() %}
-{% let avatar = user_db.avatar.as_ref().unwrap() %}
-<div class="avatar-field" id="avatar">
-	{% if avatar %}
-	<div class="avatar-container">
-		<img src="/assets/avatars/{{user_db.screen_name}}.png" />
-	</div>
-	<button class="field-btn" hx-target="#avatar" hx-get="/forms/avatar">Change avatar</button>
-	<button class="field-btn" hx-target="#avatar" hx-delete="/avatar">Delete avatar</button>
-	{% else %}
-	<button class="field-btn" hx-target="#avatar" hx-get="/forms/avatar">Upload avatar</button>
-	{% endif %}
-</div>
-{% endif %}
+
 <p>…</p>
 {% endblock %}

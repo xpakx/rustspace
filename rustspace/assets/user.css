@@ -89,6 +89,7 @@ input {
   height: 150px;
   overflow: hidden;
   border-radius: 50%;
+  margin-bottom: 10px;
 }
 
 .avatar-container img {
@@ -97,4 +98,15 @@ input {
   object-fit: cover;
   border-radius: inherit;
   transition: transform 0.3s ease-in-out;
+}
+
+.buttons {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 5px;
+}
+
+.field.avatar-field {
+	justify-content: space-evenly;
 }
