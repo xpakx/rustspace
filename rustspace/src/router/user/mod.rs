@@ -475,7 +475,7 @@ pub async fn upload_avatar(user: UserData,
             Ok(_) => {
                 let dt = Utc::now();
                 let timestamp: i64 = dt.timestamp();
-                let template = AvatarResultTemplate {avatar: true, username: username.clone(), timestamp};
+                let template = AvatarResultTemplate {avatar: true, username, timestamp};
                 return HtmlTemplate(template).into_response()
             }
         };
@@ -517,7 +517,6 @@ pub async fn delete_avatar(user: UserData,
 
     let filename = format!("assets/avatars/{}.png", username);
     if let Ok(_) = std::fs::remove_file(filename) {
-
         let result = sqlx::query("UPDATE users SET avatar=false WHERE screen_name = $1")
             .bind(&username)
             .execute(&state.db)
@@ -530,7 +529,7 @@ pub async fn delete_avatar(user: UserData,
                 return HtmlTemplate(template).into_response()
             },
             Ok(_) => {
-                let template = AvatarResultTemplate {avatar: false, username: username.clone(), timestamp: 0};
+                let template = AvatarResultTemplate {avatar: false, username, timestamp: 0};
                 return HtmlTemplate(template).into_response()
             }
         };
