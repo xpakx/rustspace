@@ -9,7 +9,7 @@ use rand_core::OsRng;
 use sqlx::Postgres;
 use tracing::{info, debug, error};
 
-use crate::{AppState, template::{ErrorsTemplate, RegisterTemplate, UserTemplate, HtmlTemplate, FieldTemplate, UnauthorizedTemplate, LoginTemplate, EmailFormTemplate, PasswordFormTemplate, EmailFieldTemplate, PasswordFieldTemplate, AvatarFormTemplate}, UserRequest, validation::{validate_user, validate_password, validate_username, validate_email, validate_repeated_password, validate_login}, UserData, security::get_token, LoginRequest, UserModel, EmailRequest, PasswordRequest};
+use crate::{AppState, template::{ErrorsTemplate, RegisterTemplate, UserTemplate, HtmlTemplate, FieldTemplate, UnauthorizedTemplate, LoginTemplate, EmailFormTemplate, PasswordFormTemplate, EmailFieldTemplate, PasswordFieldTemplate, AvatarFormTemplate, AvatarResultTemplate}, UserRequest, validation::{validate_user, validate_password, validate_username, validate_email, validate_repeated_password, validate_login}, UserData, security::get_token, LoginRequest, UserModel, EmailRequest, PasswordRequest};
 
 #[derive(Deserialize)]
 pub struct FriendlyRedirect {
@@ -100,7 +100,6 @@ pub async fn user_page(user: UserData,
 
     if let Ok(user_db) = user_db {
         if let Some(user_db) = user_db {
-            // TODO
             let template = UserTemplate {path: "user", user, user_db};
             return HtmlTemplate(template).into_response()
         } else {
@@ -459,7 +458,7 @@ pub async fn upload_avatar(user: UserData,
     if let Ok(_) = std::fs::write(filename, data) {
 
         let result = sqlx::query("UPDATE users SET avatar=true WHERE screen_name = $1")
-            .bind(username)
+            .bind(&username)
             .execute(&state.db)
             .await
             .map_err(|err: sqlx::Error| err.to_string());
@@ -470,7 +469,7 @@ pub async fn upload_avatar(user: UserData,
                 return HtmlTemplate(template).into_response()
             },
             Ok(_) => {
-                let template = ErrorsTemplate {errors: vec!["TODO"]};
+                let template = AvatarResultTemplate {avatar: true, username: username.clone()};
                 return HtmlTemplate(template).into_response()
             }
         };
@@ -514,7 +513,7 @@ pub async fn delete_avatar(user: UserData,
     if let Ok(_) = std::fs::remove_file(filename) {
 
         let result = sqlx::query("UPDATE users SET avatar=false WHERE screen_name = $1")
-            .bind(username)
+            .bind(&username)
             .execute(&state.db)
             .await
             .map_err(|err: sqlx::Error| err.to_string());
@@ -525,7 +524,7 @@ pub async fn delete_avatar(user: UserData,
                 return HtmlTemplate(template).into_response()
             },
             Ok(_) => {
-                let template = ErrorsTemplate {errors: vec!["TODO"]};
+                let template = AvatarResultTemplate {avatar: false, username: username.clone()};
                 return HtmlTemplate(template).into_response()
             }
         };

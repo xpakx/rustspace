@@ -1,0 +1,13 @@
+{% if avatar %}
+<div class="avatar-container">
+	<img src="/assets/avatars/{{username}}.png" />
+</div>
+<div class="buttons">
+	<button class="field-btn" hx-target="#avatar" hx-get="/forms/avatar">Change avatar</button>
+	<button class="field-btn" hx-target="#avatar" hx-delete="/avatar">Delete avatar</button>
+</div>
+{% else %}
+<div class="buttons">
+	<button class="field-btn" hx-target="#avatar" hx-get="/forms/avatar">Upload avatar</button>
+</div>
+{% endif %}
