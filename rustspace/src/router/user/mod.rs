@@ -99,24 +99,24 @@ pub async fn user_page(user: UserData,
         .fetch_optional(&state.db)
         .await;
 
-    if let Ok(user_db) = user_db {
-        if let Some(user_db) = user_db {
-            let timestamp: i64 = match &user_db.updated_at {
-                Some(time) => time.timestamp(),
-                None => 0
-            };
-            let template = UserTemplate {path: "user", user, user_db, timestamp};
-            return HtmlTemplate(template).into_response()
-        } else {
-            debug!("no such user");
-            let template = ErrorsTemplate {errors: vec!["No such user!"]};
-            return HtmlTemplate(template).into_response()
-        }
-    } else {
+    let Ok(user_db) = user_db else {
         debug!("db error");
         let template = ErrorsTemplate {errors: vec!["Database error, please try again later"]};
         return HtmlTemplate(template).into_response()
-    }
+    };
+
+    let Some(user_db) = user_db  else {
+        debug!("no such user");
+        let template = ErrorsTemplate {errors: vec!["No such user!"]};
+        return HtmlTemplate(template).into_response()
+    };
+
+    let timestamp: i64 = match &user_db.updated_at {
+        Some(time) => time.timestamp(),
+        None => 0
+    };
+    let template = UserTemplate {path: "user", user, user_db, timestamp};
+    return HtmlTemplate(template).into_response()
 }
 
 pub async fn check_password(Form(user): Form<UserRequest>) -> impl IntoResponse {
@@ -458,10 +458,9 @@ pub async fn upload_avatar(user: UserData,
         }
     }
 
-    println!("Length of avatar for user {} is {} bytes", username, data.len());
+    debug!("Length of avatar for user {} is {} bytes", username, data.len());
     let filename = format!("assets/avatars/{}.png", username);
     if let Ok(_) = std::fs::write(filename, data) {
-
         let result = sqlx::query("UPDATE users SET avatar=true WHERE screen_name = $1")
             .bind(&username)
             .execute(&state.db)
