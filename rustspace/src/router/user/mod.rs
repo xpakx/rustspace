@@ -101,8 +101,10 @@ pub async fn user_page(user: UserData,
 
     if let Ok(user_db) = user_db {
         if let Some(user_db) = user_db {
-            let dt = Utc::now();
-            let timestamp: i64 = dt.timestamp();
+            let timestamp: i64 = match &user_db.updated_at {
+                Some(time) => time.timestamp(),
+                None => 0
+            };
             let template = UserTemplate {path: "user", user, user_db, timestamp};
             return HtmlTemplate(template).into_response()
         } else {
