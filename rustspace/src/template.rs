@@ -46,7 +46,8 @@ pub struct LoginTemplate {
 pub struct UserTemplate {
     pub path: &'static str,
     pub user: UserData,
-    pub user_db: UserModel
+    pub user_db: UserModel,
+    pub timestamp: i64,
 }
 
 #[derive(Template)]
@@ -166,7 +167,8 @@ pub struct AvatarFormTemplate {
 #[template(path = "avatar-result.html")]
 pub struct AvatarResultTemplate {
     pub avatar: bool,
-    pub username: String
+    pub username: String,
+    pub timestamp: i64,
 }
 
 pub struct HtmlTemplate<T>(pub T);

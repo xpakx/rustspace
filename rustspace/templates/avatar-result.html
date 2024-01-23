@@ -1,7 +1,7 @@
 <div hx-swap-oob="true" class="field avatar-field" id="avatar">
 	{% if avatar %}
 	<div class="avatar-container">
-		<img src="/assets/avatars/{{username}}.png" />
+		<img src="/assets/avatars/{{username}}.png?{{timestamp}}" />
 	</div>
 	<div class="buttons">
 		<button class="field-btn" hx-target="#avatar" hx-get="/forms/avatar">Change avatar</button>

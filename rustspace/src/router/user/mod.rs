@@ -1,5 +1,6 @@
 use core::fmt;
 use std::sync::Arc;
+use chrono::Utc;
 use serde::Deserialize;
 
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher, PasswordHash, PasswordVerifier};
@@ -100,7 +101,9 @@ pub async fn user_page(user: UserData,
 
     if let Ok(user_db) = user_db {
         if let Some(user_db) = user_db {
-            let template = UserTemplate {path: "user", user, user_db};
+            let dt = Utc::now();
+            let timestamp: i64 = dt.timestamp();
+            let template = UserTemplate {path: "user", user, user_db, timestamp};
             return HtmlTemplate(template).into_response()
         } else {
             debug!("no such user");
@@ -469,7 +472,9 @@ pub async fn upload_avatar(user: UserData,
                 return HtmlTemplate(template).into_response()
             },
             Ok(_) => {
-                let template = AvatarResultTemplate {avatar: true, username: username.clone()};
+                let dt = Utc::now();
+                let timestamp: i64 = dt.timestamp();
+                let template = AvatarResultTemplate {avatar: true, username: username.clone(), timestamp};
                 return HtmlTemplate(template).into_response()
             }
         };
@@ -524,7 +529,7 @@ pub async fn delete_avatar(user: UserData,
                 return HtmlTemplate(template).into_response()
             },
             Ok(_) => {
-                let template = AvatarResultTemplate {avatar: false, username: username.clone()};
+                let template = AvatarResultTemplate {avatar: false, username: username.clone(), timestamp: 0};
                 return HtmlTemplate(template).into_response()
             }
         };
