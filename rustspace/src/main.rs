@@ -100,7 +100,7 @@ struct UserDetails {
 #[derive(Serialize, Deserialize, sqlx::FromRow)]
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-struct FrienshipModel {
+struct FriendshipModel {
     id: Option<i32>,
     user_id: i32,
     friend_id: i32,

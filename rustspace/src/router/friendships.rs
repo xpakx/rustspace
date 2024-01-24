@@ -4,7 +4,7 @@ use axum::{response::IntoResponse, extract::State, Form};
 use sqlx::Postgres;
 use tracing::{info, debug};
 
-use crate::{template::{HtmlTemplate, ErrorsTemplate}, UserData, AppState, UserModel, FrienshipModel, FriendshipRequest, validation::validate_non_empty};
+use crate::{template::{HtmlTemplate, ErrorsTemplate}, UserData, AppState, UserModel, FriendshipModel, FriendshipRequest, validation::validate_non_empty};
 
 pub async fn send_friend_request(
     user: UserData,
@@ -46,7 +46,7 @@ pub async fn send_friend_request(
         return HtmlTemplate(template).into_response()
     };
 
-    let friendship = sqlx::query_as::<Postgres, FrienshipModel>(
+    let friendship = sqlx::query_as::<Postgres, FriendshipModel>(
         "SELECT * FROM friendships WHERE (user_id = $1 AND friend_id = $2) OR (user_id = $2 AND friend_id = $1)",
         )
         .bind(&friend.id)
