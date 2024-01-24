@@ -1,10 +1,10 @@
 use std::sync::Arc;
 
 use axum::{response::IntoResponse, extract::State, Form};
-use sqlx::Postgres;
+use sqlx::{Postgres, PgPool};
 use tracing::{info, debug};
 
-use crate::{template::{HtmlTemplate, ErrorsTemplate}, UserData, AppState, UserModel, FriendshipModel, FriendshipRequest, validation::validate_non_empty};
+use crate::{template::{HtmlTemplate, ErrorsTemplate}, UserData, AppState, UserModel, FriendshipModel, FriendshipRequest, validation::validate_non_empty, FriendshipDetails};
 
 pub async fn send_friend_request(
     user: UserData,
@@ -89,4 +89,39 @@ pub async fn send_friend_request(
             return HtmlTemplate(template).into_response()
         }
     }
+}
+
+#[allow(dead_code)]
+async fn get_friend_requests(db: &PgPool, user_id: i32, page: i32, accepted: bool, rejected: bool, get_count: bool) -> Result<(Vec<FriendshipDetails>, Option<i64>), sqlx::Error> {
+    let page_size = 25;
+    let offset = page_size * page;
+    let users = sqlx::query_as::<Postgres, FriendshipDetails>(
+        "SELECT f.id, u.screen_name, f.accepted, f.rejected, f.created_at
+        FROM users u
+        LEFT JOIN friendships f ON u.id = f.friend_id
+        WHERE f.user_id = $3 AND f.accepted = $4 AND f.rejected = $5
+        ORDER BY f.created_at
+        LIMIT $1 OFFSET $2"
+        )
+        .bind(page_size)
+        .bind(offset)
+        .bind(user_id)
+        .bind(accepted)
+        .bind(rejected)
+        .fetch_all(db)
+        .await?;
+    if !get_count {
+        return Ok((users, None));
+    }
+
+    let records: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM friendships f
+        WHERE f.user_id = $1 AND f.accepted = $2 AND f.rejected = $3")
+        .bind(user_id)
+        .bind(accepted)
+        .bind(rejected)
+        .fetch_one(db)
+        .await?;
+    
+    Ok((users, Some(records)))
 }

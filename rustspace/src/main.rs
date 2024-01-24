@@ -110,6 +110,17 @@ struct FriendshipModel {
     accepted_at: Option<chrono::DateTime<chrono::Utc>>,
 }
 
+#[derive(Serialize, Deserialize, sqlx::FromRow, Debug)]
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+struct FriendshipDetails {
+    id: Option<i32>,
+    screen_name: String,
+    accepted: bool,
+    rejected: bool,
+    created_at: Option<chrono::DateTime<chrono::Utc>>,
+}
+
 #[derive(Serialize, Deserialize)]
 pub struct UserRequest {
     username: Option<String>,
