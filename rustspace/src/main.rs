@@ -61,7 +61,6 @@ async fn main() {
 
 #[derive(Serialize, Deserialize, sqlx::FromRow)]
 #[allow(non_snake_case)]
-#[allow(dead_code)]
 struct UserModel {
     id: Option<i32>,
     screen_name: String,
@@ -74,7 +73,6 @@ struct UserModel {
 
 #[derive(Serialize, Deserialize, sqlx::FromRow)]
 #[allow(non_snake_case)]
-#[allow(dead_code)]
 struct ProfileModel {
     id: Option<i32>,
     user_id: i32,
@@ -88,7 +86,6 @@ struct ProfileModel {
 
 #[derive(Serialize, Deserialize, sqlx::FromRow, Debug)]
 #[allow(non_snake_case)]
-#[allow(dead_code)]
 struct UserDetails {
     id: Option<i32>,
     screen_name: String,
@@ -99,7 +96,6 @@ struct UserDetails {
 
 #[derive(Serialize, Deserialize, sqlx::FromRow)]
 #[allow(non_snake_case)]
-#[allow(dead_code)]
 struct FriendshipModel {
     id: Option<i32>,
     user_id: i32,
@@ -112,7 +108,6 @@ struct FriendshipModel {
 
 #[derive(Serialize, Deserialize, sqlx::FromRow, Debug)]
 #[allow(non_snake_case)]
-#[allow(dead_code)]
 struct FriendshipDetails {
     id: Option<i32>,
     screen_name: String,
