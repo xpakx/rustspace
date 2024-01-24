@@ -97,6 +97,19 @@ struct UserDetails {
     city: Option<String>,
 }
 
+#[derive(Serialize, Deserialize, sqlx::FromRow)]
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+struct FrienshipModel {
+    id: Option<i32>,
+    user_id: i32,
+    friend_id: i32,
+    accepted: bool,
+    rejected: bool,
+    created_at: Option<chrono::DateTime<chrono::Utc>>,
+    accepted_at: Option<chrono::DateTime<chrono::Utc>>,
+}
+
 #[derive(Serialize, Deserialize)]
 pub struct UserRequest {
     username: Option<String>,
@@ -104,6 +117,11 @@ pub struct UserRequest {
     psw_repeat: Option<String>,
     email: Option<String>,
     redir: Option<String>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct FriendshipRequest {
+    username: Option<String>,
 }
 
 #[derive(Serialize, Deserialize)]
