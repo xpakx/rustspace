@@ -170,7 +170,12 @@ pub async fn requests(
         return HtmlTemplate(template).into_response()
     }
 
-    let users = get_friend_requests(&state.db, 1, 0, false, false, false).await;
+    let Some(user_id) = get_user_id(&state.db, &user).await else {
+        let template = ErrorsTemplate {errors: vec!["Couldn't get user's id!"]};
+        return HtmlTemplate(template).into_response()
+    };
+
+    let users = get_friend_requests(&state.db, user_id, 0, false, false, false).await;
     match users {
         Err(err) => {
             debug!("Database error: {}", err);
@@ -192,7 +197,12 @@ pub async fn friends(
         return HtmlTemplate(template).into_response()
     }
 
-    let users = get_friends(&state.db, 1, 0, false).await;
+    let Some(user_id) = get_user_id(&state.db, &user).await else {
+        let template = ErrorsTemplate {errors: vec!["Couldn't get user's id!"]};
+        return HtmlTemplate(template).into_response()
+    };
+
+    let users = get_friends(&state.db, user_id, 0, false).await;
     match users {
         Err(err) => {
             debug!("Database error: {}", err);
@@ -204,4 +214,22 @@ pub async fn friends(
             return HtmlTemplate(template).into_response()
         }
     };
+}
+
+pub async fn get_user_id(db: &PgPool, user: &UserData) -> Option<i32> {
+    let user_db = sqlx::query_as::<Postgres, UserModel>(
+        "SELECT * FROM users WHERE screen_name = $1",
+        )
+        .bind(&user.username)
+        .fetch_optional(db)
+        .await;
+
+    let Ok(Some(user_db)) = user_db else {
+        return None;
+    };
+
+    let Some(user_id) = user_db.id else {
+        return None;
+    };
+    Some(user_id)
 }
