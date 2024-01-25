@@ -33,10 +33,17 @@ pub async fn profile(
         Some(true) => true,
         _ => false
     };
+
+    let timestamp: i64 = match &user_db.updated_at {
+        Some(time) => time.timestamp(),
+        None => 0
+    };
+
     let Some(user_id) = user_db.id else {
-        let template = ProfileTemplate {path: "profile", user, username, profile: None, owner, avatar};
+        let template = ProfileTemplate {path: "profile", user, username, profile: None, owner, avatar, timestamp};
         return HtmlTemplate(template).into_response()
     };
+
 
     let profile = sqlx::query_as::<Postgres, ProfileModel>(
         "SELECT * FROM profiles WHERE user_id = $1",
@@ -46,11 +53,11 @@ pub async fn profile(
         .await;
 
     let Ok(profile) = profile else {
-        let template = ProfileTemplate {path: "profile", user, username, profile: None, owner, avatar};
+        let template = ProfileTemplate {path: "profile", user, username, profile: None, owner, avatar, timestamp};
         return HtmlTemplate(template).into_response()
     };
 
-   let template = ProfileTemplate {path: "profile", user, username, profile, owner, avatar};
+   let template = ProfileTemplate {path: "profile", user, username, profile, owner, avatar, timestamp};
    return HtmlTemplate(template).into_response()
 }
 

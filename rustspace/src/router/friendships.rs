@@ -91,7 +91,6 @@ pub async fn send_friend_request(
     }
 }
 
-#[allow(dead_code)]
 async fn get_friend_requests(db: &PgPool, user_id: i32, page: i32, accepted: bool, rejected: bool, get_count: bool) -> Result<(Vec<FriendshipDetails>, Option<i64>), sqlx::Error> {
     let page_size = 25;
     let offset = page_size * page;
@@ -126,7 +125,6 @@ async fn get_friend_requests(db: &PgPool, user_id: i32, page: i32, accepted: boo
     Ok((users, Some(records)))
 }
 
-#[allow(dead_code)]
 async fn get_friends(db: &PgPool, user_id: i32, page: i32, get_count: bool) -> Result<(Vec<FriendshipDetails>, Option<i64>), sqlx::Error> {
     let page_size = 25;
     let offset = page_size * page;
@@ -171,7 +169,7 @@ pub async fn requests(
     }
 
     let Some(user_id) = get_user_id(&state.db, &user).await else {
-        let template = ErrorsTemplate {errors: vec!["Couldn't get user's id!"]};
+        let template = ErrorsTemplate {errors: vec!["Db error!"]};
         return HtmlTemplate(template).into_response()
     };
 
@@ -198,7 +196,7 @@ pub async fn friends(
     }
 
     let Some(user_id) = get_user_id(&state.db, &user).await else {
-        let template = ErrorsTemplate {errors: vec!["Couldn't get user's id!"]};
+        let template = ErrorsTemplate {errors: vec!["Db error!"]};
         return HtmlTemplate(template).into_response()
     };
 

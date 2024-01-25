@@ -17,7 +17,7 @@
 		{% let profile = profile.as_ref().unwrap() %} 
 		{% if avatar %}
 		<div class="avatar-container">
-			<img src="/assets/avatars/{{username}}.png" />
+			<img src="/assets/avatars/{{username}}.png?{{timestamp}}" />
 		</div>
 		{% endif %}
 		{% if profile.real_name.is_some() %}

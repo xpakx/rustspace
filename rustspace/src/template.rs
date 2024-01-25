@@ -103,7 +103,8 @@ pub struct ProfileTemplate {
     pub username: String,
     pub profile: Option<ProfileModel>,
     pub owner: bool,
-    pub avatar: bool
+    pub avatar: bool,
+    pub timestamp: i64,
 }
 
 #[derive(Template)]
