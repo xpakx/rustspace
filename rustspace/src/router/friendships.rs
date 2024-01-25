@@ -4,7 +4,7 @@ use axum::{response::IntoResponse, extract::State, Form};
 use sqlx::{Postgres, PgPool};
 use tracing::{info, debug};
 
-use crate::{template::{HtmlTemplate, ErrorsTemplate}, UserData, AppState, UserModel, FriendshipModel, FriendshipRequest, validation::validate_non_empty, FriendshipDetails};
+use crate::{template::{HtmlTemplate, ErrorsTemplate, UnauthorizedTemplate}, UserData, AppState, UserModel, FriendshipModel, FriendshipRequest, validation::validate_non_empty, FriendshipDetails};
 
 pub async fn send_friend_request(
     user: UserData,
@@ -134,8 +134,13 @@ async fn get_friends(db: &PgPool, user_id: i32, page: i32, get_count: bool) -> R
         "SELECT f.id, u.screen_name, f.accepted, f.rejected, f.created_at
         FROM users u
         LEFT JOIN friendships f ON u.id = f.friend_id
-        WHERE (f.user_id = $3 OR f.friend_id = $3) AND f.accepted = true
-        ORDER BY f.created_at
+        WHERE f.user_id = $3 AND f.accepted = true
+        UNION
+        SELECT fr.id, us.screen_name, fr.accepted, fr.rejected, fr.created_at
+        FROM users us
+        LEFT JOIN friendships fr ON us.id = fr.user_id
+        WHERE fr.friend_id = $3 AND fr.accepted = true
+        ORDER BY created_at
         LIMIT $1 OFFSET $2"
         )
         .bind(page_size)
