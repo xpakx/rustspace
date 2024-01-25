@@ -161,3 +161,47 @@ async fn get_friends(db: &PgPool, user_id: i32, page: i32, get_count: bool) -> R
     
     Ok((users, Some(records)))
 }
+
+pub async fn requests(
+    user: UserData,
+    State(state): State<Arc<AppState>>) -> impl IntoResponse {
+    if user.username.is_none() {
+        let template = UnauthorizedTemplate {message: "You're unauthenticated!", redir: Some(String::from("/friends/requests"))};
+        return HtmlTemplate(template).into_response()
+    }
+
+    let users = get_friend_requests(&state.db, 1, 0, false, false, false).await;
+    match users {
+        Err(err) => {
+            debug!("Database error: {}", err);
+            let template = ErrorsTemplate {errors: vec!["Db error!"]};
+            return HtmlTemplate(template).into_response()
+        },
+        Ok((_, _)) => {
+            let template = ErrorsTemplate {errors: vec!["TODO"]};
+            return HtmlTemplate(template).into_response()
+        }
+    };
+}
+
+pub async fn friends(
+    user: UserData,
+    State(state): State<Arc<AppState>>) -> impl IntoResponse {
+    if user.username.is_none() {
+        let template = UnauthorizedTemplate {message: "You're unauthenticated!", redir: Some(String::from("/friends"))};
+        return HtmlTemplate(template).into_response()
+    }
+
+    let users = get_friends(&state.db, 1, 0, false).await;
+    match users {
+        Err(err) => {
+            debug!("Database error: {}", err);
+            let template = ErrorsTemplate {errors: vec!["Db error!"]};
+            return HtmlTemplate(template).into_response()
+        },
+        Ok((_, _)) => {
+            let template = ErrorsTemplate {errors: vec!["TODO"]};
+            return HtmlTemplate(template).into_response()
+        }
+    };
+}
