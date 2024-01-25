@@ -125,3 +125,34 @@ async fn get_friend_requests(db: &PgPool, user_id: i32, page: i32, accepted: boo
     
     Ok((users, Some(records)))
 }
+
+#[allow(dead_code)]
+async fn get_friends(db: &PgPool, user_id: i32, page: i32, get_count: bool) -> Result<(Vec<FriendshipDetails>, Option<i64>), sqlx::Error> {
+    let page_size = 25;
+    let offset = page_size * page;
+    let users = sqlx::query_as::<Postgres, FriendshipDetails>(
+        "SELECT f.id, u.screen_name, f.accepted, f.rejected, f.created_at
+        FROM users u
+        LEFT JOIN friendships f ON u.id = f.friend_id
+        WHERE (f.user_id = $3 OR f.friend_id = $3) AND f.accepted = true
+        ORDER BY f.created_at
+        LIMIT $1 OFFSET $2"
+        )
+        .bind(page_size)
+        .bind(offset)
+        .bind(user_id)
+        .fetch_all(db)
+        .await?;
+    if !get_count {
+        return Ok((users, None));
+    }
+
+    let records: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM friendships f
+        WHERE (f.user_id = $1 OR f.friend_id = $1) AND f.accepted = true")
+        .bind(user_id)
+        .fetch_one(db)
+        .await?;
+    
+    Ok((users, Some(records)))
+}
