@@ -250,8 +250,8 @@ fn records_to_count(records: Option<i64>) -> i32 {
 pub async fn change_request_state(
     user: UserData,
     State(state): State<Arc<AppState>>,
-    Form(request): Form<FriendshipStateRequest>,
-    Path(request_id): Path<String>
+    Path(request_id): Path<String>,
+    Form(request): Form<FriendshipStateRequest>
     ) -> impl IntoResponse {
     info!("sending friend request requested");
     if user.username.is_none() {
