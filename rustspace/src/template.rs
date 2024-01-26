@@ -2,7 +2,7 @@ use askama::Template;
 use axum::response::{Html, IntoResponse, Response};
 use axum::http::StatusCode;
 
-use crate::{UserData, UserModel, ProfileModel, UserDetails};
+use crate::{UserData, UserModel, ProfileModel, UserDetails, FriendshipDetails};
 
 #[derive(Template)]
 #[template(path = "index.html")]
@@ -170,6 +170,17 @@ pub struct AvatarResultTemplate {
     pub avatar: bool,
     pub username: String,
     pub timestamp: i64,
+}
+
+#[derive(Template)]
+#[template(path = "friend-requests.html")]
+pub struct FriendRequestsTemplate {
+    pub path: &'static str,
+    pub user: UserData,
+
+    pub friends: Vec<FriendshipDetails>,
+    pub records: Option<i64>,
+    pub pages: i32,
 }
 
 pub struct HtmlTemplate<T>(pub T);
