@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+ 
+{% block title %}RustSpace: Friends{% endblock %}
+ 
+{% block head %}
+  <link href="/assets/community.css" rel="stylesheet" />
+{% endblock %}
+
+{% block content %}
+<h1>Requests</h1>
+
+<section class="requests" id="requests">
+{% for friend in friends %}
+<div class="user">
+	<span class="at">@</span><a href="/profile/{{friend.screen_name}}"><span class="screen_name">{{ friend.screen_name }}</span></a>  
+</div>
+{% endfor %}
+</section>
+<section class="page-nav" id="page-nav">
+	<span class="current">0</span>
+	{% if pages > 1 %}
+	<button hx-get="/friends/search?page=1" hx-target="#requests">1</button>
+	{% endif %}
+
+	{% if pages > 3 %}
+	…
+	{% endif %}
+	{% if pages > 2 %}
+	<button hx-get="/friends/search?page={{pages-1}}" hx-target="#requests">{{pages-1}}</button>
+	{% endif %}
+</section>
+<section class="record-count" id="count">
+{% if records.is_some() %}
+{{ records.as_ref().unwrap() }} requests found
+{% endif %}
+</section>
+
+{% endblock %}

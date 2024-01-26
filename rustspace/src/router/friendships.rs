@@ -4,7 +4,7 @@ use axum::{response::IntoResponse, extract::State, Form};
 use sqlx::{Postgres, PgPool};
 use tracing::{info, debug};
 
-use crate::{template::{HtmlTemplate, ErrorsTemplate, UnauthorizedTemplate, FriendRequestsTemplate}, UserData, AppState, UserModel, FriendshipModel, FriendshipRequest, validation::validate_non_empty, FriendshipDetails};
+use crate::{template::{HtmlTemplate, ErrorsTemplate, UnauthorizedTemplate, FriendRequestsTemplate, FriendsTemplate}, UserData, AppState, UserModel, FriendshipModel, FriendshipRequest, validation::validate_non_empty, FriendshipDetails};
 
 pub async fn send_friend_request(
     user: UserData,
@@ -208,8 +208,9 @@ pub async fn friends(
             let template = ErrorsTemplate {errors: vec!["Db error!"]};
             return HtmlTemplate(template).into_response()
         },
-        Ok((_, _)) => {
-            let template = ErrorsTemplate {errors: vec!["TODO"]};
+        Ok((friends, records)) => {
+            let pages = records_to_count(records);
+            let template = FriendsTemplate {path: "/friends", friends, pages, user, records };
             return HtmlTemplate(template).into_response()
         }
     };
