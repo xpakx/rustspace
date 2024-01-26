@@ -246,11 +246,10 @@ fn records_to_count(records: Option<i64>) -> i32 {
     }
 }
 
-#[allow(dead_code)]
 pub async fn change_request_state(
     user: UserData,
     State(state): State<Arc<AppState>>,
-    Path(request_id): Path<String>,
+    Path(request_id): Path<i32>,
     Form(request): Form<FriendshipStateRequest>
     ) -> impl IntoResponse {
     info!("sending friend request requested");
