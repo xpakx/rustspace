@@ -1,10 +1,11 @@
 use std::sync::Arc;
 
-use axum::{response::IntoResponse, extract::State, Form};
+use axum::{response::IntoResponse, extract::{State, Path}, Form};
 use sqlx::{Postgres, PgPool};
 use tracing::{info, debug};
+use chrono::Utc;
 
-use crate::{template::{HtmlTemplate, ErrorsTemplate, UnauthorizedTemplate, FriendRequestsTemplate, FriendsTemplate}, UserData, AppState, UserModel, FriendshipModel, FriendshipRequest, validation::validate_non_empty, FriendshipDetails};
+use crate::{template::{HtmlTemplate, ErrorsTemplate, UnauthorizedTemplate, FriendRequestsTemplate, FriendsTemplate}, UserData, AppState, UserModel, FriendshipModel, FriendshipRequest, FriendshipStateRequest, validation::validate_non_empty, FriendshipDetails};
 
 pub async fn send_friend_request(
     user: UserData,
@@ -242,5 +243,88 @@ fn records_to_count(records: Option<i64>) -> i32 {
             let count = count.ceil() as i32;
             count
         }
+    }
+}
+
+#[allow(dead_code)]
+pub async fn change_request_state(
+    user: UserData,
+    State(state): State<Arc<AppState>>,
+    Form(request): Form<FriendshipStateRequest>,
+    Path(request_id): Path<String>
+    ) -> impl IntoResponse {
+    info!("sending friend request requested");
+    if user.username.is_none() {
+        let template = ErrorsTemplate {errors: vec!["Unauthenticated!"]};
+        return HtmlTemplate(template).into_response()
+    }
+
+    let (accepted, rejected, error) = match request.state {
+        None => (false, false, Some("State cannot be empty!")),
+        Some(state) if state == "accepted" => (true, false, None),
+        Some(state) if state == "rejected" => (false, true, None),
+        Some(_) => (false, false, Some("Unsupported state!"))
+    };
+
+    if let Some(error) = error {
+        let template = ErrorsTemplate {errors: vec![error]};
+        return HtmlTemplate(template).into_response()
+    };
+
+    let user_db = sqlx::query_as::<Postgres, UserModel>("SELECT * FROM users WHERE screen_name = $1")
+        .bind(&user.username)
+        .fetch_optional(&state.db)
+        .await;
+    let Ok(Some(user)) = user_db else {
+        let template = ErrorsTemplate {errors: vec!["Db error!"]};
+        return HtmlTemplate(template).into_response()
+    };
+    let Some(user_id) = user.id else {
+        let template = ErrorsTemplate {errors: vec!["Db error!"]};
+        return HtmlTemplate(template).into_response()
+    };
+
+    let friendship = sqlx::query_as::<Postgres, FriendshipModel>(
+        "SELECT * FROM friendships WHERE id = $1",
+        )
+        .bind(&request_id)
+        .fetch_optional(&state.db)
+        .await;
+
+    let Ok(friendship) = friendship else {
+        let template = ErrorsTemplate {errors: vec!["Db error!"]};
+        return HtmlTemplate(template).into_response()
+    };
+
+    let Some(friendship) = friendship else {
+        let template = ErrorsTemplate {errors: vec!["No such request!"]};
+        return HtmlTemplate(template).into_response()
+    };
+
+    if &friendship.friend_id != &user_id {
+        // TODO
+        let template = ErrorsTemplate {errors: vec!["You cannot change this request!"]};
+        return HtmlTemplate(template).into_response()
+    }
+
+    let accepted_at = match &accepted {
+        true => Some(Utc::now()),
+        false => friendship.accepted_at
+    };
+
+    let result = sqlx::query("UPDATE friendships SET accepted = $1, rejected = $2, accepted_at = $3 WHERE id = $4")
+        .bind(&accepted)
+        .bind(&rejected)
+        .bind(&accepted_at)
+        .bind(&user_id)
+        .execute(&state.db)
+        .await
+        .map_err(|err: sqlx::Error| err.to_string());
+    if let Ok(_) = result {
+        let template = ErrorsTemplate {errors: vec!["TODO"]};
+        return HtmlTemplate(template).into_response()
+    } else {
+        let template = ErrorsTemplate {errors: vec!["Database error, please try again later"]};
+        return HtmlTemplate(template).into_response()
     }
 }

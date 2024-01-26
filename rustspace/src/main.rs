@@ -131,6 +131,11 @@ pub struct FriendshipRequest {
 }
 
 #[derive(Serialize, Deserialize)]
+pub struct FriendshipStateRequest {
+    state: Option<String>,
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct EmailRequest {
     email: Option<String>,
 }
