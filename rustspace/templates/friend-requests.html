@@ -9,12 +9,12 @@
 {% block content %}
 <h1>Requests</h1>
 
-
-
 <section class="requests" id="requests">
 {% for friend in friends %}
 <div class="user">
 	<span class="at">@</span><a href="/profile/{{friend.screen_name}}"><span class="screen_name">{{ friend.screen_name }}</span></a>  
+	<button class="accept-btn" hx-post="/friends/requests/{{friend.id.unwrap()}}" hx-vals='{"state": "accepted"}'>Accept</button>
+	<button class="reject-btn" hx-post="/friends/requests/{{friend.id.unwrap()}}" hx-vals='{"state": "rejected"}'>Reject</button>
 </div>
 {% endfor %}
 </section>
