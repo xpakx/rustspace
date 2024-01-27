@@ -25,6 +25,13 @@ pub async fn send_friend_request(
 
     let username = request.username.unwrap();
 
+    if let Some(logged) = &user.username {
+       if logged == &username {
+            let template = ErrorsTemplate {errors: vec!["You cannot befriend yourself!"]};
+            return HtmlTemplate(template).into_response()
+        }
+    }
+
     debug!("getting user from database");
     let user_db = sqlx::query_as::<Postgres, UserModel>("SELECT * FROM users WHERE screen_name = $1")
         .bind(&user.username)
