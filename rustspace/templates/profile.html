@@ -11,6 +11,7 @@
 <h1>{{username}}'s profile</h1>
 
 
+
 <section class="profile" id="profile">
 {% if profile.is_some() %}
 	<div class="profile-fields">
@@ -48,5 +49,9 @@
 	<button class="field-btn" hx-target="#profile" hx-get="/forms/profile">Edit</button>
 {% endif %}
 </section>
+
+{% if user.username.is_some() %}
+<button class="field-btn" hx-post="/friendships" hx-vals='{"username": "{{username}}"}'>Send friend request</button>
+{% endif %}
 
 {% endblock %}
