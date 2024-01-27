@@ -98,8 +98,8 @@ async fn get_friend_requests(db: &PgPool, user_id: i32, page: i32, accepted: boo
     let users = sqlx::query_as::<Postgres, FriendshipDetails>(
         "SELECT f.id, u.screen_name, f.accepted, f.rejected, f.created_at
         FROM users u
-        LEFT JOIN friendships f ON u.id = f.friend_id
-        WHERE f.user_id = $3 AND f.accepted = $4 AND f.rejected = $5
+        LEFT JOIN friendships f ON u.id = f.user_id
+        WHERE f.friend_id = $3 AND f.accepted = $4 AND f.rejected = $5
         ORDER BY f.created_at
         LIMIT $1 OFFSET $2"
         )
