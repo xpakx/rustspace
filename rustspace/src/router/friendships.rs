@@ -315,7 +315,7 @@ pub async fn change_request_state(
         .bind(&accepted)
         .bind(&rejected)
         .bind(&accepted_at)
-        .bind(&user_id)
+        .bind(&request_id)
         .execute(&state.db)
         .await
         .map_err(|err: sqlx::Error| err.to_string());
