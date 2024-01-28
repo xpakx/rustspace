@@ -260,6 +260,35 @@ pub async fn friends(
     };
 }
 
+pub async fn friends_page(
+    user: UserData,
+    Query(query): Query<SearchQuery>,
+    State(state): State<Arc<AppState>>) -> impl IntoResponse {
+    if user.username.is_none() {
+        let template = ErrorsTemplate {errors: vec!["You're unauthenticated!"]};
+        return HtmlTemplate(template).into_response()
+    }
+
+    let Some(user_id) = get_user_id(&state.db, &user).await else {
+        let template = ErrorsTemplate {errors: vec!["Db error!"]};
+        return HtmlTemplate(template).into_response()
+    };
+
+    let users = get_friends(&state.db, user_id, query.page, false).await;
+    match users {
+        Err(err) => {
+            debug!("Database error: {}", err);
+            let template = ErrorsTemplate {errors: vec!["Db error!"]};
+            return HtmlTemplate(template).into_response()
+        },
+        Ok((_, records)) => {
+            let _ = records_to_count(records);
+            let template = ErrorsTemplate {errors: vec!["TODO"]};
+            return HtmlTemplate(template).into_response()
+        }
+    };
+}
+
 pub async fn get_user_id(db: &PgPool, user: &UserData) -> Option<i32> {
     let user_db = sqlx::query_as::<Postgres, UserModel>(
         "SELECT * FROM users WHERE screen_name = $1",
