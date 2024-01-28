@@ -121,7 +121,7 @@ async fn get_friend_requests(db: &PgPool, user_id: i32, page: i32, accepted: boo
 
     let records: i64 = sqlx::query_scalar(
         "SELECT COUNT(*) FROM friendships f
-        WHERE f.user_id = $1 AND f.accepted = $2 AND f.rejected = $3")
+        WHERE f.friend_id = $1 AND f.accepted = $2 AND f.rejected = $3")
         .bind(user_id)
         .bind(accepted)
         .bind(rejected)
