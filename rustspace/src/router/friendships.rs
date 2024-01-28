@@ -1,9 +1,10 @@
 use std::sync::Arc;
 
-use axum::{response::IntoResponse, extract::{State, Path}, Form};
+use axum::{response::IntoResponse, extract::{State, Path, Query}, Form};
 use sqlx::{Postgres, PgPool};
 use tracing::{info, debug};
 use chrono::Utc;
+use serde::Deserialize;
 
 use crate::{template::{HtmlTemplate, ErrorsTemplate, UnauthorizedTemplate, FriendRequestsTemplate, FriendsTemplate}, UserData, AppState, UserModel, FriendshipModel, FriendshipRequest, FriendshipStateRequest, validation::validate_non_empty, FriendshipDetails};
 
@@ -191,6 +192,41 @@ pub async fn requests(
         Ok((friends, records)) => {
             let pages = records_to_count(records);
             let template = FriendRequestsTemplate {path: "/friends", friends, pages, user, records };
+            return HtmlTemplate(template).into_response()
+        }
+    };
+}
+
+
+#[derive(Deserialize)]
+pub struct SearchQuery {
+    page: i32,
+}
+
+pub async fn requests_page(
+    user: UserData,
+    Query(query): Query<SearchQuery>,
+    State(state): State<Arc<AppState>>) -> impl IntoResponse {
+    if user.username.is_none() {
+        let template = ErrorsTemplate {errors: vec!["You're unauthenticated!"]};
+        return HtmlTemplate(template).into_response()
+    }
+
+    let Some(user_id) = get_user_id(&state.db, &user).await else {
+        let template = ErrorsTemplate {errors: vec!["Db error!"]};
+        return HtmlTemplate(template).into_response()
+    };
+
+    let users = get_friend_requests(&state.db, user_id, query.page, false, false, false).await;
+    match users {
+        Err(err) => {
+            debug!("Database error: {}", err);
+            let template = ErrorsTemplate {errors: vec!["Db error!"]};
+            return HtmlTemplate(template).into_response()
+        },
+        Ok((_, records)) => {
+            let _ = records_to_count(records);
+            let template = ErrorsTemplate {errors: vec!["TODO"]};
             return HtmlTemplate(template).into_response()
         }
     };
