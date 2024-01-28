@@ -100,7 +100,7 @@ pub async fn send_friend_request(
     }
 }
 
-async fn get_friend_requests(db: &PgPool, user_id: i32, page: i32, accepted: bool, rejected: bool, get_count: bool) -> Result<(Vec<FriendshipDetails>, Option<i64>), sqlx::Error> {
+async fn get_friend_requests(db: &PgPool, user_id: i32, page: i32, accepted: bool, rejected: bool) -> Result<(Vec<FriendshipDetails>, Option<i64>), sqlx::Error> {
     let page_size = 25;
     let offset = page_size * page;
     let users = sqlx::query_as::<Postgres, FriendshipDetails>(
@@ -118,9 +118,6 @@ async fn get_friend_requests(db: &PgPool, user_id: i32, page: i32, accepted: boo
         .bind(rejected)
         .fetch_all(db)
         .await?;
-    if !get_count {
-        return Ok((users, None));
-    }
 
     let records: i64 = sqlx::query_scalar(
         "SELECT COUNT(*) FROM friendships f
@@ -134,7 +131,7 @@ async fn get_friend_requests(db: &PgPool, user_id: i32, page: i32, accepted: boo
     Ok((users, Some(records)))
 }
 
-async fn get_friends(db: &PgPool, user_id: i32, page: i32, get_count: bool) -> Result<(Vec<FriendshipDetails>, Option<i64>), sqlx::Error> {
+async fn get_friends(db: &PgPool, user_id: i32, page: i32) -> Result<(Vec<FriendshipDetails>, Option<i64>), sqlx::Error> {
     let page_size = 25;
     let offset = page_size * page;
     let users = sqlx::query_as::<Postgres, FriendshipDetails>(
@@ -155,9 +152,6 @@ async fn get_friends(db: &PgPool, user_id: i32, page: i32, get_count: bool) -> R
         .bind(user_id)
         .fetch_all(db)
         .await?;
-    if !get_count {
-        return Ok((users, None));
-    }
 
     let records: i64 = sqlx::query_scalar(
         "SELECT COUNT(*) FROM friendships f
@@ -182,7 +176,7 @@ pub async fn requests(
         return HtmlTemplate(template).into_response()
     };
 
-    let users = get_friend_requests(&state.db, user_id, 0, false, false, false).await;
+    let users = get_friend_requests(&state.db, user_id, 0, false, false).await;
     match users {
         Err(err) => {
             debug!("Database error: {}", err);
@@ -217,7 +211,7 @@ pub async fn requests_page(
         return HtmlTemplate(template).into_response()
     };
 
-    let users = get_friend_requests(&state.db, user_id, query.page, false, false, false).await;
+    let users = get_friend_requests(&state.db, user_id, query.page, false, false).await;
     match users {
         Err(err) => {
             debug!("Database error: {}", err);
@@ -245,7 +239,7 @@ pub async fn friends(
         return HtmlTemplate(template).into_response()
     };
 
-    let users = get_friends(&state.db, user_id, 0, false).await;
+    let users = get_friends(&state.db, user_id, 0).await;
     match users {
         Err(err) => {
             debug!("Database error: {}", err);
@@ -274,7 +268,7 @@ pub async fn friends_page(
         return HtmlTemplate(template).into_response()
     };
 
-    let users = get_friends(&state.db, user_id, query.page, false).await;
+    let users = get_friends(&state.db, user_id, query.page).await;
     match users {
         Err(err) => {
             debug!("Database error: {}", err);
