@@ -6,7 +6,7 @@ use tracing::{info, debug};
 use chrono::Utc;
 use serde::Deserialize;
 
-use crate::{template::{HtmlTemplate, ErrorsTemplate, UnauthorizedTemplate, FriendRequestsTemplate, FriendsTemplate}, UserData, AppState, UserModel, FriendshipModel, FriendshipRequest, FriendshipStateRequest, validation::validate_non_empty, FriendshipDetails};
+use crate::{template::{HtmlTemplate, ErrorsTemplate, UnauthorizedTemplate, FriendRequestsTemplate, FriendsTemplate, FriendRequestsResultsTemplate}, UserData, AppState, UserModel, FriendshipModel, FriendshipRequest, FriendshipStateRequest, validation::validate_non_empty, FriendshipDetails};
 
 pub async fn send_friend_request(
     user: UserData,
@@ -224,9 +224,9 @@ pub async fn requests_page(
             let template = ErrorsTemplate {errors: vec!["Db error!"]};
             return HtmlTemplate(template).into_response()
         },
-        Ok((_, records)) => {
-            let _ = records_to_count(records);
-            let template = ErrorsTemplate {errors: vec!["TODO"]};
+        Ok((friends, records)) => {
+            let pages = records_to_count(records);
+            let template = FriendRequestsResultsTemplate {friends, pages, page: query.page};
             return HtmlTemplate(template).into_response()
         }
     };

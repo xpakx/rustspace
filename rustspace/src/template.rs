@@ -194,6 +194,14 @@ pub struct FriendsTemplate {
     pub pages: i32,
 }
 
+#[derive(Template)]
+#[template(path = "friend-requests-result.html")]
+pub struct FriendRequestsResultsTemplate {
+    pub friends: Vec<FriendshipDetails>,
+    pub page: i32,
+    pub pages: i32,
+}
+
 pub struct HtmlTemplate<T>(pub T);
 
 impl<T> IntoResponse for HtmlTemplate<T> where T: Template, {
