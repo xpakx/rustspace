@@ -1,5 +1,5 @@
 use axum::{extract::Request, body::{Body, to_bytes}, http::StatusCode};
-use sqlx::{Postgres, PgPool};
+use sqlx::{Postgres, PgPool, Row};
 use tower::ServiceExt;
 use serial_test::serial;
 
@@ -221,5 +221,40 @@ async fn test_making_request_while_reverse_one_is_already_created() {
     let bytes = body.unwrap();
     let content = std::str::from_utf8(&*bytes).unwrap();
     assert!(content.contains("already created"));
+    clear_friendships(&db).await;
+}
+
+#[tokio::test]
+#[serial]
+async fn test_making_request() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let db = prepare_db().await;
+    insert_new_user("User", "user1@mail.com", &db).await;
+    insert_new_user("Test", "Test@mail.com", &db).await;
+    let response = prepare_server_with_db(db.clone())
+        .await
+        .oneshot(
+            Request::builder()
+            .method("POST")
+            .header("Cookie", format!("Token={};", token))
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .uri("/friendships")
+            .body(Body::from("username=User"))
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+
+    let result = sqlx::query("SELECT COUNT(*) FROM friendships")
+        .fetch_one(&db)
+        .await;
+
+    assert!(result.is_ok());
+    if let Ok(result) = result {
+        assert_eq!(result.get::<i64, _>(0), 1);
+    }
+
     clear_friendships(&db).await;
 }
