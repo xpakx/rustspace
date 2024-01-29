@@ -192,3 +192,34 @@ async fn test_making_request_while_its_already_created() {
     assert!(content.contains("already created"));
     clear_friendships(&db).await;
 }
+
+#[tokio::test]
+#[serial]
+async fn test_making_request_while_reverse_one_is_already_created() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let db = prepare_db().await;
+    insert_new_user("User", "user1@mail.com", &db).await;
+    insert_new_user("Test", "Test@mail.com", &db).await;
+    insert_friendship_request("User", "Test", &db).await;
+    let response = prepare_server_with_db(db.clone())
+        .await
+        .oneshot(
+            Request::builder()
+            .method("POST")
+            .header("Cookie", format!("Token={};", token))
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .uri("/friendships")
+            .body(Body::from("username=User"))
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = to_bytes(response.into_body(), 1000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    assert!(content.contains("already created"));
+    clear_friendships(&db).await;
+}
