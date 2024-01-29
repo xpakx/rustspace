@@ -353,6 +353,7 @@ async fn test_getting_friendship_requests() {
     clear_friendships(&db).await;
 
     let body = to_bytes(response.into_body(), 9000).await;
+    clear_friendships(&db).await;
     assert!(body.is_ok());
     let bytes = body.unwrap();
     let content = std::str::from_utf8(&*bytes).unwrap();
@@ -409,5 +410,5 @@ async fn test_if_friends_endpoint_exists() {
     assert!(body.is_ok());
     let bytes = body.unwrap();
     let content = std::str::from_utf8(&*bytes).unwrap();
-    assert!(content.contains("Requests"));
+    assert!(content.contains("Friends"));
 }
