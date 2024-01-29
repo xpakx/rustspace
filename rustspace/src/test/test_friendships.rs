@@ -139,7 +139,7 @@ async fn test_user_trying_to_befriend_nonexistent_user() {
     assert!(content.contains("not found"));
 }
 
-async fn insert_friendship(username: &str, username2: &str, rejected: bool, accepted: bool, db: &PgPool) {
+async fn insert_friendship(username: &str, username2: &str, accepted: bool, rejected: bool, db: &PgPool) {
     let user_db = sqlx::query_as::<Postgres, UserModel>("SELECT * FROM users WHERE screen_name = $1")
         .bind(&username)
         .fetch_optional(db)
