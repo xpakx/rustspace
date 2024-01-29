@@ -353,7 +353,6 @@ async fn test_getting_friendship_requests() {
     clear_friendships(&db).await;
 
     let body = to_bytes(response.into_body(), 9000).await;
-    clear_friendships(&db).await;
     assert!(body.is_ok());
     let bytes = body.unwrap();
     let content = std::str::from_utf8(&*bytes).unwrap();
@@ -411,4 +410,52 @@ async fn test_if_friends_endpoint_exists() {
     let bytes = body.unwrap();
     let content = std::str::from_utf8(&*bytes).unwrap();
     assert!(content.contains("Friends"));
+}
+
+#[tokio::test]
+#[serial]
+async fn test_getting_friends() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let db = prepare_db().await;
+    insert_new_user("Test", "Test@mail.com", &db).await;
+
+    insert_new_user("User", "user1@mail.com", &db).await;
+    insert_friendship("User", "Test", true, false, &db).await;
+    insert_new_user("User2", "user2@mail.com", &db).await;
+    insert_friendship("User2", "Test", true, false, &db).await;
+
+    // not accepted
+    insert_new_user("User3", "user3@mail.com", &db).await;
+    insert_friendship_request("User3", "Test", &db).await;
+    // rejected
+    insert_new_user("User4", "user4@mail.com", &db).await;
+    insert_friendship("User4", "Test", false, true, &db).await;
+    // reverse
+    insert_new_user("User5", "user5@mail.com", &db).await;
+    insert_friendship("Test", "User5", true, false, &db).await;
+
+    let response = prepare_server_with_db(db.clone())
+        .await
+        .oneshot(
+            Request::builder()
+            .method("GET")
+            .header("Cookie", format!("Token={};", token))
+            .uri("/friends")
+            .body(Body::empty())
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    clear_friendships(&db).await;
+
+    let body = to_bytes(response.into_body(), 9000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    assert!(content.contains("User"));
+    assert!(content.contains("User2"));
+    assert!(!content.contains("User3"));
+    assert!(!content.contains("User4"));
+    assert!(content.contains("User5"));
 }
