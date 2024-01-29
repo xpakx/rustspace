@@ -10,6 +10,7 @@ mod test_auth;
 mod test_user;
 mod test_profile;
 mod test_community;
+mod test_friendships;
 
 async fn clear_db(db: &PgPool) {
     _ = sqlx::query("DELETE FROM users")
