@@ -139,7 +139,7 @@ async fn test_user_trying_to_befriend_nonexistent_user() {
     assert!(content.contains("not found"));
 }
 
-async fn insert_friendship_request(username: &str, username2: &str, db: &PgPool) {
+async fn insert_friendship(username: &str, username2: &str, rejected: bool, accepted: bool, db: &PgPool) {
     let user_db = sqlx::query_as::<Postgres, UserModel>("SELECT * FROM users WHERE screen_name = $1")
         .bind(&username)
         .fetch_optional(db)
@@ -155,11 +155,18 @@ async fn insert_friendship_request(username: &str, username2: &str, db: &PgPool)
         panic!("No such user!");
     };
 
-    _ = sqlx::query("INSERT INTO friendships (user_id, friend_id) VALUES ($1, $2)")
+    _ = sqlx::query("INSERT INTO friendships (user_id, friend_id, accepted, rejected) VALUES ($1, $2, $3, $4)")
         .bind(&user.id)
         .bind(&friend.id)
+        .bind(&accepted)
+        .bind(&rejected)
         .execute(db)
         .await;
+}
+
+
+async fn insert_friendship_request(username: &str, username2: &str, db: &PgPool) {
+    insert_friendship(username, username2, false, false, db).await;
 }
 
 #[tokio::test]
@@ -250,13 +257,13 @@ async fn test_making_request() {
     let result = sqlx::query("SELECT COUNT(*) FROM friendships")
         .fetch_one(&db)
         .await;
+    clear_friendships(&db).await;
 
     assert!(result.is_ok());
     if let Ok(result) = result {
         assert_eq!(result.get::<i64, _>(0), 1);
     }
 
-    clear_friendships(&db).await;
 }
 
 // friendship requests view
@@ -306,6 +313,54 @@ async fn test_if_friendship_requests_endpoint_exists() {
     let bytes = body.unwrap();
     let content = std::str::from_utf8(&*bytes).unwrap();
     assert!(content.contains("Requests"));
+}
+
+#[tokio::test]
+#[serial]
+async fn test_getting_friendship_requests() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let db = prepare_db().await;
+    insert_new_user("Test", "Test@mail.com", &db).await;
+
+    insert_new_user("User", "user1@mail.com", &db).await;
+    insert_friendship_request("User", "Test", &db).await;
+    insert_new_user("User2", "user2@mail.com", &db).await;
+    insert_friendship_request("User2", "Test", &db).await;
+
+    // accepted
+    insert_new_user("User3", "user3@mail.com", &db).await;
+    insert_friendship("User3", "Test", true, false, &db).await;
+    // rejected
+    insert_new_user("User4", "user4@mail.com", &db).await;
+    insert_friendship("User4", "Test", false, true, &db).await;
+    // reverse
+    insert_new_user("User5", "user5@mail.com", &db).await;
+    insert_friendship_request("Test", "User5", &db).await;
+
+    let response = prepare_server_with_db(db.clone())
+        .await
+        .oneshot(
+            Request::builder()
+            .method("GET")
+            .header("Cookie", format!("Token={};", token))
+            .uri("/friends/requests")
+            .body(Body::empty())
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    clear_friendships(&db).await;
+
+    let body = to_bytes(response.into_body(), 9000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    assert!(content.contains("User"));
+    assert!(content.contains("User2"));
+    assert!(!content.contains("User3"));
+    assert!(!content.contains("User4"));
+    assert!(!content.contains("User5"));
 }
 
 // friends view
