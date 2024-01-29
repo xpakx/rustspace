@@ -38,6 +38,7 @@ async fn test_making_friendship_request_with_no_name() {
         .oneshot(
             Request::builder()
             .method("POST")
+            .header("Cookie", format!("Token={};", token))
             .header("Content-Type", "application/x-www-form-urlencoded")
             .uri("/friendships")
             .body(Body::empty())
@@ -65,6 +66,7 @@ async fn test_making_friendship_request_with_empty_name() {
         .oneshot(
             Request::builder()
             .method("POST")
+            .header("Cookie", format!("Token={};", token))
             .header("Content-Type", "application/x-www-form-urlencoded")
             .uri("/friendships")
             .body(Body::from("username="))
@@ -92,6 +94,7 @@ async fn test_user_trying_to_befriend_themself() {
         .oneshot(
             Request::builder()
             .method("POST")
+            .header("Cookie", format!("Token={};", token))
             .header("Content-Type", "application/x-www-form-urlencoded")
             .uri("/friendships")
             .body(Body::from("username=Test"))
@@ -118,6 +121,7 @@ async fn test_user_trying_to_befriend_nonexistent_user() {
         .oneshot(
             Request::builder()
             .method("POST")
+            .header("Cookie", format!("Token={};", token))
             .header("Content-Type", "application/x-www-form-urlencoded")
             .uri("/friendships")
             .body(Body::from("username=User"))
