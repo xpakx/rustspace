@@ -28,3 +28,57 @@ async fn test_making_friendship_request_by_unauthenticated_user() {
     assert!(content.contains("error"));
     assert!(content.contains("Authentication Error"));
 }
+
+#[tokio::test]
+#[serial]
+async fn test_making_friendship_request_with_no_name() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let response = prepare_server_with_user(false)
+        .await
+        .oneshot(
+            Request::builder()
+            .method("POST")
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .uri("/friendships")
+            .body(Body::empty())
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = to_bytes(response.into_body(), 1000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    assert!(content.contains("error"));
+    assert!(content.contains("username"));
+    assert!(content.contains("empty"));
+}
+
+#[tokio::test]
+#[serial]
+async fn test_making_friendship_request_with_empty_name() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let response = prepare_server_with_user(false)
+        .await
+        .oneshot(
+            Request::builder()
+            .method("POST")
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .uri("/friendships")
+            .body(Body::from("username="))
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = to_bytes(response.into_body(), 1000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    assert!(content.contains("error"));
+    assert!(content.contains("username"));
+    assert!(content.contains("empty"));
+}
