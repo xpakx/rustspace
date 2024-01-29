@@ -26,7 +26,7 @@ async fn test_making_friendship_request_by_unauthenticated_user() {
     let bytes = body.unwrap();
     let content = std::str::from_utf8(&*bytes).unwrap();
     assert!(content.contains("error"));
-    assert!(content.contains("Authentication Error"));
+    assert!(content.contains("Unauthenticated"));
 }
 
 #[tokio::test]
@@ -52,7 +52,7 @@ async fn test_making_friendship_request_with_no_name() {
     let bytes = body.unwrap();
     let content = std::str::from_utf8(&*bytes).unwrap();
     assert!(content.contains("error"));
-    assert!(content.contains("username"));
+    assert!(content.contains("Username"));
     assert!(content.contains("empty"));
 }
 
@@ -79,7 +79,7 @@ async fn test_making_friendship_request_with_empty_name() {
     let bytes = body.unwrap();
     let content = std::str::from_utf8(&*bytes).unwrap();
     assert!(content.contains("error"));
-    assert!(content.contains("username"));
+    assert!(content.contains("Username"));
     assert!(content.contains("empty"));
 }
 
