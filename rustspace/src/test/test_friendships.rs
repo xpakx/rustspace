@@ -3,7 +3,7 @@ use sqlx::{Postgres, PgPool, Row};
 use tower::ServiceExt;
 use serial_test::serial;
 
-use crate::{test::{prepare_server_with_user, prepare_db, prepare_server_with_db, insert_new_user, clear_friendships}, security::get_token, UserModel, FriendshipModel};
+use crate::{test::{prepare_server_with_user, prepare_db, prepare_server_with_db, insert_new_user, clear_friendships, insert_users, insert_requests}, security::get_token, UserModel, FriendshipModel};
 
 #[tokio::test]
 #[serial]
@@ -361,6 +361,44 @@ async fn test_getting_friendship_requests() {
     assert!(!content.contains("User3"));
     assert!(!content.contains("User4"));
     assert!(!content.contains("User5"));
+}
+
+#[tokio::test]
+#[serial]
+async fn test_pagination_on_friend_requests_view() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let db = prepare_db().await;
+    insert_new_user("Test", "Test@mail.com", &db).await;
+    insert_users(300, "user", &db).await;
+    insert_requests(false, false, &db).await;
+
+    let response = prepare_server_with_db(db.clone())
+        .await
+        .oneshot(
+            Request::builder()
+            .method("GET")
+            .uri("/friends/requests")
+            .header("Cookie", format!("Token={};", token))
+            .body(Body::empty())
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    clear_friendships(&db).await;
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = to_bytes(response.into_body(), 20000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    println!("{}", content);
+    assert!(content.contains("300 requests found"));
+    assert!(content.contains("\"current\">0<"));
+    assert!(content.contains("page=1\""));
+    assert!(!content.contains("page=2\""));
+    assert!(!content.contains("page=10"));
+    assert!(content.contains("page=11"));
 }
 
 // friends view

@@ -1,9 +1,9 @@
 use std::sync::Arc;
 use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
 use rand_core::OsRng;
-use sqlx::PgPool;
+use sqlx::{PgPool, Postgres};
 
-use crate::{get_router, AppState, db::get_db};
+use crate::{get_router, AppState, db::get_db, UserModel};
 
 mod test_routes;
 mod test_auth;
@@ -93,6 +93,27 @@ async fn insert_users(amount: i32, username_prefix: &str, db: &PgPool) {
                     ")
         .bind(amount)
         .bind(username_prefix)
+        .execute(db)
+        .await;
+}
+
+async fn insert_requests(accepted: bool, rejected: bool, db: &PgPool) {
+    let user = sqlx::query_as::<Postgres, UserModel>("SELECT * FROM users WHERE screen_name = $1")
+        .bind("Test")
+        .fetch_optional(db)
+        .await;
+    let Ok(Some(user)) = user else {
+        panic!("No user in db!");
+    };
+    let Some(user_id) = user.id else {
+        panic!("No user id!");
+    };
+    _ = sqlx::query("INSERT INTO friendships (user_id, friend_id, accepted, rejected) 
+                    SELECT u.id, $1, $2, $3 FROM users u WHERE screen_name <> $4")
+        .bind(user_id)
+        .bind(accepted)
+        .bind(rejected)
+        .bind("Test")
         .execute(db)
         .await;
 }
