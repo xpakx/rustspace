@@ -485,3 +485,56 @@ async fn test_accepting_request_by_unauthenticated_user() {
     assert!(content.contains("error"));
     assert!(content.contains("Unauthenticated"));
 }
+
+#[tokio::test]
+#[serial]
+async fn test_changing_request_state_without_specyfying_state() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let response = prepare_server_with_user(false)
+        .await
+        .oneshot(
+            Request::builder()
+            .method("POST")
+            .uri("/friends/requests/1")
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .header("Cookie", format!("Token={};", token))
+            .body(Body::empty())
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    let body = to_bytes(response.into_body(), 1000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    assert!(content.contains("error"));
+    assert!(content.contains("State"));
+    assert!(content.contains("empty"));
+}
+
+#[tokio::test]
+#[serial]
+async fn test_changing_request_state_with_wrong_state() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let response = prepare_server_with_user(false)
+        .await
+        .oneshot(
+            Request::builder()
+            .method("POST")
+            .uri("/friends/requests/1")
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .header("Cookie", format!("Token={};", token))
+            .body(Body::from("state=state"))
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    let body = to_bytes(response.into_body(), 1000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    assert!(content.contains("error"));
+    assert!(content.contains("Unsupported state"));
+}
