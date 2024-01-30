@@ -498,6 +498,44 @@ async fn test_getting_friends() {
     assert!(content.contains("User5"));
 }
 
+#[tokio::test]
+#[serial]
+async fn test_pagination_on_friend_view() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let db = prepare_db().await;
+    insert_new_user("Test", "Test@mail.com", &db).await;
+    insert_users(300, "user", &db).await;
+    insert_requests(true, false, &db).await;
+
+    let response = prepare_server_with_db(db.clone())
+        .await
+        .oneshot(
+            Request::builder()
+            .method("GET")
+            .uri("/friends")
+            .header("Cookie", format!("Token={};", token))
+            .body(Body::empty())
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    clear_friendships(&db).await;
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = to_bytes(response.into_body(), 20000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    println!("{}", content);
+    assert!(content.contains("300 requests found"));
+    assert!(content.contains("\"current\">0<"));
+    assert!(content.contains("page=1\""));
+    assert!(!content.contains("page=2\""));
+    assert!(!content.contains("page=10"));
+    assert!(content.contains("page=11"));
+}
+
 // changing request's state
 
 #[tokio::test]
