@@ -3,7 +3,7 @@ use sqlx::{Postgres, PgPool, Row};
 use tower::ServiceExt;
 use serial_test::serial;
 
-use crate::{test::{prepare_server_with_user, prepare_db, prepare_server_with_db, insert_new_user, clear_friendships}, security::get_token, UserModel};
+use crate::{test::{prepare_server_with_user, prepare_db, prepare_server_with_db, insert_new_user, clear_friendships}, security::get_token, UserModel, FriendshipModel};
 
 #[tokio::test]
 #[serial]
@@ -563,4 +563,47 @@ async fn test_accepting_nonexistent_request() {
     let content = std::str::from_utf8(&*bytes).unwrap();
     assert!(content.contains("error"));
     assert!(content.contains("No such request"));
+}
+
+#[tokio::test]
+#[serial]
+async fn test_accepting_users_own_request() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let db = prepare_db().await;
+    insert_new_user("Test", "Test@mail.com", &db).await;
+
+    insert_new_user("User", "user1@mail.com", &db).await;
+    insert_friendship("Test", "User", true, false, &db).await;
+
+    let request_db = sqlx::query_as::<Postgres, FriendshipModel>("SELECT * FROM friendships LIMIT 1")
+        .fetch_optional(&db)
+        .await;
+    let Ok(Some(request)) = request_db else {
+        panic!("No request in db!");
+    };
+    let Some(request_id) = request.id else {
+        panic!("No request id!");
+    };
+
+    let response = prepare_server_with_db(db.clone())
+        .await
+        .oneshot(
+            Request::builder()
+            .method("POST")
+            .uri(format!("/friends/requests/{}", request_id))
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .header("Cookie", format!("Token={};", token))
+            .body(Body::from("state=accepted"))
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    clear_friendships(&db).await;
+    let body = to_bytes(response.into_body(), 1000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    assert!(content.contains("error"));
+    assert!(content.contains("cannot change"));
 }
