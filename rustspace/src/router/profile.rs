@@ -4,7 +4,7 @@ use axum::{response::IntoResponse, extract::{Path, State}, Form};
 use sqlx::Postgres;
 use tracing::{info, debug};
 
-use crate::{template::{ProfileTemplate, HtmlTemplate, UserNotFoundTemplate, ProfileFormTemplate, ErrorsTemplate, ProfileFieldTemplate}, UserData, UserModel, AppState, ProfileModel, ProfileRequest};
+use crate::{template::{ProfileTemplate, HtmlTemplate, UserNotFoundTemplate, ProfileFormTemplate, ErrorsTemplate, ProfileFieldTemplate, FriendStatus}, UserData, UserModel, AppState, ProfileModel, ProfileRequest, FriendshipModel};
 
 pub async fn profile(
     user: UserData,
@@ -40,24 +40,57 @@ pub async fn profile(
     };
 
     let Some(user_id) = user_db.id else {
-        let template = ProfileTemplate {path: "profile", user, username, profile: None, owner, avatar, timestamp};
+        let template = ProfileTemplate {path: "profile", user, username, profile: None, owner, avatar, timestamp, friend: FriendStatus::NotFriend};
         return HtmlTemplate(template).into_response()
     };
 
+    let current_db = sqlx::query_as::<Postgres, UserModel>(
+        "SELECT * FROM users WHERE screen_name = $1",
+        )
+        .bind(&user.username)
+        .fetch_optional(&state.db)
+        .await;
+    let current_id = match current_db {
+        Ok(Some(curr)) if curr.id.is_some()=> curr.id,
+        _ => None
+    };
 
+    let friend = match current_id {
+        _ if owner => FriendStatus::User,
+        None => FriendStatus::NotFriend,
+        Some(current_id) => {
+            let friendship = sqlx::query_as::<Postgres, FriendshipModel>(
+                "SELECT * FROM friendships WHERE (user_id = $1 AND friend_id = $2) OR (user_id = $2 AND friend_id = $1)",
+                )
+                .bind(&current_id)
+                .bind(&user_id)
+                .fetch_optional(&state.db)
+                .await;
+
+            match friendship {
+                Ok(Some(accepted)) if accepted.accepted =>  FriendStatus::Friend,
+                Ok(Some(rejected)) if rejected.rejected =>  FriendStatus::Rejector,
+                Ok(Some(_)) =>  FriendStatus::Invitee,
+                Ok(None) => FriendStatus::NotFriend,
+                Err(_) => FriendStatus::NotFriend
+            }
+        }
+    };
+        
     let profile = sqlx::query_as::<Postgres, ProfileModel>(
         "SELECT * FROM profiles WHERE user_id = $1",
         )
         .bind(user_id)
         .fetch_optional(&state.db)
         .await;
+    
 
     let Ok(profile) = profile else {
-        let template = ProfileTemplate {path: "profile", user, username, profile: None, owner, avatar, timestamp};
+        let template = ProfileTemplate {path: "profile", user, username, profile: None, owner, avatar, timestamp, friend};
         return HtmlTemplate(template).into_response()
     };
 
-   let template = ProfileTemplate {path: "profile", user, username, profile, owner, avatar, timestamp};
+   let template = ProfileTemplate {path: "profile", user, username, profile, owner, avatar, timestamp, friend};
    return HtmlTemplate(template).into_response()
 }
 

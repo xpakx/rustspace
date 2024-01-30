@@ -105,6 +105,16 @@ pub struct ProfileTemplate {
     pub owner: bool,
     pub avatar: bool,
     pub timestamp: i64,
+    pub friend: FriendStatus,
+}
+
+#[derive(PartialEq,Eq,PartialOrd,Ord)]
+pub enum FriendStatus {
+    User,
+    Friend,
+    Invitee,
+    Rejector,
+    NotFriend,
 }
 
 #[derive(Template)]
