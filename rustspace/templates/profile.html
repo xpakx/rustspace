@@ -51,7 +51,15 @@
 </section>
 
 {% if user.username.is_some() %}
+{% if friend == FriendStatus::NotFriend %}
 <button class="field-btn" hx-post="/friendships" hx-vals='{"username": "{{username}}"}'>Send friend request</button>
+{% else if friend == FriendStatus::Friend %}
+<div class="field-btn">Friend</div>
+{% else if friend == FriendStatus::Invitee %}
+<div class="field-btn">Invited to friends</div>
+{% else if friend == FriendStatus::Rejector %}
+<div class="field-btn">User rejected your friendship request</div>
+{% endif %}
 {% endif %}
 
 {% endblock %}
