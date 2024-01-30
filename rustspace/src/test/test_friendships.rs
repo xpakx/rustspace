@@ -459,3 +459,29 @@ async fn test_getting_friends() {
     assert!(!content.contains("User4"));
     assert!(content.contains("User5"));
 }
+
+// changing request's state
+
+#[tokio::test]
+#[serial]
+async fn test_accepting_request_by_unauthenticated_user() {
+    let response = prepare_server_with_user(false)
+        .await
+        .oneshot(
+            Request::builder()
+            .method("POST")
+            .uri("/friends/requests/1")
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .body(Body::from("state=accepted"))
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    let body = to_bytes(response.into_body(), 1000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    assert!(content.contains("error"));
+    assert!(content.contains("Unauthenticated"));
+}
