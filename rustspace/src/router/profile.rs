@@ -44,12 +44,15 @@ pub async fn profile(
         return HtmlTemplate(template).into_response()
     };
 
-    let current_db = sqlx::query_as::<Postgres, UserModel>(
+    let current_db = match &user.username {
+        Some(username) => sqlx::query_as::<Postgres, UserModel>(
         "SELECT * FROM users WHERE screen_name = $1",
         )
-        .bind(&user.username)
+        .bind(username)
         .fetch_optional(&state.db)
-        .await;
+        .await,
+        None => Ok(None)
+    };
     let current_id = match current_db {
         Ok(Some(curr)) if curr.id.is_some()=> curr.id,
         _ => None
