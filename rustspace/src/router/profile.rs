@@ -71,6 +71,7 @@ pub async fn profile(
                 .await;
 
             match friendship {
+                Ok(Some(cancelled)) if cancelled.cancelled =>  FriendStatus::NotFriend,
                 Ok(Some(accepted)) if accepted.accepted =>  FriendStatus::Friend,
                 Ok(Some(rejected)) if rejected.rejected =>  FriendStatus::Rejector,
                 Ok(Some(_)) =>  FriendStatus::Invitee,
