@@ -100,31 +100,27 @@ pub async fn send_friend_request(
     }
 }
 
-async fn get_friend_requests(db: &PgPool, user_id: i32, page: i32, accepted: bool, rejected: bool) -> Result<(Vec<FriendshipDetails>, Option<i64>), sqlx::Error> {
+async fn get_friend_requests(db: &PgPool, user_id: i32, page: i32) -> Result<(Vec<FriendshipDetails>, Option<i64>), sqlx::Error> {
     let page_size = 25;
     let offset = page_size * page;
     let users = sqlx::query_as::<Postgres, FriendshipDetails>(
         "SELECT f.id, u.screen_name, f.accepted, f.rejected, f.cancelled, f.created_at
         FROM users u
         LEFT JOIN friendships f ON u.id = f.user_id
-        WHERE f.friend_id = $3 AND f.accepted = $4 AND f.rejected = $5
+        WHERE f.friend_id = $3 AND f.accepted = false AND f.rejected = false AND f.cancelled = false
         ORDER BY f.created_at
         LIMIT $1 OFFSET $2"
         )
         .bind(page_size)
         .bind(offset)
         .bind(user_id)
-        .bind(accepted)
-        .bind(rejected)
         .fetch_all(db)
         .await?;
 
     let records: i64 = sqlx::query_scalar(
         "SELECT COUNT(*) FROM friendships f
-        WHERE f.friend_id = $1 AND f.accepted = $2 AND f.rejected = $3")
+        WHERE f.friend_id = $1 AND f.accepted = false AND f.rejected = false AND f.cancelled = false")
         .bind(user_id)
-        .bind(accepted)
-        .bind(rejected)
         .fetch_one(db)
         .await?;
     
@@ -176,7 +172,7 @@ pub async fn requests(
         return HtmlTemplate(template).into_response()
     };
 
-    let users = get_friend_requests(&state.db, user_id, 0, false, false).await;
+    let users = get_friend_requests(&state.db, user_id, 0).await;
     match users {
         Err(err) => {
             debug!("Database error: {}", err);
@@ -211,7 +207,7 @@ pub async fn requests_page(
         return HtmlTemplate(template).into_response()
     };
 
-    let users = get_friend_requests(&state.db, user_id, query.page, false, false).await;
+    let users = get_friend_requests(&state.db, user_id, query.page).await;
     match users {
         Err(err) => {
             debug!("Database error: {}", err);
