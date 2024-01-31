@@ -212,6 +212,10 @@ pub struct FriendRequestsResultsTemplate {
     pub pages: i32,
 }
 
+#[derive(Template)]
+#[template(path = "invited-button.html")]
+pub struct InvitedTemplate {}
+
 pub struct HtmlTemplate<T>(pub T);
 
 impl<T> IntoResponse for HtmlTemplate<T> where T: Template, {
