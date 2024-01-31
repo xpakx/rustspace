@@ -649,7 +649,7 @@ async fn test_accepting_users_own_request() {
     insert_new_user("Test", "Test@mail.com", &db).await;
 
     insert_new_user("User", "user1@mail.com", &db).await;
-    insert_friendship("Test", "User", true, false, &db).await;
+    insert_friendship("Test", "User", false, false, &db).await;
 
     let request_db = sqlx::query_as::<Postgres, FriendshipModel>("SELECT * FROM friendships LIMIT 1")
         .fetch_optional(&db)
@@ -661,7 +661,7 @@ async fn test_accepting_users_own_request() {
         panic!("No request id!");
     };
 
-    let response = prepare_server_with_db(db.clone())
+    _ = prepare_server_with_db(db.clone())
         .await
         .oneshot(
             Request::builder()
@@ -675,13 +675,15 @@ async fn test_accepting_users_own_request() {
         .await
         .unwrap();
 
+    let request_updated = sqlx::query_as::<Postgres, FriendshipModel>("SELECT * FROM friendships LIMIT 1")
+        .fetch_optional(&db)
+        .await;
+    let Ok(Some(request_updated)) = request_updated else {
+        panic!("No request in db!");
+    };
+
     clear_friendships(&db).await;
-    let body = to_bytes(response.into_body(), 1000).await;
-    assert!(body.is_ok());
-    let bytes = body.unwrap();
-    let content = std::str::from_utf8(&*bytes).unwrap();
-    assert!(content.contains("error"));
-    assert!(content.contains("cannot change"));
+    assert!(!request_updated.accepted);
 }
 
 #[tokio::test]
