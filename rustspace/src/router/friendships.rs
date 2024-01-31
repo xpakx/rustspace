@@ -372,6 +372,10 @@ pub async fn change_request_state(
         false => friendship.accepted_at
     };
     if &friendship.friend_id != &user_id {
+        if (friendship.cancelled && rejected) || (!friendship.cancelled && accepted) {
+            let template = ErrorsTemplate {errors: vec!["TODO"]};
+            return HtmlTemplate(template).into_response()
+        }
         let result = sqlx::query("UPDATE friendships SET cancelled = $1, accepted_at = $2 WHERE id = $4")
             .bind(&rejected)
             .bind(&accepted_at)
@@ -386,6 +390,11 @@ pub async fn change_request_state(
             let template = ErrorsTemplate {errors: vec!["Database error, please try again later"]};
             return HtmlTemplate(template).into_response()
         }
+    }
+    
+    if (friendship.rejected && rejected) || (friendship.accepted && accepted) {
+        let template = ErrorsTemplate {errors: vec!["TODO"]};
+        return HtmlTemplate(template).into_response()
     }
 
     let result = sqlx::query("UPDATE friendships SET accepted = $1, rejected = $2, accepted_at = $3 WHERE id = $4")
