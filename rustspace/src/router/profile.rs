@@ -40,7 +40,7 @@ pub async fn profile(
     };
 
     let Some(user_id) = user_db.id else {
-        let template = ProfileTemplate {path: "profile", user, username, profile: None, owner, avatar, timestamp, friend: FriendStatus::NotFriend};
+        let template = ProfileTemplate {path: "profile", user, username, profile: None, owner, avatar, timestamp, friend: FriendStatus::NotFriend, friend_id: None};
         return HtmlTemplate(template).into_response()
     };
 
@@ -58,9 +58,9 @@ pub async fn profile(
         _ => None
     };
 
-    let friend = match current_id {
-        _ if owner => FriendStatus::User,
-        None => FriendStatus::NotFriend,
+    let (friend, friend_id) = match current_id {
+        _ if owner => (FriendStatus::User, None),
+        None => (FriendStatus::NotFriend, None),
         Some(current_id) => {
             let friendship = sqlx::query_as::<Postgres, FriendshipModel>(
                 "SELECT * FROM friendships WHERE (user_id = $1 AND friend_id = $2) OR (user_id = $2 AND friend_id = $1)",
@@ -71,12 +71,12 @@ pub async fn profile(
                 .await;
 
             match friendship {
-                Ok(Some(cancelled)) if cancelled.cancelled =>  FriendStatus::NotFriend,
-                Ok(Some(accepted)) if accepted.accepted =>  FriendStatus::Friend,
-                Ok(Some(rejected)) if rejected.rejected =>  FriendStatus::Rejector,
-                Ok(Some(_)) =>  FriendStatus::Invitee,
-                Ok(None) => FriendStatus::NotFriend,
-                Err(_) => FriendStatus::NotFriend
+                Ok(Some(cancelled)) if cancelled.cancelled =>  (FriendStatus::Cancelled, cancelled.id),
+                Ok(Some(accepted)) if accepted.accepted =>  (FriendStatus::Friend, None),
+                Ok(Some(rejected)) if rejected.rejected =>  (FriendStatus::Rejector, None),
+                Ok(Some(_)) =>  (FriendStatus::Invitee, None),
+                Ok(None) => (FriendStatus::NotFriend, None),
+                Err(_) => (FriendStatus::NotFriend, None)
             }
         }
     };
@@ -90,11 +90,11 @@ pub async fn profile(
     
 
     let Ok(profile) = profile else {
-        let template = ProfileTemplate {path: "profile", user, username, profile: None, owner, avatar, timestamp, friend};
+        let template = ProfileTemplate {path: "profile", user, username, profile: None, owner, avatar, timestamp, friend, friend_id};
         return HtmlTemplate(template).into_response()
     };
 
-   let template = ProfileTemplate {path: "profile", user, username, profile, owner, avatar, timestamp, friend};
+   let template = ProfileTemplate {path: "profile", user, username, profile, owner, avatar, timestamp, friend, friend_id};
    return HtmlTemplate(template).into_response()
 }
 

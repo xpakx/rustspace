@@ -106,6 +106,7 @@ pub struct ProfileTemplate {
     pub avatar: bool,
     pub timestamp: i64,
     pub friend: FriendStatus,
+    pub friend_id: Option<i32>,
 }
 
 #[derive(PartialEq,Eq,PartialOrd,Ord)]
@@ -115,6 +116,7 @@ pub enum FriendStatus {
     Invitee,
     Rejector,
     NotFriend,
+    Cancelled
 }
 
 #[derive(Template)]

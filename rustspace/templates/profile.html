@@ -52,6 +52,8 @@
 <div id="error-container"></div>
 {% if friend == FriendStatus::NotFriend %}
 <button class="field-btn" id="friend-btn" hx-post="/friendships" hx-vals='{"username": "{{username}}"}' hx-target="#error-container">Send friend request</button>
+{% else if friend == FriendStatus::Cancelled %}
+<button class="field-btn" id="friend-btn" hx-post="/friends/requests/{{friend_id.unwrap()}}" hx-vals='{"state": "accepted"}'>Renew</button>
 {% else if friend == FriendStatus::Friend %}
 <div class="field-btn friend" id="friend-btn">Friend</div>
 {% else if friend == FriendStatus::Invitee %}
