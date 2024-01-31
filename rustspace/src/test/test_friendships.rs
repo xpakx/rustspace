@@ -775,3 +775,154 @@ async fn test_rejecting_request() {
     assert!(!request_updated.accepted);
     assert!(request_updated.rejected);
 }
+
+// friendship state on the profile page
+
+#[tokio::test]
+#[serial]
+async fn test_if_friendship_button_is_present() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let db = prepare_db().await;
+    insert_new_user("User", "user1@mail.com", &db).await;
+
+    let response = prepare_server_with_db(db.clone())
+        .await
+        .oneshot(
+            Request::builder()
+            .method("GET")
+            .uri("/profile/User")
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .header("Cookie", format!("Token={};", token))
+            .body(Body::empty())
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    let body = to_bytes(response.into_body(), 2000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    assert!(content.contains("Send friend request"));
+}
+
+#[tokio::test]
+#[serial]
+async fn test_friendship_button_if_there_is_new_request() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let db = prepare_db().await;
+    insert_new_user("User", "user1@mail.com", &db).await;
+    insert_new_user("Test", "test@mail.com", &db).await;
+    insert_friendship("Test", "User", false, false, &db).await;
+
+    let response = prepare_server_with_db(db.clone())
+        .await
+        .oneshot(
+            Request::builder()
+            .method("GET")
+            .uri("/profile/User")
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .header("Cookie", format!("Token={};", token))
+            .body(Body::empty())
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    clear_friendships(&db).await;
+    let body = to_bytes(response.into_body(), 2000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    assert!(content.contains("Invited to friends"));
+}
+
+#[tokio::test]
+#[serial]
+async fn test_friendship_button_if_there_is_accepted_request() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let db = prepare_db().await;
+    insert_new_user("User", "user1@mail.com", &db).await;
+    insert_new_user("Test", "test@mail.com", &db).await;
+    insert_friendship("Test", "User", true, false, &db).await;
+
+    let response = prepare_server_with_db(db.clone())
+        .await
+        .oneshot(
+            Request::builder()
+            .method("GET")
+            .uri("/profile/User")
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .header("Cookie", format!("Token={};", token))
+            .body(Body::empty())
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    clear_friendships(&db).await;
+    let body = to_bytes(response.into_body(), 2000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    assert!(content.contains("Friend"));
+}
+
+#[tokio::test]
+#[serial]
+async fn test_friendship_button_if_there_is_rejected_request() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let db = prepare_db().await;
+    insert_new_user("User", "user1@mail.com", &db).await;
+    insert_new_user("Test", "test@mail.com", &db).await;
+    insert_friendship("Test", "User", false, true, &db).await;
+
+    let response = prepare_server_with_db(db.clone())
+        .await
+        .oneshot(
+            Request::builder()
+            .method("GET")
+            .uri("/profile/User")
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .header("Cookie", format!("Token={};", token))
+            .body(Body::empty())
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    clear_friendships(&db).await;
+    let body = to_bytes(response.into_body(), 2000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    assert!(content.contains("User rejected"));
+}
+
+#[tokio::test]
+#[serial]
+async fn test_friendship_button_presence_while_visiting_self_profile() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let db = prepare_db().await;
+    insert_new_user("Test", "test@mail.com", &db).await;
+    let response = prepare_server_with_db(db.clone())
+        .await
+        .oneshot(
+            Request::builder()
+            .method("GET")
+            .uri("/profile/Test")
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .header("Cookie", format!("Token={};", token))
+            .body(Body::empty())
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    clear_friendships(&db).await;
+    let body = to_bytes(response.into_body(), 2000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    assert!(!content.contains("friend-btn"));
+}
