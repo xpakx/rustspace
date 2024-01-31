@@ -138,12 +138,12 @@ async fn get_friends(db: &PgPool, user_id: i32, page: i32) -> Result<(Vec<Friend
         "SELECT f.id, u.screen_name, f.accepted, f.rejected, f.cancelled, f.created_at
         FROM users u
         LEFT JOIN friendships f ON u.id = f.friend_id
-        WHERE f.user_id = $3 AND f.accepted = true
+        WHERE f.user_id = $3 AND f.accepted = true AND f.cancelled = false
         UNION
         SELECT fr.id, us.screen_name, fr.accepted, fr.rejected, fr.cancelled, fr.created_at
         FROM users us
         LEFT JOIN friendships fr ON us.id = fr.user_id
-        WHERE fr.friend_id = $3 AND fr.accepted = true
+        WHERE fr.friend_id = $3 AND fr.accepted = true AND fr.cancelled = false
         ORDER BY created_at
         LIMIT $1 OFFSET $2"
         )
@@ -155,7 +155,7 @@ async fn get_friends(db: &PgPool, user_id: i32, page: i32) -> Result<(Vec<Friend
 
     let records: i64 = sqlx::query_scalar(
         "SELECT COUNT(*) FROM friendships f
-        WHERE (f.user_id = $1 OR f.friend_id = $1) AND f.accepted = true")
+        WHERE (f.user_id = $1 OR f.friend_id = $1) AND f.accepted = true AND f.cancelled = false")
         .bind(user_id)
         .fetch_one(db)
         .await?;
