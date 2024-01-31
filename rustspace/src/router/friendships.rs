@@ -372,7 +372,7 @@ pub async fn change_request_state(
             let template = ErrorsTemplate {errors: vec!["TODO"]};
             return HtmlTemplate(template).into_response()
         }
-        let result = sqlx::query("UPDATE friendships SET cancelled = $1, accepted_at = $2 WHERE id = $4")
+        let result = sqlx::query("UPDATE friendships SET cancelled = $1, accepted_at = $2 WHERE id = $3")
             .bind(&rejected)
             .bind(&accepted_at)
             .bind(&request_id)
