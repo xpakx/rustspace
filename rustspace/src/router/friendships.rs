@@ -413,3 +413,58 @@ pub async fn change_request_state(
         return HtmlTemplate(template).into_response()
     }
 }
+
+async fn get_rejected_requests(db: &PgPool, user_id: i32, page: i32) -> Result<(Vec<FriendshipDetails>, Option<i64>), sqlx::Error> {
+    let page_size = 25;
+    let offset = page_size * page;
+    let users = sqlx::query_as::<Postgres, FriendshipDetails>(
+        "SELECT f.id, u.screen_name, f.accepted, f.rejected, f.cancelled, f.created_at
+        FROM users u
+        LEFT JOIN friendships f ON u.id = f.user_id
+        WHERE f.friend_id = $3 AND f.rejected = true OR f.cancelled = true
+        ORDER BY f.created_at
+        LIMIT $1 OFFSET $2"
+        )
+        .bind(page_size)
+        .bind(offset)
+        .bind(user_id)
+        .fetch_all(db)
+        .await?;
+
+    let records: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM friendships f
+        WHERE f.friend_id = $1 AND f.rejected = true OR f.cancelled = true")
+        .bind(user_id)
+        .fetch_one(db)
+        .await?;
+    
+    Ok((users, Some(records)))
+}
+
+pub async fn rejected_requests(
+    user: UserData,
+    State(state): State<Arc<AppState>>) -> impl IntoResponse {
+    if user.username.is_none() {
+        let template = UnauthorizedTemplate {message: "You're unauthenticated!", redir: Some(String::from("/friends/requests/rejected"))};
+        return HtmlTemplate(template).into_response()
+    }
+
+    let Some(user_id) = get_user_id(&state.db, &user).await else {
+        let template = ErrorsTemplate {errors: vec!["Db error!"]};
+        return HtmlTemplate(template).into_response()
+    };
+
+    let users = get_rejected_requests(&state.db, user_id, 0).await;
+    match users {
+        Err(err) => {
+            debug!("Database error: {}", err);
+            let template = ErrorsTemplate {errors: vec!["Db error!"]};
+            return HtmlTemplate(template).into_response()
+        },
+        Ok((friends, records)) => {
+            let pages = records_to_count(records);
+            let template = FriendRequestsTemplate {path: "/friends", friends, pages, user, records };
+            return HtmlTemplate(template).into_response()
+        }
+    };
+}
