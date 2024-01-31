@@ -102,6 +102,7 @@ struct FriendshipModel {
     friend_id: i32,
     accepted: bool,
     rejected: bool,
+    cancelled: bool,
     created_at: Option<chrono::DateTime<chrono::Utc>>,
     accepted_at: Option<chrono::DateTime<chrono::Utc>>,
 }
@@ -113,6 +114,7 @@ struct FriendshipDetails {
     screen_name: String,
     accepted: bool,
     rejected: bool,
+    cancelled: bool,
     created_at: Option<chrono::DateTime<chrono::Utc>>,
 }
 

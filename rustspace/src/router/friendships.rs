@@ -104,7 +104,7 @@ async fn get_friend_requests(db: &PgPool, user_id: i32, page: i32, accepted: boo
     let page_size = 25;
     let offset = page_size * page;
     let users = sqlx::query_as::<Postgres, FriendshipDetails>(
-        "SELECT f.id, u.screen_name, f.accepted, f.rejected, f.created_at
+        "SELECT f.id, u.screen_name, f.accepted, f.rejected, f.cancelled, f.created_at
         FROM users u
         LEFT JOIN friendships f ON u.id = f.user_id
         WHERE f.friend_id = $3 AND f.accepted = $4 AND f.rejected = $5
@@ -135,12 +135,12 @@ async fn get_friends(db: &PgPool, user_id: i32, page: i32) -> Result<(Vec<Friend
     let page_size = 25;
     let offset = page_size * page;
     let users = sqlx::query_as::<Postgres, FriendshipDetails>(
-        "SELECT f.id, u.screen_name, f.accepted, f.rejected, f.created_at
+        "SELECT f.id, u.screen_name, f.accepted, f.rejected, f.cancelled, f.created_at
         FROM users u
         LEFT JOIN friendships f ON u.id = f.friend_id
         WHERE f.user_id = $3 AND f.accepted = true
         UNION
-        SELECT fr.id, us.screen_name, fr.accepted, fr.rejected, fr.created_at
+        SELECT fr.id, us.screen_name, fr.accepted, fr.rejected, fr.cancelled, fr.created_at
         FROM users us
         LEFT JOIN friendships fr ON us.id = fr.user_id
         WHERE fr.friend_id = $3 AND fr.accepted = true
