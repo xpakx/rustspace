@@ -37,6 +37,22 @@
 	cursor: pointer;
 }
 
+div.field-btn {
+	display: inline-block;
+}
+
+div.field-btn.invited {
+	background-color: #26afe4;
+}
+
+div.field-btn.rejected {
+	background-color: #845c52;
+}
+
+div.field-btn.friend {
+	background-color: #97e426;
+}
+
 .field-btn:hover {
 	background-color: #54271d;
 }

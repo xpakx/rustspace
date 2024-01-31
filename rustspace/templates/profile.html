@@ -53,11 +53,11 @@
 {% if friend == FriendStatus::NotFriend %}
 <button class="field-btn" id="friend-btn" hx-post="/friendships" hx-vals='{"username": "{{username}}"}' hx-target="#error-container">Send friend request</button>
 {% else if friend == FriendStatus::Friend %}
-<div class="field-btn" id="friend-btn">Friend</div>
+<div class="field-btn friend" id="friend-btn">Friend</div>
 {% else if friend == FriendStatus::Invitee %}
-<div class="field-btn" id="friend-btn">Invited to friends</div>
+<div class="field-btn invited" id="friend-btn">Invited to friends</div>
 {% else if friend == FriendStatus::Rejector %}
-<div class="field-btn" id="friend-btn">User rejected your friendship request</div>
+<div class="field-btn rejected" id="friend-btn">User rejected your friendship request</div>
 {% endif %}
 {% endif %}
 
