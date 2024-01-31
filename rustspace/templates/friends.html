@@ -13,6 +13,7 @@
 {% for friend in friends %}
 <div class="user">
 	<span class="at">@</span><a href="/profile/{{friend.screen_name}}"><span class="screen_name">{{ friend.screen_name }}</span></a>  
+	<button class="unfriend-btn" hx-post="/friends/requests/{{friend.id.unwrap()}}" hx-vals='{"state": "rejected"}'>Unfriend</button>
 </div>
 {% endfor %}
 </section>
