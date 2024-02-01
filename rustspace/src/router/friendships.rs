@@ -6,7 +6,7 @@ use tracing::{info, debug};
 use chrono::Utc;
 use serde::Deserialize;
 
-use crate::{template::{HtmlTemplate, ErrorsTemplate, UnauthorizedTemplate, FriendRequestsTemplate, FriendsTemplate, FriendRequestsResultsTemplate, InvitedTemplate, RejectedFriendRequestsTemplate}, UserData, AppState, UserModel, FriendshipModel, FriendshipRequest, FriendshipStateRequest, validation::validate_non_empty, FriendshipDetails};
+use crate::{template::{HtmlTemplate, ErrorsTemplate, UnauthorizedTemplate, FriendRequestsTemplate, FriendsTemplate, FriendRequestsResultsTemplate, InvitedTemplate, RejectedFriendRequestsTemplate, RejectedRequestsResultsTemplate}, UserData, AppState, UserModel, FriendshipModel, FriendshipRequest, FriendshipStateRequest, validation::validate_non_empty, FriendshipDetails};
 
 pub async fn send_friend_request(
     user: UserData,
@@ -488,7 +488,7 @@ pub async fn rejected_page(
         },
         Ok((friends, records)) => {
             let pages = records_to_count(records);
-            let template = FriendRequestsResultsTemplate {friends, pages, page: query.page};
+            let template = RejectedRequestsResultsTemplate {friends, pages, page: query.page};
             return HtmlTemplate(template).into_response()
         }
     };
