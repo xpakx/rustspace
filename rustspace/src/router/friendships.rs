@@ -464,3 +464,32 @@ pub async fn rejected_requests(
         }
     };
 }
+
+pub async fn rejected_page(
+    user: UserData,
+    Query(query): Query<SearchQuery>,
+    State(state): State<Arc<AppState>>) -> impl IntoResponse {
+    if user.username.is_none() {
+        let template = ErrorsTemplate {errors: vec!["You're unauthenticated!"]};
+        return HtmlTemplate(template).into_response()
+    }
+
+    let Some(user_id) = get_user_id(&state.db, &user).await else {
+        let template = ErrorsTemplate {errors: vec!["Db error!"]};
+        return HtmlTemplate(template).into_response()
+    };
+
+    let users = get_rejected_requests(&state.db, user_id, query.page).await;
+    match users {
+        Err(err) => {
+            debug!("Database error: {}", err);
+            let template = ErrorsTemplate {errors: vec!["Db error!"]};
+            return HtmlTemplate(template).into_response()
+        },
+        Ok((friends, records)) => {
+            let pages = records_to_count(records);
+            let template = FriendRequestsResultsTemplate {friends, pages, page: query.page};
+            return HtmlTemplate(template).into_response()
+        }
+    };
+}
