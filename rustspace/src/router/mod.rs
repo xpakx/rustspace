@@ -14,6 +14,7 @@ mod user;
 mod profile;
 mod community;
 mod friendships;
+mod post;
 
 pub fn get_router() -> Router<Arc<AppState>> {
     Router::new()

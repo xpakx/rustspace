@@ -176,6 +176,12 @@ struct BlogPostModel {
     accepted_at: Option<chrono::DateTime<chrono::Utc>>,
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct PostRequest {
+    title: Option<String>,
+    content: Option<String>,
+}
+
 pub struct UserData {
     username: Option<String>,
 }
