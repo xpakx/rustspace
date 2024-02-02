@@ -165,6 +165,17 @@ pub struct ProfileRequest {
     name: Option<String>,
 }
 
+#[derive(Serialize, Deserialize, sqlx::FromRow)]
+#[allow(non_snake_case)]
+struct BlogPostModel {
+    id: Option<i32>,
+    user_id: i32,
+    title: Option<String>,
+    content: Option<String>,
+    created_at: Option<chrono::DateTime<chrono::Utc>>,
+    accepted_at: Option<chrono::DateTime<chrono::Utc>>,
+}
+
 pub struct UserData {
     username: Option<String>,
 }
