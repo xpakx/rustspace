@@ -1,1 +1,17 @@
-TODO
+{% extends "base.html" %}
+ 
+{% block title %}Rustspace: user's posts{% endblock %}
+ 
+{% block content %}
+<h1>user's posts</h1>
+
+<section class="posts" id="posts">
+{% for post in posts %}
+<h1>{{post.title.as_ref().unwrap()}}</h1>
+
+<article class="post">
+	{{post.content.as_ref().unwrap()}}
+</article>
+{% endfor %}
+</section>
+{% endblock %}

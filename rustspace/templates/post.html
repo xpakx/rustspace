@@ -1,1 +1,11 @@
-TODO
+{% extends "base.html" %}
+ 
+{% block title %}Rustspace: {{post.title.as_ref().unwrap()}}{% endblock %}
+ 
+{% block content %}
+<h1>{{post.title.as_ref().unwrap()}}</h1>
+
+<article class="post">
+	{{post.content.as_ref().unwrap()}}
+</article>
+{% endblock %}

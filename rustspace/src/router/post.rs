@@ -171,6 +171,7 @@ pub async fn edit_post(
 }
 
 pub async fn get_post(
+    user: UserData,
     State(state): State<Arc<AppState>>,
     Path(post_id): Path<i32>
     ) -> impl IntoResponse {
@@ -190,11 +191,12 @@ pub async fn get_post(
         return HtmlTemplate(template).into_response()
     };
 
-    let template = PostTemplate {post, path: "/post"};
+    let template = PostTemplate {post, user, path: "/post"};
     return HtmlTemplate(template).into_response()
 }
 
 pub async fn get_users_posts(
+    user: UserData,
     State(state): State<Arc<AppState>>,
     Path(username): Path<String>
     ) -> impl IntoResponse {
@@ -206,7 +208,7 @@ pub async fn get_users_posts(
         .fetch_optional(&state.db)
         .await;
 
-    let Ok(Some(user)) = user_db else {
+    let Ok(Some(user_db)) = user_db else {
         let template = UserNotFoundTemplate {};
         return HtmlTemplate(template).into_response()
     };
@@ -218,7 +220,7 @@ pub async fn get_users_posts(
         ORDER BY created_at
         LIMIT 25 "
         )
-        .bind(&user.id)
+        .bind(&user_db.id)
         .fetch_all(&state.db)
         .await;
 
@@ -227,6 +229,6 @@ pub async fn get_users_posts(
         return HtmlTemplate(template).into_response()
     };
 
-    let template = PostsTemplate {posts, path: "/posts"};
+    let template = PostsTemplate {posts, user, path: "/posts"};
     return HtmlTemplate(template).into_response()
 }

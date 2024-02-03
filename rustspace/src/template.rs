@@ -241,6 +241,7 @@ pub struct RejectedRequestsResultsTemplate {
 #[template(path = "post.html")]
 pub struct PostTemplate {
     pub path: &'static str,
+    pub user: UserData,
     pub post: BlogPostModel,
 }
 
@@ -248,6 +249,7 @@ pub struct PostTemplate {
 #[template(path = "posts.html")]
 pub struct PostsTemplate {
     pub path: &'static str,
+    pub user: UserData,
     pub posts: Vec<BlogPostModel>,
 }
 
