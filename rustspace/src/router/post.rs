@@ -4,7 +4,7 @@ use axum::{response::IntoResponse, extract::{State, Path}, Form};
 use sqlx::Postgres;
 use tracing::{info, debug};
 
-use crate::{template::{HtmlTemplate, ErrorsTemplate}, UserData, AppState, UserModel, validation::validate_non_empty, PostRequest, BlogPostModel};
+use crate::{template::{HtmlTemplate, ErrorsTemplate, PostTemplate}, UserData, AppState, UserModel, validation::validate_non_empty, PostRequest, BlogPostModel};
 
 pub async fn add_post(
     user: UserData,
@@ -167,5 +167,29 @@ pub async fn edit_post(
     }
     info!("post succesfully updated.");
     let template = ErrorsTemplate {errors: vec!["TODO"]};
+    return HtmlTemplate(template).into_response()
+}
+
+pub async fn get_post(
+    State(state): State<Arc<AppState>>,
+    Path(post_id): Path<i32>
+    ) -> impl IntoResponse {
+    info!("blogpost requested");
+
+    debug!("getting post from database");
+    let post_db = sqlx::query_as::<Postgres, BlogPostModel>("SELECT * FROM posts WHERE id = $1")
+        .bind(&post_id)
+        .fetch_optional(&state.db)
+        .await;
+    let Ok(post) = post_db else {
+        let template = ErrorsTemplate {errors: vec!["Db error!"]};
+        return HtmlTemplate(template).into_response()
+    };
+    let Some(post) = post else {
+        let template = ErrorsTemplate {errors: vec!["No such post!"]};
+        return HtmlTemplate(template).into_response()
+    };
+
+    let template = PostTemplate {post, path: "/post"};
     return HtmlTemplate(template).into_response()
 }
