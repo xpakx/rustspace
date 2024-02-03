@@ -7,7 +7,7 @@ use crate::AppState;
 use self::{
     main::{root, about, help},
     user::{user_page, register_form, register_user, check_password, check_username, check_email, check_password_repeat, login_form, login, logout, to_login, edit_email, edit_password, update_email, update_password, edit_avatar, upload_avatar, delete_avatar}, 
-    profile::{profile, edit_profile, update_profile}, community::{community, get_users_page, search_users, get_search_users_page}, friendships::{send_friend_request, friends, requests, change_request_state, requests_page, friends_page, rejected_requests, rejected_page}
+    profile::{profile, edit_profile, update_profile}, community::{community, get_users_page, search_users, get_search_users_page}, friendships::{send_friend_request, friends, requests, change_request_state, requests_page, friends_page, rejected_requests, rejected_page}, post::{add_post, delete_post, edit_post, get_post, get_users_posts}
 };
 mod main;
 mod user;
@@ -55,4 +55,9 @@ pub fn get_router() -> Router<Arc<AppState>> {
         .route("/friends/requests/rejected", get(rejected_requests))
         .route("/friends/requests/rejected/page", get(rejected_page))
         .route("/friends/requests/:id", put(change_request_state))
+        .route("/blog", post(add_post))
+        .route("/blog/:id", delete(delete_post))
+        .route("/blog/:id", put(edit_post))
+        .route("/blog/:id", get(get_post))
+        .route("/user/:username/blog", get(get_users_posts))
 }
