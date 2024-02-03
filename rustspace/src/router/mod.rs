@@ -54,5 +54,5 @@ pub fn get_router() -> Router<Arc<AppState>> {
         .route("/friends/requests/page", get(requests_page))
         .route("/friends/requests/rejected", get(rejected_requests))
         .route("/friends/requests/rejected/page", get(rejected_page))
-        .route("/friends/requests/:id", post(change_request_state))
+        .route("/friends/requests/:id", put(change_request_state))
 }
