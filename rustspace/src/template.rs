@@ -244,6 +244,13 @@ pub struct PostTemplate {
     pub post: BlogPostModel,
 }
 
+#[derive(Template)]
+#[template(path = "posts.html")]
+pub struct PostsTemplate {
+    pub path: &'static str,
+    pub posts: Vec<BlogPostModel>,
+}
+
 pub struct HtmlTemplate<T>(pub T);
 
 impl<T> IntoResponse for HtmlTemplate<T> where T: Template, {

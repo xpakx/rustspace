@@ -4,7 +4,7 @@ use axum::{response::IntoResponse, extract::{State, Path}, Form};
 use sqlx::Postgres;
 use tracing::{info, debug};
 
-use crate::{template::{HtmlTemplate, ErrorsTemplate, PostTemplate}, UserData, AppState, UserModel, validation::validate_non_empty, PostRequest, BlogPostModel};
+use crate::{template::{HtmlTemplate, ErrorsTemplate, UserNotFoundTemplate, PostTemplate, PostsTemplate}, UserData, AppState, UserModel, validation::validate_non_empty, PostRequest, BlogPostModel};
 
 pub async fn add_post(
     user: UserData,
@@ -191,5 +191,42 @@ pub async fn get_post(
     };
 
     let template = PostTemplate {post, path: "/post"};
+    return HtmlTemplate(template).into_response()
+}
+
+pub async fn get_users_posts(
+    State(state): State<Arc<AppState>>,
+    Path(username): Path<String>
+    ) -> impl IntoResponse {
+    info!("blogpost requested");
+    let user_db = sqlx::query_as::<Postgres, UserModel>(
+        "SELECT * FROM users WHERE screen_name = $1",
+        )
+        .bind(&username)
+        .fetch_optional(&state.db)
+        .await;
+
+    let Ok(Some(user)) = user_db else {
+        let template = UserNotFoundTemplate {};
+        return HtmlTemplate(template).into_response()
+    };
+
+
+    debug!("getting posts from database");
+    let post_db = sqlx::query_as::<Postgres, BlogPostModel>(
+        "SELECT * FROM posts WHERE user_id = $1 
+        ORDER BY created_at
+        LIMIT 25 "
+        )
+        .bind(&user.id)
+        .fetch_all(&state.db)
+        .await;
+
+    let Ok(posts) = post_db else {
+        let template = ErrorsTemplate {errors: vec!["Db error!"]};
+        return HtmlTemplate(template).into_response()
+    };
+
+    let template = PostsTemplate {posts, path: "/posts"};
     return HtmlTemplate(template).into_response()
 }
