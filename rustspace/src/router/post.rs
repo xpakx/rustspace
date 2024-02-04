@@ -1,8 +1,9 @@
 use std::sync::Arc;
 
-use axum::{response::IntoResponse, extract::{State, Path}, Form};
+use axum::{response::IntoResponse, extract::{State, Path, Query}, Form};
 use sqlx::{Postgres, PgPool};
 use tracing::{info, debug};
+use serde::Deserialize;
 
 use crate::{template::{HtmlTemplate, ErrorsTemplate, UserNotFoundTemplate, PostTemplate, PostsTemplate}, UserData, AppState, UserModel, validation::validate_non_empty, PostRequest, BlogPostModel};
 
@@ -255,4 +256,48 @@ async fn get_posts(db: &PgPool, user_id: i32, page: i32) -> Result<(Vec<BlogPost
         .await?;
     
     Ok((users, Some(records)))
+}
+
+#[derive(Deserialize)]
+pub struct SearchQuery {
+    page: i32,
+}
+
+pub async fn posts_page(
+    user: UserData,
+    Query(query): Query<SearchQuery>,
+    State(state): State<Arc<AppState>>,
+    Path(username): Path<String>
+    ) -> impl IntoResponse {
+    info!("blogpost requested");
+    let user_db = sqlx::query_as::<Postgres, UserModel>(
+        "SELECT * FROM users WHERE screen_name = $1",
+        )
+        .bind(&username)
+        .fetch_optional(&state.db)
+        .await;
+
+    let Ok(Some(user_db)) = user_db else {
+        let template = UserNotFoundTemplate {};
+        return HtmlTemplate(template).into_response()
+    };
+
+    let Some(user_id) = user_db.id else {
+        let template = ErrorsTemplate {errors: vec!["Db error!"]};
+        return HtmlTemplate(template).into_response()
+    };
+
+    debug!("getting posts from database");
+    let posts = get_posts(&state.db, user_id, query.page).await;
+    match posts {
+        Err(err) => {
+            debug!("Database error: {}", err);
+            let template = ErrorsTemplate {errors: vec!["Db error!"]};
+            return HtmlTemplate(template).into_response()
+        },
+        Ok((posts, _)) => {
+            let template = PostsTemplate {posts, user, path: "/posts"};
+            return HtmlTemplate(template).into_response()
+        }
+    };
 }
