@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use axum::{response::IntoResponse, extract::{State, Path}, Form};
-use sqlx::Postgres;
+use sqlx::{Postgres, PgPool};
 use tracing::{info, debug};
 
 use crate::{template::{HtmlTemplate, ErrorsTemplate, UserNotFoundTemplate, PostTemplate, PostsTemplate}, UserData, AppState, UserModel, validation::validate_non_empty, PostRequest, BlogPostModel};
@@ -213,22 +213,46 @@ pub async fn get_users_posts(
         return HtmlTemplate(template).into_response()
     };
 
-
-    debug!("getting posts from database");
-    let post_db = sqlx::query_as::<Postgres, BlogPostModel>(
-        "SELECT * FROM posts WHERE user_id = $1 
-        ORDER BY created_at
-        LIMIT 25 "
-        )
-        .bind(&user_db.id)
-        .fetch_all(&state.db)
-        .await;
-
-    let Ok(posts) = post_db else {
+    let Some(user_id) = user_db.id else {
         let template = ErrorsTemplate {errors: vec!["Db error!"]};
         return HtmlTemplate(template).into_response()
     };
 
-    let template = PostsTemplate {posts, user, path: "/posts"};
-    return HtmlTemplate(template).into_response()
+    debug!("getting posts from database");
+    let posts = get_posts(&state.db, user_id, 0).await;
+    match posts {
+        Err(err) => {
+            debug!("Database error: {}", err);
+            let template = ErrorsTemplate {errors: vec!["Db error!"]};
+            return HtmlTemplate(template).into_response()
+        },
+        Ok((posts, _)) => {
+            let template = PostsTemplate {posts, user, path: "/posts"};
+            return HtmlTemplate(template).into_response()
+        }
+    };
+}
+
+async fn get_posts(db: &PgPool, user_id: i32, page: i32) -> Result<(Vec<BlogPostModel>, Option<i64>), sqlx::Error> {
+    let page_size = 25;
+    let offset = page_size * page;
+    let users = sqlx::query_as::<Postgres, BlogPostModel>(
+        "SELECT * FROM posts WHERE user_id = $1 
+        ORDER BY created_at
+        LIMIT $2 OFFSET $3 "
+        )
+        .bind(&user_id)
+        .bind(page_size)
+        .bind(offset)
+        .fetch_all(db)
+        .await?;
+
+    let records: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM friendships f
+        WHERE f.friend_id = $1 AND f.rejected = true OR f.cancelled = true")
+        .bind(&user_id)
+        .fetch_one(db)
+        .await?;
+    
+    Ok((users, Some(records)))
 }
