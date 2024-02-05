@@ -543,7 +543,7 @@ async fn test_accepting_request_by_unauthenticated_user() {
         .await
         .oneshot(
             Request::builder()
-            .method("POST")
+            .method("PUT")
             .uri("/friends/requests/1")
             .header("Content-Type", "application/x-www-form-urlencoded")
             .body(Body::from("state=accepted"))
@@ -568,7 +568,7 @@ async fn test_changing_request_state_without_specyfying_state() {
         .await
         .oneshot(
             Request::builder()
-            .method("POST")
+            .method("PUT")
             .uri("/friends/requests/1")
             .header("Content-Type", "application/x-www-form-urlencoded")
             .header("Cookie", format!("Token={};", token))
@@ -595,7 +595,7 @@ async fn test_changing_request_state_with_wrong_state() {
         .await
         .oneshot(
             Request::builder()
-            .method("POST")
+            .method("PUT")
             .uri("/friends/requests/1")
             .header("Content-Type", "application/x-www-form-urlencoded")
             .header("Cookie", format!("Token={};", token))
@@ -621,7 +621,7 @@ async fn test_accepting_nonexistent_request() {
         .await
         .oneshot(
             Request::builder()
-            .method("POST")
+            .method("PUT")
             .uri("/friends/requests/1")
             .header("Content-Type", "application/x-www-form-urlencoded")
             .header("Cookie", format!("Token={};", token))
@@ -635,7 +635,6 @@ async fn test_accepting_nonexistent_request() {
     assert!(body.is_ok());
     let bytes = body.unwrap();
     let content = std::str::from_utf8(&*bytes).unwrap();
-    println!("{}", content);
     assert!(content.contains("error"));
     assert!(content.contains("No such request"));
 }
@@ -664,7 +663,7 @@ async fn test_accepting_users_own_request() {
         .await
         .oneshot(
             Request::builder()
-            .method("POST")
+            .method("PUT")
             .uri(format!("/friends/requests/{}", request_id))
             .header("Content-Type", "application/x-www-form-urlencoded")
             .header("Cookie", format!("Token={};", token))
@@ -708,7 +707,7 @@ async fn test_accepting_request() {
         .await
         .oneshot(
             Request::builder()
-            .method("POST")
+            .method("PUT")
             .uri(format!("/friends/requests/{}", request_id))
             .header("Content-Type", "application/x-www-form-urlencoded")
             .header("Cookie", format!("Token={};", token))
@@ -753,7 +752,7 @@ async fn test_rejecting_request() {
         .await
         .oneshot(
             Request::builder()
-            .method("POST")
+            .method("PUT")
             .uri(format!("/friends/requests/{}", request_id))
             .header("Content-Type", "application/x-www-form-urlencoded")
             .header("Cookie", format!("Token={};", token))
