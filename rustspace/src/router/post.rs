@@ -5,7 +5,7 @@ use sqlx::{Postgres, PgPool};
 use tracing::{info, debug};
 use serde::Deserialize;
 
-use crate::{template::{HtmlTemplate, ErrorsTemplate, UserNotFoundTemplate, PostTemplate, PostsTemplate}, UserData, AppState, UserModel, validation::validate_non_empty, PostRequest, BlogPostModel};
+use crate::{template::{HtmlTemplate, ErrorsTemplate, UserNotFoundTemplate, PostTemplate, PostsTemplate, PostsResultTemplate}, UserData, AppState, UserModel, validation::validate_non_empty, PostRequest, BlogPostModel};
 
 pub async fn add_post(
     user: UserData,
@@ -265,7 +265,6 @@ pub struct SearchQuery {
 }
 
 pub async fn posts_page(
-    user: UserData,
     Query(query): Query<SearchQuery>,
     State(state): State<Arc<AppState>>,
     Path(username): Path<String>
@@ -298,7 +297,7 @@ pub async fn posts_page(
         },
         Ok((posts, results)) => {
             let pages = records_to_count(results);
-            let template = PostsTemplate {posts, user, pages, username, path: "/posts"};
+            let template = PostsResultTemplate {posts, pages, username, page: query.page};
             return HtmlTemplate(template).into_response()
         }
     };
