@@ -392,7 +392,6 @@ async fn test_pagination_on_friend_requests_view() {
     assert!(body.is_ok());
     let bytes = body.unwrap();
     let content = std::str::from_utf8(&*bytes).unwrap();
-    println!("{}", content);
     assert!(content.contains("300 requests found"));
     assert!(content.contains("\"current\">0<"));
     assert!(content.contains("page=1\""));
@@ -527,7 +526,6 @@ async fn test_pagination_on_friend_view() {
     assert!(body.is_ok());
     let bytes = body.unwrap();
     let content = std::str::from_utf8(&*bytes).unwrap();
-    println!("{}", content);
     assert!(content.contains("300 requests found"));
     assert!(content.contains("\"current\">0<"));
     assert!(content.contains("page=1\""));
@@ -637,6 +635,7 @@ async fn test_accepting_nonexistent_request() {
     assert!(body.is_ok());
     let bytes = body.unwrap();
     let content = std::str::from_utf8(&*bytes).unwrap();
+    println!("{}", content);
     assert!(content.contains("error"));
     assert!(content.contains("No such request"));
 }

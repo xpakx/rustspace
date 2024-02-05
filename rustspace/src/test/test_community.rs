@@ -105,7 +105,6 @@ async fn test_getting_community_page_with_two_pages() {
     assert!(body.is_ok());
     let bytes = body.unwrap();
     let content = std::str::from_utf8(&*bytes).unwrap();
-    println!("{}", content);
     let re = Regex::new(r"aaa").unwrap();
     let count = re.find_iter(content).count();
     assert_eq!(count, 25*2); // link and username
@@ -131,7 +130,6 @@ async fn test_getting_users_catalogue_by_unauthenticated_user() {
     let bytes = body.unwrap();
     let content = std::str::from_utf8(&*bytes).unwrap();
     assert!(content.contains("error"));
-    println!("{}", content);
     assert!(content.contains("unauthorized"));
 }
 
@@ -219,7 +217,6 @@ async fn test_getting_second_page_of_catalogue() {
     assert!(body.is_ok());
     let bytes = body.unwrap();
     let content = std::str::from_utf8(&*bytes).unwrap();
-    println!("{}", content);
     assert!(content.contains("300 users found"));
     assert!(content.contains("page=0"));
     assert!(!content.contains("page=1&"));
@@ -252,7 +249,6 @@ async fn test_getting_third_page_of_catalogue() {
     assert!(body.is_ok());
     let bytes = body.unwrap();
     let content = std::str::from_utf8(&*bytes).unwrap();
-    println!("{}", content);
     assert!(content.contains("300 users found"));
     assert!(content.contains("page=0"));
     assert!(content.contains("page=1"));
@@ -286,7 +282,6 @@ async fn test_getting_page_in_the_middle() {
     assert!(body.is_ok());
     let bytes = body.unwrap();
     let content = std::str::from_utf8(&*bytes).unwrap();
-    println!("{}", content);
     assert!(content.contains("300 users found"));
     assert!(content.contains("page=0"));
     assert!(!content.contains("page=1&"));
@@ -322,7 +317,6 @@ async fn test_getting_last_page() {
     assert!(body.is_ok());
     let bytes = body.unwrap();
     let content = std::str::from_utf8(&*bytes).unwrap();
-    println!("{}", content);
     assert!(content.contains("300 users found"));
     assert!(content.contains("page=0"));
     assert!(!content.contains("page=1&"));
@@ -467,7 +461,6 @@ async fn test_getting_second_page_of_user_search_results() {
     assert!(body.is_ok());
     let bytes = body.unwrap();
     let content = std::str::from_utf8(&*bytes).unwrap();
-    println!("{}", content);
     assert!(content.contains("300 users found"));
     assert!(content.contains("page=0"));
     assert!(!content.contains("page=1&"));
@@ -500,7 +493,6 @@ async fn test_getting_third_page_of_user_search_results() {
     assert!(body.is_ok());
     let bytes = body.unwrap();
     let content = std::str::from_utf8(&*bytes).unwrap();
-    println!("{}", content);
     assert!(content.contains("300 users found"));
     assert!(content.contains("page=0"));
     assert!(content.contains("page=1"));
@@ -534,7 +526,6 @@ async fn test_getting_page_of_user_search_results_in_the_middle() {
     assert!(body.is_ok());
     let bytes = body.unwrap();
     let content = std::str::from_utf8(&*bytes).unwrap();
-    println!("{}", content);
     assert!(content.contains("300 users found"));
     assert!(content.contains("page=0"));
     assert!(!content.contains("page=1&"));
@@ -570,7 +561,6 @@ async fn test_getting_last_page_of_user_search_result() {
     assert!(body.is_ok());
     let bytes = body.unwrap();
     let content = std::str::from_utf8(&*bytes).unwrap();
-    println!("{}", content);
     assert!(content.contains("300 users found"));
     assert!(content.contains("page=0"));
     assert!(!content.contains("page=1&"));
@@ -601,7 +591,6 @@ async fn test_requesting_negative_page_of_catalogue() {
     assert!(body.is_ok());
     let bytes = body.unwrap();
     let content = std::str::from_utf8(&*bytes).unwrap();
-    println!("{}", content);
     assert!(content.contains("error"));
     assert!(content.contains("negative"));
 }
@@ -628,7 +617,6 @@ async fn test_requesting_negative_page_of_user_search_results() {
     assert!(body.is_ok());
     let bytes = body.unwrap();
     let content = std::str::from_utf8(&*bytes).unwrap();
-    println!("{}", content);
     assert!(content.contains("error"));
     assert!(content.contains("negative"));
 }
@@ -655,7 +643,6 @@ async fn test_requesting_too_long_search_query_in_catalogue() {
     assert!(body.is_ok());
     let bytes = body.unwrap();
     let content = std::str::from_utf8(&*bytes).unwrap();
-    println!("{}", content);
     assert!(content.contains("error"));
     assert!(content.contains("single letter"));
 }
