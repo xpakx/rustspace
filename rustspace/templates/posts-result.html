@@ -1,0 +1,32 @@
+{% for post in posts %}
+<h1>{{post.title.as_ref().unwrap()}}</h1>
+
+<article class="post">
+	{{post.content.as_ref().unwrap()}}
+</article>
+{% endfor %}
+</section>
+
+<section hx-swap-oob="true" class="page-nav" id="page-nav">
+	{% if page >= 2 %}
+	<button hx-get="/user/{{username}}/blog/page?page=0" hx-target="#posts">0</button>
+	{% endif %}
+	{% if page > 2 %}
+	…
+	{% endif %}
+
+	{% if page > 0 %}
+	<button hx-get="/user/{{username}}/blog/page?page={{page-1}}" hx-target="#posts">{{page-1}}</button>
+	{% endif %}
+	<span class="current">{{page}}</span>
+	{% if page < pages-1 %}
+	<button hx-get="/user/{{username}}/blog/page?page={{page+1}}" hx-target="#posts">{{page+1}}</button>
+	{% endif %}
+
+	{% if page < pages-3 %}
+	…
+	{% endif %}
+	{% if page <= pages-3 %}
+	<button hx-get="/user/{{username}}/blog/page?page={{pages+1}}" hx-target="#posts">{{pages-1}}</button>
+	{% endif %}
+</section>

@@ -250,9 +250,18 @@ pub struct PostTemplate {
 pub struct PostsTemplate {
     pub path: &'static str,
     pub user: UserData,
+    pub username: String,
+    pub posts: Vec<BlogPostModel>,
+    pub pages: i32,
+}
+
+#[derive(Template)]
+#[template(path = "posts-result.html")]
+pub struct PostsResultTemplate {
     pub posts: Vec<BlogPostModel>,
     pub username: String,
     pub pages: i32,
+    pub page: i32,
 }
 
 pub struct HtmlTemplate<T>(pub T);
