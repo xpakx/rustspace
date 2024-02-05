@@ -251,6 +251,8 @@ pub struct PostsTemplate {
     pub path: &'static str,
     pub user: UserData,
     pub posts: Vec<BlogPostModel>,
+    pub username: String,
+    pub pages: i32,
 }
 
 pub struct HtmlTemplate<T>(pub T);

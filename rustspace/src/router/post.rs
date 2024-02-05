@@ -227,8 +227,9 @@ pub async fn get_users_posts(
             let template = ErrorsTemplate {errors: vec!["Db error!"]};
             return HtmlTemplate(template).into_response()
         },
-        Ok((posts, _)) => {
-            let template = PostsTemplate {posts, user, path: "/posts"};
+        Ok((posts, records)) => {
+            let pages = records_to_count(records);
+            let template = PostsTemplate {posts, user, pages, username, path: "/posts"};
             return HtmlTemplate(template).into_response()
         }
     };
@@ -295,9 +296,21 @@ pub async fn posts_page(
             let template = ErrorsTemplate {errors: vec!["Db error!"]};
             return HtmlTemplate(template).into_response()
         },
-        Ok((posts, _)) => {
-            let template = PostsTemplate {posts, user, path: "/posts"};
+        Ok((posts, results)) => {
+            let pages = records_to_count(results);
+            let template = PostsTemplate {posts, user, pages, username, path: "/posts"};
             return HtmlTemplate(template).into_response()
         }
     };
+}
+
+fn records_to_count(records: Option<i64>) -> i32 {
+    match records {
+        None => 0,
+        Some(count) => {
+            let count = (count as f64)/25.0;
+            let count = count.ceil() as i32;
+            count
+        }
+    }
 }

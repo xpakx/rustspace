@@ -15,3 +15,18 @@
 {% endfor %}
 </section>
 {% endblock %}
+
+
+<section class="page-nav" id="page-nav">
+	<span class="current">0</span>
+	{% if pages > 1 %}
+	<button hx-get="/user/{{username}}/blog/page?page=1" hx-target="#posts">1</button>
+	{% endif %}
+
+	{% if pages > 3 %}
+	…
+	{% endif %}
+	{% if pages > 2 %}
+	<button hx-get="/user/{{username}}/blog/page?page={{pages-1}}" hx-target="#posts">{{pages-1}}</button>
+	{% endif %}
+</section>

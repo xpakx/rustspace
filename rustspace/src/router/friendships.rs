@@ -187,7 +187,6 @@ pub async fn requests(
     };
 }
 
-
 #[derive(Deserialize)]
 pub struct SearchQuery {
     page: i32,
