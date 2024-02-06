@@ -7,6 +7,17 @@ use serde::Deserialize;
 
 use crate::{template::{HtmlTemplate, ErrorsTemplate, UserNotFoundTemplate, PostTemplate, PostsTemplate, PostsResultTemplate, PostFormTemplate}, UserData, AppState, UserModel, validation::validate_non_empty, PostRequest, BlogPostModel};
 
+fn validate_post(request: &PostRequest) -> Vec<&'static str> {
+    let mut errors = vec![];
+    if !validate_non_empty(&request.content) {
+        errors.push("Post content cannot be empty!");
+    }
+    if !validate_non_empty(&request.title) {
+        errors.push("Post title cannot be empty!");
+    }
+    return errors;
+}
+
 pub async fn add_post(
     user: UserData,
     State(state): State<Arc<AppState>>,
@@ -18,10 +29,12 @@ pub async fn add_post(
         return HtmlTemplate(template).into_response()
     }
 
-    if !validate_non_empty(&request.content) {
-        let template = ErrorsTemplate {errors: vec!["Post content cannot be empty!"]};
+    let errors = validate_post(&request);
+    if !errors.is_empty() {
+        let template = ErrorsTemplate {errors};
         return HtmlTemplate(template).into_response()
     }
+
     debug!("getting user from database");
     let user_db = sqlx::query_as::<Postgres, UserModel>("SELECT * FROM users WHERE screen_name = $1")
         .bind(&user.username)
