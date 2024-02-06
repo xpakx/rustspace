@@ -199,6 +199,7 @@ pub async fn get_post(
         .fetch_optional(&state.db)
         .await;
     let Ok(post) = post_db else {
+        debug!("Db error: {:?}", post_db);
         let template = ErrorsTemplate {errors: vec!["Db error!"]};
         return HtmlTemplate(template).into_response()
     };
