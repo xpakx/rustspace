@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use axum::{response::IntoResponse, extract::{State, Path, Query}, Form};
+use axum::{response::IntoResponse, extract::{State, Path, Query}, Form, http::{HeaderMap, HeaderValue}};
 use sqlx::{Postgres, PgPool};
 use tracing::{info, debug};
 use serde::Deserialize;
@@ -32,21 +32,23 @@ pub async fn add_post(
         return HtmlTemplate(template).into_response()
     };
 
-    let query_result = sqlx::query("INSERT INTO posts (user_id, content, title) VALUES ($1, $2, $3)")
+    let query_result: Result<i64, String> = sqlx::query_scalar("INSERT INTO posts (user_id, content, title) VALUES ($1, $2, $3) RETURNING id")
         .bind(&user.id)
         .bind(&request.content)
         .bind(&request.title)
-        .execute(&state.db)
+        .fetch_one(&state.db)
         .await
         .map_err(|err: sqlx::Error| err.to_string());
 
-    if let Err(_) = query_result {
+    let Ok(id) = query_result else {
         let template = ErrorsTemplate {errors: vec!["Db error!"]};
         return HtmlTemplate(template).into_response()
-    }
+    };
     info!("post succesfully created.");
-    let template = ErrorsTemplate {errors: vec!["TODO"]};
-    return HtmlTemplate(template).into_response()
+
+    let mut headers = HeaderMap::new();
+    headers.insert("HX-redirect", HeaderValue::from_str(&format!("/blog/{}", id)).unwrap());
+    (headers, "Success").into_response()
 }
 
 pub async fn delete_post(
