@@ -37,6 +37,17 @@ pub async fn get_user_by_name(db: &PgPool, username: &String) -> Result<Option<U
         .await;
 }
 
+pub async fn insert_post(db: &PgPool, user_id: &i32, request: &PostRequest) -> Result<i64, String> {
+    debug!("saving post in database");
+    return sqlx::query_scalar("INSERT INTO posts (user_id, content, title) VALUES ($1, $2, $3) RETURNING id")
+        .bind(user_id)
+        .bind(&request.content)
+        .bind(&request.title)
+        .fetch_one(db)
+        .await
+        .map_err(|err: sqlx::Error| err.to_string());
+}
+
 pub async fn add_post(
     user: UserData,
     State(state): State<Arc<AppState>>,
@@ -53,14 +64,8 @@ pub async fn add_post(
         let template = ErrorsTemplate {errors: vec!["Db error!"]};
         return HtmlTemplate(template).into_response()
     };
-
-    let query_result: Result<i64, String> = sqlx::query_scalar("INSERT INTO posts (user_id, content, title) VALUES ($1, $2, $3) RETURNING id")
-        .bind(&user.id)
-        .bind(&request.content)
-        .bind(&request.title)
-        .fetch_one(&state.db)
-        .await
-        .map_err(|err: sqlx::Error| err.to_string());
+    let user_id = user.id.unwrap();
+    let query_result = insert_post(&state.db, &user_id, &request).await;
 
     let Ok(id) = query_result else {
         let template = ErrorsTemplate {errors: vec!["Db error!"]};
