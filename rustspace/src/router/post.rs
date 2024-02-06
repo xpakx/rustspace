@@ -29,6 +29,14 @@ fn post_action_validate(user: &UserData, request: &PostRequest,) -> Option<Error
     return None;
 }
 
+pub async fn get_user_by_name(db: &PgPool, username: &String) -> Result<Option<UserModel>, sqlx::Error> {
+    debug!("getting user from database");
+    return sqlx::query_as::<Postgres, UserModel>("SELECT * FROM users WHERE screen_name = $1")
+        .bind(username)
+        .fetch_optional(db)
+        .await;
+}
+
 pub async fn add_post(
     user: UserData,
     State(state): State<Arc<AppState>>,
@@ -40,12 +48,8 @@ pub async fn add_post(
         return HtmlTemplate(template).into_response()
     }
 
-    debug!("getting user from database");
-    let user_db = sqlx::query_as::<Postgres, UserModel>("SELECT * FROM users WHERE screen_name = $1")
-        .bind(&user.username)
-        .fetch_optional(&state.db)
-        .await;
-    let Ok(Some(user)) = user_db else {
+    let username = user.username.unwrap();
+    let Ok(Some(user)) = get_user_by_name(&state.db, &username).await else {
         let template = ErrorsTemplate {errors: vec!["Db error!"]};
         return HtmlTemplate(template).into_response()
     };
@@ -81,11 +85,8 @@ pub async fn delete_post(
     }
 
     debug!("getting user from database");
-    let user_db = sqlx::query_as::<Postgres, UserModel>("SELECT * FROM users WHERE screen_name = $1")
-        .bind(&user.username)
-        .fetch_optional(&state.db)
-        .await;
-    let Ok(Some(user)) = user_db else {
+    let username = user.username.unwrap();
+    let Ok(Some(user)) = get_user_by_name(&state.db, &username).await else {
         let template = ErrorsTemplate {errors: vec!["Db error!"]};
         return HtmlTemplate(template).into_response()
     };
@@ -142,11 +143,8 @@ pub async fn edit_post(
     }
 
     debug!("getting user from database");
-    let user_db = sqlx::query_as::<Postgres, UserModel>("SELECT * FROM users WHERE screen_name = $1")
-        .bind(&user.username)
-        .fetch_optional(&state.db)
-        .await;
-    let Ok(Some(user)) = user_db else {
+    let username = user.username.unwrap();
+    let Ok(Some(user)) = get_user_by_name(&state.db, &username).await else {
         let template = ErrorsTemplate {errors: vec!["Db error!"]};
         return HtmlTemplate(template).into_response()
     };
@@ -222,14 +220,8 @@ pub async fn get_users_posts(
     Path(username): Path<String>
     ) -> impl IntoResponse {
     info!("blogpost requested");
-    let user_db = sqlx::query_as::<Postgres, UserModel>(
-        "SELECT * FROM users WHERE screen_name = $1",
-        )
-        .bind(&username)
-        .fetch_optional(&state.db)
-        .await;
 
-    let Ok(Some(user_db)) = user_db else {
+    let Ok(Some(user_db)) = get_user_by_name(&state.db, &username).await else {
         let template = UserNotFoundTemplate {};
         return HtmlTemplate(template).into_response()
     };
@@ -290,18 +282,11 @@ pub async fn posts_page(
     Path(username): Path<String>
     ) -> impl IntoResponse {
     info!("blogpost requested");
-    let user_db = sqlx::query_as::<Postgres, UserModel>(
-        "SELECT * FROM users WHERE screen_name = $1",
-        )
-        .bind(&username)
-        .fetch_optional(&state.db)
-        .await;
 
-    let Ok(Some(user_db)) = user_db else {
+    let Ok(Some(user_db)) = get_user_by_name(&state.db, &username).await else {
         let template = UserNotFoundTemplate {};
         return HtmlTemplate(template).into_response()
     };
-
     let Some(user_id) = user_db.id else {
         let template = ErrorsTemplate {errors: vec!["Db error!"]};
         return HtmlTemplate(template).into_response()
