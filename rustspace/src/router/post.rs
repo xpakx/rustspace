@@ -136,6 +136,12 @@ pub async fn edit_post(
         return HtmlTemplate(template).into_response()
     }
 
+    let errors = validate_post(&request);
+    if !errors.is_empty() {
+        let template = ErrorsTemplate {errors};
+        return HtmlTemplate(template).into_response()
+    }
+
     debug!("getting user from database");
     let user_db = sqlx::query_as::<Postgres, UserModel>("SELECT * FROM users WHERE screen_name = $1")
         .bind(&user.username)
