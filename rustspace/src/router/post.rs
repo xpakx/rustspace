@@ -5,7 +5,7 @@ use sqlx::{Postgres, PgPool};
 use tracing::{info, debug};
 use serde::Deserialize;
 
-use crate::{template::{HtmlTemplate, ErrorsTemplate, UserNotFoundTemplate, PostTemplate, PostsTemplate, PostsResultTemplate, PostFormTemplate}, UserData, AppState, UserModel, validation::validate_non_empty, PostRequest, BlogPostModel};
+use crate::{template::{HtmlTemplate, ErrorsTemplate, UserNotFoundTemplate, PostTemplate, PostsTemplate, PostsResultTemplate, PostFormTemplate}, UserData, AppState, validation::validate_non_empty, PostRequest, BlogPostModel};
 
 fn validate_post(request: &PostRequest) -> Vec<&'static str> {
     let mut errors = vec![];
@@ -29,15 +29,15 @@ fn post_action_validate(user: &UserData, request: &PostRequest,) -> Option<Error
     return None;
 }
 
-pub async fn get_user_by_name(db: &PgPool, username: &String) -> Result<Option<UserModel>, sqlx::Error> {
+pub async fn get_user_by_name(db: &PgPool, username: &String) -> Result<Option<i32>, sqlx::Error> {
     debug!("getting user from database");
-    return sqlx::query_as::<Postgres, UserModel>("SELECT * FROM users WHERE screen_name = $1")
+    return sqlx::query_scalar("SELECT id FROM users WHERE screen_name = $1")
         .bind(username)
         .fetch_optional(db)
         .await;
 }
 
-pub async fn insert_post(db: &PgPool, user_id: &i32, request: &PostRequest) -> Result<i64, String> {
+pub async fn insert_post(db: &PgPool, user_id: &i32, request: &PostRequest) -> Result<i32, String> {
     debug!("saving post in database");
     return sqlx::query_scalar("INSERT INTO posts (user_id, content, title) VALUES ($1, $2, $3) RETURNING id")
         .bind(user_id)
@@ -60,14 +60,14 @@ pub async fn add_post(
     }
 
     let username = user.username.unwrap();
-    let Ok(Some(user)) = get_user_by_name(&state.db, &username).await else {
+    let Ok(Some(user_id)) = get_user_by_name(&state.db, &username).await else {
         let template = ErrorsTemplate {errors: vec!["Db error!"]};
         return HtmlTemplate(template).into_response()
     };
-    let user_id = user.id.unwrap();
     let query_result = insert_post(&state.db, &user_id, &request).await;
 
     let Ok(id) = query_result else {
+        debug!("Db error: {:?}", query_result);
         let template = ErrorsTemplate {errors: vec!["Db error!"]};
         return HtmlTemplate(template).into_response()
     };
@@ -91,11 +91,7 @@ pub async fn delete_post(
 
     debug!("getting user from database");
     let username = user.username.unwrap();
-    let Ok(Some(user)) = get_user_by_name(&state.db, &username).await else {
-        let template = ErrorsTemplate {errors: vec!["Db error!"]};
-        return HtmlTemplate(template).into_response()
-    };
-    let Some(user_id) = user.id else {
+    let Ok(Some(user_id)) = get_user_by_name(&state.db, &username).await else {
         let template = ErrorsTemplate {errors: vec!["Db error!"]};
         return HtmlTemplate(template).into_response()
     };
@@ -149,11 +145,7 @@ pub async fn edit_post(
 
     debug!("getting user from database");
     let username = user.username.unwrap();
-    let Ok(Some(user)) = get_user_by_name(&state.db, &username).await else {
-        let template = ErrorsTemplate {errors: vec!["Db error!"]};
-        return HtmlTemplate(template).into_response()
-    };
-    let Some(user_id) = user.id else {
+    let Ok(Some(user_id)) = get_user_by_name(&state.db, &username).await else {
         let template = ErrorsTemplate {errors: vec!["Db error!"]};
         return HtmlTemplate(template).into_response()
     };
@@ -226,13 +218,8 @@ pub async fn get_users_posts(
     ) -> impl IntoResponse {
     info!("blogpost requested");
 
-    let Ok(Some(user_db)) = get_user_by_name(&state.db, &username).await else {
+    let Ok(Some(user_id)) = get_user_by_name(&state.db, &username).await else {
         let template = UserNotFoundTemplate {};
-        return HtmlTemplate(template).into_response()
-    };
-
-    let Some(user_id) = user_db.id else {
-        let template = ErrorsTemplate {errors: vec!["Db error!"]};
         return HtmlTemplate(template).into_response()
     };
 
@@ -288,12 +275,8 @@ pub async fn posts_page(
     ) -> impl IntoResponse {
     info!("blogpost requested");
 
-    let Ok(Some(user_db)) = get_user_by_name(&state.db, &username).await else {
+    let Ok(Some(user_id)) = get_user_by_name(&state.db, &username).await else {
         let template = UserNotFoundTemplate {};
-        return HtmlTemplate(template).into_response()
-    };
-    let Some(user_id) = user_db.id else {
-        let template = ErrorsTemplate {errors: vec!["Db error!"]};
         return HtmlTemplate(template).into_response()
     };
 
