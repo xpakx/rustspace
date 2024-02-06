@@ -18,20 +18,25 @@ fn validate_post(request: &PostRequest) -> Vec<&'static str> {
     return errors;
 }
 
+fn post_action_validate(user: &UserData, request: &PostRequest,) -> Option<ErrorsTemplate> {
+    if user.username.is_none() {
+        return Some(ErrorsTemplate {errors: vec!["Unauthenticated!"]});
+    }
+    let errors = validate_post(&request);
+    if !errors.is_empty() {
+        return Some(ErrorsTemplate {errors});
+    }
+    return None;
+}
+
 pub async fn add_post(
     user: UserData,
     State(state): State<Arc<AppState>>,
     Form(request): Form<PostRequest>
     ) -> impl IntoResponse {
     info!("adding blogpost requested");
-    if user.username.is_none() {
-        let template = ErrorsTemplate {errors: vec!["Unauthenticated!"]};
-        return HtmlTemplate(template).into_response()
-    }
-
-    let errors = validate_post(&request);
-    if !errors.is_empty() {
-        let template = ErrorsTemplate {errors};
+    let error = post_action_validate(&user, &request);
+    if let Some(template) = error {
         return HtmlTemplate(template).into_response()
     }
 
@@ -131,14 +136,8 @@ pub async fn edit_post(
     Form(request): Form<PostRequest>
     ) -> impl IntoResponse {
     info!("updating blogpost requested");
-    if user.username.is_none() {
-        let template = ErrorsTemplate {errors: vec!["Unauthenticated!"]};
-        return HtmlTemplate(template).into_response()
-    }
-
-    let errors = validate_post(&request);
-    if !errors.is_empty() {
-        let template = ErrorsTemplate {errors};
+    let error = post_action_validate(&user, &request);
+    if let Some(template) = error {
         return HtmlTemplate(template).into_response()
     }
 
