@@ -264,6 +264,13 @@ pub struct PostsResultTemplate {
     pub page: i32,
 }
 
+#[derive(Template)]
+#[template(path = "post-form.html")]
+pub struct PostFormTemplate {
+    pub path: &'static str,
+    pub user: UserData,
+}
+
 pub struct HtmlTemplate<T>(pub T);
 
 impl<T> IntoResponse for HtmlTemplate<T> where T: Template, {

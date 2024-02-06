@@ -5,7 +5,7 @@ use sqlx::{Postgres, PgPool};
 use tracing::{info, debug};
 use serde::Deserialize;
 
-use crate::{template::{HtmlTemplate, ErrorsTemplate, UserNotFoundTemplate, PostTemplate, PostsTemplate, PostsResultTemplate}, UserData, AppState, UserModel, validation::validate_non_empty, PostRequest, BlogPostModel};
+use crate::{template::{HtmlTemplate, ErrorsTemplate, UserNotFoundTemplate, PostTemplate, PostsTemplate, PostsResultTemplate, PostFormTemplate}, UserData, AppState, UserModel, validation::validate_non_empty, PostRequest, BlogPostModel};
 
 pub async fn add_post(
     user: UserData,
@@ -312,4 +312,10 @@ fn records_to_count(records: Option<i64>) -> i32 {
             count
         }
     }
+}
+
+pub async fn post_form(user: UserData) -> impl IntoResponse {
+    info!("register form requested");
+    let template = PostFormTemplate {path: "register", user};
+    return HtmlTemplate(template)
 }
