@@ -193,6 +193,11 @@ struct BlogCommentModel {
     updated_at: Option<chrono::DateTime<chrono::Utc>>,
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct CommentRequest {
+    content: Option<String>,
+}
+
 pub struct UserData {
     username: Option<String>,
 }
