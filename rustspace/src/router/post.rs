@@ -5,7 +5,7 @@ use sqlx::{Postgres, PgPool};
 use tracing::{info, debug};
 use serde::Deserialize;
 
-use crate::{template::{HtmlTemplate, ErrorsTemplate, UserNotFoundTemplate, PostTemplate, PostsTemplate, PostsResultTemplate, PostFormTemplate}, UserData, AppState, validation::validate_non_empty, PostRequest, BlogPostModel};
+use crate::{template::{HtmlTemplate, ErrorsTemplate, UserNotFoundTemplate, PostTemplate, PostsTemplate, PostsResultTemplate, PostFormTemplate, PostNotFoundTemplate}, UserData, AppState, validation::validate_non_empty, PostRequest, BlogPostModel};
 
 fn validate_post(request: &PostRequest) -> Vec<&'static str> {
     let mut errors = vec![];
@@ -200,11 +200,11 @@ pub async fn get_post(
         .await;
     let Ok(post) = post_db else {
         debug!("Db error: {:?}", post_db);
-        let template = ErrorsTemplate {errors: vec!["Db error!"]};
+        let template = ErrorsTemplate {errors: vec!["Db error!"]}; //TODO
         return HtmlTemplate(template).into_response()
     };
     let Some(post) = post else {
-        let template = ErrorsTemplate {errors: vec!["No such post!"]};
+        let template = PostNotFoundTemplate{};
         return HtmlTemplate(template).into_response()
     };
 
@@ -229,7 +229,7 @@ pub async fn get_users_posts(
     match posts {
         Err(err) => {
             debug!("Database error: {}", err);
-            let template = ErrorsTemplate {errors: vec!["Db error!"]};
+            let template = ErrorsTemplate {errors: vec!["Db error!"]}; //TODO
             return HtmlTemplate(template).into_response()
         },
         Ok((posts, records)) => {
@@ -286,7 +286,7 @@ pub async fn posts_page(
     match posts {
         Err(err) => {
             debug!("Database error: {}", err);
-            let template = ErrorsTemplate {errors: vec!["Db error!"]};
+            let template = ErrorsTemplate {errors: vec!["Db error!"]}; //TODO
             return HtmlTemplate(template).into_response()
         },
         Ok((posts, results)) => {

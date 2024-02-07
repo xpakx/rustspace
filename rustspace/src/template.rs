@@ -271,6 +271,11 @@ pub struct PostFormTemplate {
     pub user: UserData,
 }
 
+#[derive(Template)]
+#[template(path = "post-error.html")]
+pub struct PostNotFoundTemplate {
+}
+
 pub struct HtmlTemplate<T>(pub T);
 
 impl<T> IntoResponse for HtmlTemplate<T> where T: Template, {
