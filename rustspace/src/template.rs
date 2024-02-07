@@ -276,6 +276,18 @@ pub struct PostFormTemplate {
 pub struct PostNotFoundTemplate {
 }
 
+#[derive(Template)]
+#[template(path = "db-error.html")]
+pub struct DbErrorTemplate {
+}
+
+#[derive(Template)]
+#[template(path = "new-posts.html")]
+pub struct NewPostsTemplate {
+    pub posts: Vec<BlogPostModel>,
+    pub username: String,
+}
+
 pub struct HtmlTemplate<T>(pub T);
 
 impl<T> IntoResponse for HtmlTemplate<T> where T: Template, {

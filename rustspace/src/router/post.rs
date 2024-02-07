@@ -5,7 +5,7 @@ use sqlx::{Postgres, PgPool};
 use tracing::{info, debug};
 use serde::Deserialize;
 
-use crate::{template::{HtmlTemplate, ErrorsTemplate, UserNotFoundTemplate, PostTemplate, PostsTemplate, PostsResultTemplate, PostFormTemplate, PostNotFoundTemplate}, UserData, AppState, validation::validate_non_empty, PostRequest, BlogPostModel};
+use crate::{template::{HtmlTemplate, ErrorsTemplate, UserNotFoundTemplate, PostTemplate, PostsTemplate, PostsResultTemplate, PostFormTemplate, PostNotFoundTemplate, DbErrorTemplate, NewPostsTemplate}, UserData, AppState, validation::validate_non_empty, PostRequest, BlogPostModel};
 
 fn validate_post(request: &PostRequest) -> Vec<&'static str> {
     let mut errors = vec![];
@@ -203,7 +203,7 @@ pub async fn get_post(
         .await;
     let Ok(post) = post_db else {
         debug!("Db error: {:?}", post_db);
-        let template = ErrorsTemplate {errors: vec!["Db error!"]}; //TODO
+        let template = DbErrorTemplate{};
         return HtmlTemplate(template).into_response()
     };
     let Some(post) = post else {
@@ -232,7 +232,7 @@ pub async fn get_users_posts(
     match posts {
         Err(err) => {
             debug!("Database error: {}", err);
-            let template = ErrorsTemplate {errors: vec!["Db error!"]}; //TODO
+            let template = DbErrorTemplate{};
             return HtmlTemplate(template).into_response()
         },
         Ok((posts, records)) => {
@@ -289,7 +289,7 @@ pub async fn posts_page(
     match posts {
         Err(err) => {
             debug!("Database error: {}", err);
-            let template = ErrorsTemplate {errors: vec!["Db error!"]}; //TODO
+            let template = DbErrorTemplate{};
             return HtmlTemplate(template).into_response()
         },
         Ok((posts, results)) => {
@@ -315,4 +315,43 @@ pub async fn post_form(user: UserData) -> impl IntoResponse {
     info!("register form requested");
     let template = PostFormTemplate {path: "register", user};
     return HtmlTemplate(template)
+}
+
+async fn get_new_posts(db: &PgPool, user_id: i32) -> Result<Vec<BlogPostModel>, sqlx::Error> {
+    let page_size = 5;
+    let users = sqlx::query_as::<Postgres, BlogPostModel>(
+        "SELECT * FROM posts WHERE user_id = $1 
+        ORDER BY created_at
+        LIMIT $2 "
+        )
+        .bind(&user_id)
+        .bind(page_size)
+        .fetch_all(db)
+        .await?;
+
+    Ok(users)
+}
+
+pub async fn new_posts(
+    State(state): State<Arc<AppState>>,
+    Path(username): Path<String>
+    ) -> impl IntoResponse {
+    let Ok(Some(user_id)) = get_user_by_name(&state.db, &username).await else {
+        let template = ErrorsTemplate {errors: vec!["No user!"]};
+        return HtmlTemplate(template).into_response()
+    };
+
+    debug!("getting posts from database");
+    let posts = get_new_posts(&state.db, user_id).await;
+    match posts {
+        Err(err) => {
+            debug!("Database error: {}", err);
+            let template = ErrorsTemplate {errors: vec!["Db error!"]};
+            return HtmlTemplate(template).into_response()
+        },
+        Ok(posts) => {
+            let template = NewPostsTemplate {posts, username};
+            return HtmlTemplate(template).into_response()
+        }
+    };
 }

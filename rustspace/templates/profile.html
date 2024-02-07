@@ -63,4 +63,7 @@
 {% endif %}
 {% endif %}
 
+<section class="posts" hx-get="/user/{{username}}/blog/new" hx-trigger="load once">
+</section>
+
 {% endblock %}
