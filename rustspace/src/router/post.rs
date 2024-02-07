@@ -64,8 +64,8 @@ pub async fn add_post(
         let template = ErrorsTemplate {errors: vec!["Db error!"]};
         return HtmlTemplate(template).into_response()
     };
-    let query_result = insert_post(&state.db, &user_id, &request).await;
 
+    let query_result = insert_post(&state.db, &user_id, &request).await;
     let Ok(id) = query_result else {
         debug!("Db error: {:?}", query_result);
         let template = ErrorsTemplate {errors: vec!["Db error!"]};
@@ -182,8 +182,10 @@ pub async fn edit_post(
         return HtmlTemplate(template).into_response()
     }
     info!("post succesfully updated.");
-    let template = ErrorsTemplate {errors: vec!["TODO"]};
-    return HtmlTemplate(template).into_response()
+
+    let mut headers = HeaderMap::new();
+    headers.insert("HX-redirect", HeaderValue::from_str(&format!("/blog/{}", post_id)).unwrap());
+    (headers, "Success").into_response()
 }
 
 pub async fn get_post(
