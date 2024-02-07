@@ -127,8 +127,9 @@ pub async fn delete_post(
     }
 
     info!("post succesfully deleted.");
-    let template = ErrorsTemplate {errors: vec!["TODO"]};
-    return HtmlTemplate(template).into_response()
+    let mut headers = HeaderMap::new();
+    headers.insert("HX-redirect", HeaderValue::from_str("/").unwrap());
+    (headers, "Success").into_response()
 }
 
 pub async fn edit_post(
