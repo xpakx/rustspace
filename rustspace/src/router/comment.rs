@@ -1,10 +1,10 @@
 use std::sync::Arc;
 
 use axum::{response::IntoResponse, extract::{State, Path}, Form};
-use sqlx::{PgPool, postgres::PgQueryResult};
+use sqlx::{PgPool, postgres::PgQueryResult, Postgres};
 use tracing::{info, debug};
 
-use crate::{template::{HtmlTemplate, ErrorsTemplate}, UserData, AppState, validation::validate_non_empty, CommentRequest};
+use crate::{template::{HtmlTemplate, ErrorsTemplate}, UserData, AppState, validation::validate_non_empty, CommentRequest, BlogCommentModel};
 
 fn validate_comment(request: &CommentRequest) -> Vec<&'static str> {
     let mut errors = vec![];
@@ -70,6 +70,59 @@ pub async fn add_comment(
     };
     info!("comment succesfully created.");
 
+    let template = ErrorsTemplate {errors: vec!["TODO"]};
+    return HtmlTemplate(template).into_response()
+}
+
+pub async fn delete_comment(
+    user: UserData,
+    State(state): State<Arc<AppState>>,
+    Path(comment_id): Path<i32>
+    ) -> impl IntoResponse {
+    info!("deleting comment requested");
+    if user.username.is_none() {
+        let template = ErrorsTemplate {errors: vec!["Unauthenticated!"]};
+        return HtmlTemplate(template).into_response()
+    }
+
+    debug!("getting user from database");
+    let username = user.username.unwrap();
+    let Ok(Some(user_id)) = get_user_by_name(&state.db, &username).await else {
+        let template = ErrorsTemplate {errors: vec!["Db error!"]};
+        return HtmlTemplate(template).into_response()
+    };
+
+    debug!("getting comment from database");
+    let comment_db = sqlx::query_as::<Postgres, BlogCommentModel>("SELECT * FROM comments WHERE id = $1")
+        .bind(&comment_id)
+        .fetch_optional(&state.db)
+        .await;
+    let Ok(comment) = comment_db else {
+        let template = ErrorsTemplate {errors: vec!["Db error!"]};
+        return HtmlTemplate(template).into_response()
+    };
+    let Some(comment) = comment else {
+        let template = ErrorsTemplate {errors: vec!["No such comment!"]};
+        return HtmlTemplate(template).into_response()
+    };
+
+    if &comment.user_id != &user_id {
+        let template = ErrorsTemplate {errors: vec!["You cannot delete this comment!"]};
+        return HtmlTemplate(template).into_response()
+    }
+
+    let query_result = sqlx::query("DELETE FROM comments WHERE id = $1")
+        .bind(&comment.id)
+        .execute(&state.db)
+        .await
+        .map_err(|err: sqlx::Error| err.to_string());
+
+    if let Err(_) = query_result {
+        let template = ErrorsTemplate {errors: vec!["Db error!"]};
+        return HtmlTemplate(template).into_response()
+    }
+
+    info!("comment succesfully deleted.");
     let template = ErrorsTemplate {errors: vec!["TODO"]};
     return HtmlTemplate(template).into_response()
 }
