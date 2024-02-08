@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use axum::{response::IntoResponse, extract::{State, Path}, Form};
+use axum::{response::IntoResponse, extract::{State, Path, Query}, Form};
 use sqlx::{PgPool, postgres::PgQueryResult, Postgres};
 use tracing::{info, debug};
 use serde::Deserialize;
@@ -226,4 +226,42 @@ async fn get_comments(db: &PgPool, post_id: i32, page: i32) -> Result<(Vec<BlogC
         .await?;
     
     Ok((users, Some(records)))
+}
+
+#[derive(Deserialize)]
+pub struct SearchQuery {
+    page: i32,
+}
+
+pub async fn comments_page(
+    Query(query): Query<SearchQuery>,
+    State(state): State<Arc<AppState>>,
+    Path(post_id): Path<i32>
+    ) -> impl IntoResponse {
+
+    debug!("getting comments from database");
+    let comments = get_comments(&state.db, post_id, query.page).await;
+    match comments {
+        Err(err) => {
+            debug!("Database error: {}", err);
+            let template = ErrorsTemplate {errors: vec!["Db error!"]};
+            return HtmlTemplate(template).into_response()
+        },
+        Ok((comments, results)) => {
+            let pages = records_to_count(results);
+            let template = CommentsTemplate {comments, pages, page: query.page};
+            return HtmlTemplate(template).into_response()
+        }
+    };
+}
+
+fn records_to_count(records: Option<i64>) -> i32 {
+    match records {
+        None => 0,
+        Some(count) => {
+            let count = (count as f64)/25.0;
+            let count = count.ceil() as i32;
+            count
+        }
+    }
 }
