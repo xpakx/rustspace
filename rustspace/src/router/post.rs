@@ -271,8 +271,8 @@ async fn get_posts(db: &PgPool, user_id: i32, page: i32) -> Result<(Vec<BlogPost
         .await?;
 
     let records: i64 = sqlx::query_scalar(
-        "SELECT COUNT(*) FROM friendships f
-        WHERE f.friend_id = $1 AND f.rejected = true OR f.cancelled = true")
+        "SELECT COUNT(*) FROM posts 
+        WHERE user_id = $1")
         .bind(&user_id)
         .fetch_one(db)
         .await?;
