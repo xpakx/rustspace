@@ -19,9 +19,10 @@
 			<img src="/assets/avatars/{{username}}.png?{{timestamp}}" />
 		</div>
 		{% endif %}
-		{% if profile.real_name.is_some() %}
 		<div class="profile-field name">
-			{{ profile.real_name.as_ref().unwrap()}}
+			{% if profile.real_name.is_some() %}
+				{{ profile.real_name.as_ref().unwrap()}}
+			{% endif %}
 			{% if profile.gender.is_some() %}
 			<span class="gender">
 				({{ profile.gender.as_ref().unwrap()}})
@@ -37,7 +38,6 @@
 		<div class="profile-field desc">
 			{{ profile.description.as_ref().unwrap()}}
 		</div>
-		{% endif %}
 		{% endif %}
 	</div>
 {% else %}
