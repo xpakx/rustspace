@@ -3,6 +3,7 @@
 {% block title %}Rustspace: {{post.title.as_ref().unwrap()}}{% endblock %}
  
 {% block content %}
+{% let post_id = post.id.as_ref().unwrap() %}
 <h1>{{post.title.as_ref().unwrap()}}</h1>
 <div class="post-data">
 	by
@@ -15,16 +16,14 @@
 	{{post.content.as_ref().unwrap()}}
 </article>
 {% if owner %}
-{% let post_id = post.id.as_ref().unwrap() %}
 <section class="actions">
 	<button class="action-btn" hx-delete="/blog/{{post_id}}">Delete</button>
 </section>
-
+{% endif %}
 
 <h2>Comments</h2>
 <section class="comments" id="comments" hx-get="/blog/{{post_id}}/comments" hx-trigger="load once">
 </section>
-{% endif %}
 
 
 {% endblock %}
