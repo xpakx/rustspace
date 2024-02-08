@@ -128,7 +128,7 @@ pub async fn delete_post(
 
     info!("post succesfully deleted.");
     let mut headers = HeaderMap::new();
-    headers.insert("HX-redirect", HeaderValue::from_str("/").unwrap());
+    headers.insert("HX-redirect", HeaderValue::from_str(&format!("/user/{}/blog", username)).unwrap());
     (headers, "Success").into_response()
 }
 
