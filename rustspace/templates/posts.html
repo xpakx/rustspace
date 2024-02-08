@@ -12,6 +12,7 @@
 <article class="post">
 	{{post.content.as_ref().unwrap()}}
 </article>
+<a href="/blog/{{post.id.as_ref().unwrap()}}" class="post-link">Go</a>
 {% endfor %}
 </section>
 {% endblock %}

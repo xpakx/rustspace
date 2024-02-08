@@ -1,12 +1,16 @@
 {%if posts.len() > 0 %}
 {% for post in posts %}
+<section class="posts">
 <h1>{{post.title.as_ref().unwrap()}}</h1>
 
 <article class="post">
 	{{post.content.as_ref().unwrap()}}
 </article>
+
+<a href="/blog/{{post.id.as_ref().unwrap()}}" class="post-link">Go</a>
+</section>
 {% endfor %}
-<a class="btn-link" href="/user/{{username}}/blog">More</a>
+<a class="btn-link" href="/user/{{username}}/blog">More posts</a>
 {% else %}
 <div class="profile-empty">No posts</div>
 {% endif %}
