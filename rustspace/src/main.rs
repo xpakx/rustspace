@@ -184,6 +184,18 @@ pub struct PostRequest {
 
 #[derive(Serialize, Deserialize, sqlx::FromRow, Debug)]
 #[allow(non_snake_case)]
+struct BlogPostDetails {
+    id: Option<i32>,
+    user_id: i32,
+    screen_name: String,
+    title: Option<String>,
+    content: Option<String>,
+    created_at: Option<chrono::DateTime<chrono::Utc>>,
+    updated_at: Option<chrono::DateTime<chrono::Utc>>,
+}
+
+#[derive(Serialize, Deserialize, sqlx::FromRow, Debug)]
+#[allow(non_snake_case)]
 struct BlogCommentModel {
     id: Option<i32>,
     user_id: i32,

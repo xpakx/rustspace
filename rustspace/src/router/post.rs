@@ -5,7 +5,7 @@ use sqlx::{Postgres, PgPool};
 use tracing::{info, debug};
 use serde::Deserialize;
 
-use crate::{template::{HtmlTemplate, ErrorsTemplate, UserNotFoundTemplate, PostTemplate, PostsTemplate, PostsResultTemplate, PostFormTemplate, PostNotFoundTemplate, DbErrorTemplate, NewPostsTemplate}, UserData, AppState, validation::validate_non_empty, PostRequest, BlogPostModel};
+use crate::{template::{HtmlTemplate, ErrorsTemplate, UserNotFoundTemplate, PostTemplate, PostsTemplate, PostsResultTemplate, PostFormTemplate, PostNotFoundTemplate, DbErrorTemplate, NewPostsTemplate}, UserData, AppState, validation::validate_non_empty, PostRequest, BlogPostModel, BlogPostDetails};
 
 fn validate_post(request: &PostRequest) -> Vec<&'static str> {
     let mut errors = vec![];
@@ -197,7 +197,12 @@ pub async fn get_post(
     info!("blogpost requested");
 
     debug!("getting post from database");
-    let post_db = sqlx::query_as::<Postgres, BlogPostModel>("SELECT * FROM posts WHERE id = $1")
+    let post_db = sqlx::query_as::<Postgres, BlogPostDetails>(
+        "SELECT p.*, u.screen_name 
+        FROM posts p
+        LEFT JOIN users u ON u.id = p.user_id
+        WHERE p.id = $1"
+        )
         .bind(&post_id)
         .fetch_optional(&state.db)
         .await;

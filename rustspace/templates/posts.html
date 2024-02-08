@@ -1,9 +1,9 @@
 {% extends "base.html" %}
  
-{% block title %}Rustspace: user's posts{% endblock %}
+{% block title %}Rustspace: {{username}}'s posts{% endblock %}
  
 {% block content %}
-<h1>user's posts</h1>
+<h1>{{username}}'s posts</h1>
 
 <section class="posts" id="posts">
 {% for post in posts %}
@@ -15,7 +15,6 @@
 <a href="/blog/{{post.id.as_ref().unwrap()}}" class="post-link">Go</a>
 {% endfor %}
 </section>
-{% endblock %}
 
 
 <section class="page-nav" id="page-nav">
@@ -31,3 +30,7 @@
 	<button hx-get="/user/{{username}}/blog/page?page={{pages-1}}" hx-target="#posts">{{pages-1}}</button>
 	{% endif %}
 </section>
+
+<a href="/profile/{{username}}" class="profile-link">Back to profile</a>
+
+{% endblock %}

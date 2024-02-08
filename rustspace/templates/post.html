@@ -4,6 +4,12 @@
  
 {% block content %}
 <h1>{{post.title.as_ref().unwrap()}}</h1>
+<div class="post-data">
+	by
+	<a href="/profile/{{post.screen_name}}">
+		{{post.screen_name}}
+	</a>
+</div>
 
 <article class="post">
 	{{post.content.as_ref().unwrap()}}

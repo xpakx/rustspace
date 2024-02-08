@@ -2,7 +2,7 @@ use askama::Template;
 use axum::response::{Html, IntoResponse, Response};
 use axum::http::StatusCode;
 
-use crate::{UserData, UserModel, ProfileModel, UserDetails, FriendshipDetails, BlogPostModel};
+use crate::{UserData, UserModel, ProfileModel, UserDetails, FriendshipDetails, BlogPostModel, BlogPostDetails};
 
 #[derive(Template)]
 #[template(path = "index.html")]
@@ -242,7 +242,7 @@ pub struct RejectedRequestsResultsTemplate {
 pub struct PostTemplate {
     pub path: &'static str,
     pub user: UserData,
-    pub post: BlogPostModel,
+    pub post: BlogPostDetails,
     pub owner: bool,
 }
 
