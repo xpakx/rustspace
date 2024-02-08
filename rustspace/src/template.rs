@@ -243,6 +243,7 @@ pub struct PostTemplate {
     pub path: &'static str,
     pub user: UserData,
     pub post: BlogPostModel,
+    pub owner: bool,
 }
 
 #[derive(Template)]

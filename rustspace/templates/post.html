@@ -8,4 +8,10 @@
 <article class="post">
 	{{post.content.as_ref().unwrap()}}
 </article>
+{% if owner %}
+{% let post_id = post.id.as_ref().unwrap() %}
+<section class="actions">
+	<button class="action-btn" hx-delete="/blog/{{post_id}}">Delete</button>
+</section>
+{% endif %}
 {% endblock %}

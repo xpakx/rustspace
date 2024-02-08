@@ -211,7 +211,15 @@ pub async fn get_post(
         return HtmlTemplate(template).into_response()
     };
 
-    let template = PostTemplate {post, user, path: "/post"};
+    let owner = match &user.username {
+        None => false,
+        Some(username) => match get_user_by_name(&state.db, username).await {
+            Ok(Some(user_id)) if user_id == post.user_id => true,
+            _ => false
+        }
+    };
+
+    let template = PostTemplate {post, user, owner, path: "/post"};
     return HtmlTemplate(template).into_response()
 }
 
