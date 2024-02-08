@@ -3,3 +3,7 @@
 	{{comment.content.as_ref().unwrap()}}
 </article>
 {% endfor %}
+
+{% if comments.len() == 0 %}
+No comments.
+{% endif %}

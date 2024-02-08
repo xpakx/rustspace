@@ -19,5 +19,12 @@
 <section class="actions">
 	<button class="action-btn" hx-delete="/blog/{{post_id}}">Delete</button>
 </section>
+
+
+<h2>Comments</h2>
+<section class="comments" id="comments" hx-get="/blog/{{post_id}}/comments" hx-trigger="load once">
+</section>
 {% endif %}
+
+
 {% endblock %}
