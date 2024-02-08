@@ -126,3 +126,57 @@ pub async fn delete_comment(
     let template = ErrorsTemplate {errors: vec!["TODO"]};
     return HtmlTemplate(template).into_response()
 }
+
+pub async fn edit_comment(
+    user: UserData,
+    State(state): State<Arc<AppState>>,
+    Path(comment_id): Path<i32>,
+    Form(request): Form<CommentRequest>
+    ) -> impl IntoResponse {
+    info!("updating blog comment requested");
+    let error = comment_action_validate(&user, &request);
+    if let Some(template) = error {
+        return HtmlTemplate(template).into_response()
+    }
+
+    debug!("getting user from database");
+    let username = user.username.unwrap();
+    let Ok(Some(user_id)) = get_user_by_name(&state.db, &username).await else {
+        let template = ErrorsTemplate {errors: vec!["Db error!"]};
+        return HtmlTemplate(template).into_response()
+    };
+
+    debug!("getting comment from database");
+    let comment_db = sqlx::query_as::<Postgres, BlogCommentModel>("SELECT * FROM comments WHERE id = $1")
+        .bind(&comment_id)
+        .fetch_optional(&state.db)
+        .await;
+    let Ok(comment) = comment_db else {
+        let template = ErrorsTemplate {errors: vec!["Db error!"]};
+        return HtmlTemplate(template).into_response()
+    };
+    let Some(comment) = comment else {
+        let template = ErrorsTemplate {errors: vec!["No such comment!"]};
+        return HtmlTemplate(template).into_response()
+    };
+
+    if &comment.user_id != &user_id {
+        let template = ErrorsTemplate {errors: vec!["You cannot edit this comment!"]};
+        return HtmlTemplate(template).into_response()
+    }
+
+    let query_result = sqlx::query("UPDATE comments SET content = $1 WHERE id = $2)")
+        .bind(&request.content)
+        .bind(&comment_id)
+        .execute(&state.db)
+        .await
+        .map_err(|err: sqlx::Error| err.to_string());
+
+    if let Err(_) = query_result {
+        let template = ErrorsTemplate {errors: vec!["Db error!"]};
+        return HtmlTemplate(template).into_response()
+    }
+    info!("comment succesfully updated.");
+    let template = ErrorsTemplate {errors: vec!["TODO"]};
+    return HtmlTemplate(template).into_response()
+}
