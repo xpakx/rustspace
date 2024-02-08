@@ -3,8 +3,9 @@ use std::sync::Arc;
 use axum::{response::IntoResponse, extract::{State, Path}, Form};
 use sqlx::{PgPool, postgres::PgQueryResult, Postgres};
 use tracing::{info, debug};
+use serde::Deserialize;
 
-use crate::{template::{HtmlTemplate, ErrorsTemplate}, UserData, AppState, validation::validate_non_empty, CommentRequest, BlogCommentModel};
+use crate::{template::{HtmlTemplate, ErrorsTemplate, CommentsTemplate}, UserData, AppState, validation::validate_non_empty, CommentRequest, BlogCommentModel};
 
 fn validate_comment(request: &CommentRequest) -> Vec<&'static str> {
     let mut errors = vec![];
@@ -179,4 +180,50 @@ pub async fn edit_comment(
     info!("comment succesfully updated.");
     let template = ErrorsTemplate {errors: vec!["TODO"]};
     return HtmlTemplate(template).into_response()
+}
+
+pub async fn comments_for_post(
+    State(state): State<Arc<AppState>>,
+    Path(post_id): Path<i32>
+    ) -> impl IntoResponse {
+    info!("comments requested");
+
+    debug!("getting comments from database");
+    let comments = get_comments(&state.db, post_id, 0).await;
+    match comments {
+        Err(err) => {
+            debug!("Database error: {}", err);
+            let template = ErrorsTemplate {errors: vec!["Db error!"]};
+            return HtmlTemplate(template).into_response()
+        },
+        Ok((comments, records)) => {
+            let pages = records_to_count(records);
+            let template = CommentsTemplate {comments, pages, page: 0};
+            return HtmlTemplate(template).into_response()
+        }
+    };
+}
+
+async fn get_comments(db: &PgPool, post_id: i32, page: i32) -> Result<(Vec<BlogCommentModel>, Option<i64>), sqlx::Error> {
+    let page_size = 25;
+    let offset = page_size * page;
+    let users = sqlx::query_as::<Postgres, BlogCommentModel>(
+        "SELECT * FROM comments WHERE post_id = $1 
+        ORDER BY created_at
+        LIMIT $2 OFFSET $3 "
+        )
+        .bind(&post_id)
+        .bind(page_size)
+        .bind(offset)
+        .fetch_all(db)
+        .await?;
+
+    let records: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM comments
+        WHERE post_id = $1")
+        .bind(&post_id)
+        .fetch_one(db)
+        .await?;
+    
+    Ok((users, Some(records)))
 }

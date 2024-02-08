@@ -1,0 +1,5 @@
+{% for comment in comments %}
+<article class="comment">
+	{{comment.content.as_ref().unwrap()}}
+</article>
+{% endfor %}

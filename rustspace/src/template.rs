@@ -2,7 +2,7 @@ use askama::Template;
 use axum::response::{Html, IntoResponse, Response};
 use axum::http::StatusCode;
 
-use crate::{UserData, UserModel, ProfileModel, UserDetails, FriendshipDetails, BlogPostModel, BlogPostDetails};
+use crate::{UserData, UserModel, ProfileModel, UserDetails, FriendshipDetails, BlogPostModel, BlogPostDetails, BlogCommentModel};
 
 #[derive(Template)]
 #[template(path = "index.html")]
@@ -287,6 +287,14 @@ pub struct DbErrorTemplate {
 pub struct NewPostsTemplate {
     pub posts: Vec<BlogPostModel>,
     pub username: String,
+}
+
+#[derive(Template)]
+#[template(path = "comments-result.html")]
+pub struct CommentsTemplate {
+    pub comments: Vec<BlogCommentModel>,
+    pub pages: i32,
+    pub page: i32,
 }
 
 pub struct HtmlTemplate<T>(pub T);
