@@ -2,6 +2,15 @@
 <article class="comment">
 	<div class="username">{{comment.screen_name}}</div>
 	{{comment.content.as_ref().unwrap()}}
+
+{% if user.username.is_some() %}
+{% let username = user.username.clone().unwrap() %}
+{% if comment.screen_name == username %}
+<section class="actions">
+	<button class="action-btn" hx-delete="/blog/comment/{{comment.id.as_ref().unwrap()}}">Delete</button>
+</section>
+{% endif %}
+{% endif %}
 </article>
 {% endfor %}
 

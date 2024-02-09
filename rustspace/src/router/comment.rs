@@ -183,6 +183,7 @@ pub async fn edit_comment(
 }
 
 pub async fn comments_for_post(
+    user: UserData,
     State(state): State<Arc<AppState>>,
     Path(post_id): Path<i32>
     ) -> impl IntoResponse {
@@ -198,7 +199,7 @@ pub async fn comments_for_post(
         },
         Ok((comments, records)) => {
             let pages = records_to_count(records);
-            let template = CommentsTemplate {comments, pages, post_id, page: 0};
+            let template = CommentsTemplate {comments, pages, post_id, page: 0, user};
             return HtmlTemplate(template).into_response()
         }
     };
@@ -238,6 +239,7 @@ pub struct SearchQuery {
 }
 
 pub async fn comments_page(
+    user: UserData,
     Query(query): Query<SearchQuery>,
     State(state): State<Arc<AppState>>,
     Path(post_id): Path<i32>
@@ -253,7 +255,7 @@ pub async fn comments_page(
         },
         Ok((comments, results)) => {
             let pages = records_to_count(results);
-            let template = CommentsTemplate {comments, pages, post_id, page: query.page};
+            let template = CommentsTemplate {comments, pages, post_id, page: query.page, user };
             return HtmlTemplate(template).into_response()
         }
     };

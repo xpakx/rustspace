@@ -294,6 +294,7 @@ pub struct NewPostsTemplate {
 pub struct CommentsTemplate {
     pub comments: Vec<BlogCommentDetails>,
     pub post_id: i32,
+    pub user: UserData,
     pub pages: i32,
     pub page: i32,
 }
