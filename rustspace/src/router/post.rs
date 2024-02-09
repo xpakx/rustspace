@@ -157,6 +157,7 @@ pub async fn edit_post(
         .fetch_optional(&state.db)
         .await;
     let Ok(post) = post_db else {
+        debug!("Db error: {:?}", post_db);
         let template = ErrorsTemplate {errors: vec!["Db error!"]};
         return HtmlTemplate(template).into_response()
     };
@@ -170,7 +171,7 @@ pub async fn edit_post(
         return HtmlTemplate(template).into_response()
     }
 
-    let query_result = sqlx::query("UPDATE posts  SET content = $1, title = $2 WHERE id = $3)")
+    let query_result = sqlx::query("UPDATE posts SET content = $1, title = $2 WHERE id = $3")
         .bind(&request.content)
         .bind(&request.title)
         .bind(&post_id)
@@ -178,7 +179,8 @@ pub async fn edit_post(
         .await
         .map_err(|err: sqlx::Error| err.to_string());
 
-    if let Err(_) = query_result {
+    if let Err(err) = query_result {
+        debug!("Db error: {:?}", err);
         let template = ErrorsTemplate {errors: vec!["Db error!"]};
         return HtmlTemplate(template).into_response()
     }
