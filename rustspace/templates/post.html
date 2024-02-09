@@ -23,6 +23,8 @@
 {% endif %}
 
 <h2>Comments</h2>
+
+{% if user.username.is_some() %}
 <div id="error-container-comment"></div>
 <form hx-post="/blog/{{post_id}}/comments" hx-target="#error-container-comment">
 	<div class="form-row">
@@ -34,6 +36,7 @@
 		<button type="submit" class="btn">Send</button>
 	</div>
 </form>
+{% endif %}
 
 <section class="comments" id="comments" hx-get="/blog/{{post_id}}/comments" hx-trigger="load once">
 </section>
