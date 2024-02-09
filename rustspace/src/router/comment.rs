@@ -198,7 +198,7 @@ pub async fn comments_for_post(
         },
         Ok((comments, records)) => {
             let pages = records_to_count(records);
-            let template = CommentsTemplate {comments, pages, page: 0};
+            let template = CommentsTemplate {comments, pages, post_id, page: 0};
             return HtmlTemplate(template).into_response()
         }
     };
@@ -249,7 +249,7 @@ pub async fn comments_page(
         },
         Ok((comments, results)) => {
             let pages = records_to_count(results);
-            let template = CommentsTemplate {comments, pages, page: query.page};
+            let template = CommentsTemplate {comments, pages, post_id, page: query.page};
             return HtmlTemplate(template).into_response()
         }
     };

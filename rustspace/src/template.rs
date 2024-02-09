@@ -293,6 +293,7 @@ pub struct NewPostsTemplate {
 #[template(path = "comments-result.html")]
 pub struct CommentsTemplate {
     pub comments: Vec<BlogCommentModel>,
+    pub post_id: i32,
     pub pages: i32,
     pub page: i32,
 }
