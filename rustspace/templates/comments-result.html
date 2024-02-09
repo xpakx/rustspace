@@ -7,28 +7,27 @@
 {% if comments.len() == 0 %}
 No comments.
 {% else %} 
-
-<section hx-swap-oob="true" class="page-nav" id="page-nav">
+<section class="page-nav" id="page-nav">
 	{% if page >= 2 %}
-	<button hx-get="/blog/{{post_id}}/page?page={{0}}" hx-target="#community">0</button>
+	<button hx-get="/blog/{{post_id}}/comments/page?page={{0}}" hx-target="#comments">0</button>
 	{% endif %}
 	{% if page > 2 %}
 	…
 	{% endif %}
 
 	{% if page > 0 %}
-	<button hx-get="/blog/{{post_id}}/page?page={{page-1}}" hx-target="#community">{{page-1}}</button>
+	<button hx-get="/blog/{{post_id}}/comments/page?page={{page-1}}" hx-target="#comments">{{page-1}}</button>
 	{% endif %}
 	<span class="current">{{page}}</span>
 	{% if page < pages-1 %}
-	<button hx-get="/blog/{{post_id}}/page?page={{page+1}}" hx-target="#community">{{page+1}}</button>
+	<button hx-get="/blog/{{post_id}}/comments/page?page={{page+1}}" hx-target="#comments">{{page+1}}</button>
 	{% endif %}
 
 	{% if page < pages-3 %}
 	…
 	{% endif %}
 	{% if page <= pages-3 %}
-	<button hx-get="/blog/{{post_id}}/page?page={{pages-1}}" hx-target="#community">{{pages-1}}</button>
+	<button hx-get="/blog/{{post_id}}/comments/page?page={{pages-1}}" hx-target="#comments">{{pages-1}}</button>
 	{% endif %}
 </section>
 {% endif %}
