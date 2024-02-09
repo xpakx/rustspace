@@ -5,7 +5,7 @@ use sqlx::{Postgres, PgPool};
 use tracing::{info, debug};
 use serde::Deserialize;
 
-use crate::{template::{HtmlTemplate, ErrorsTemplate, UserNotFoundTemplate, PostTemplate, PostsTemplate, PostsResultTemplate, PostFormTemplate, PostNotFoundTemplate, DbErrorTemplate, NewPostsTemplate}, UserData, AppState, validation::validate_non_empty, PostRequest, BlogPostModel, BlogPostDetails};
+use crate::{template::{HtmlTemplate, ErrorsTemplate, UserNotFoundTemplate, PostTemplate, PostsTemplate, PostsResultTemplate, PostFormTemplate, PostNotFoundTemplate, DbErrorTemplate, NewPostsTemplate, UpdatePostFormTemplate}, UserData, AppState, validation::validate_non_empty, PostRequest, BlogPostModel, BlogPostDetails};
 
 fn validate_post(request: &PostRequest) -> Vec<&'static str> {
     let mut errors = vec![];
@@ -369,4 +369,30 @@ pub async fn new_posts(
             return HtmlTemplate(template).into_response()
         }
     };
+}
+
+pub async fn edit_post_form(
+    user: UserData,
+    State(state): State<Arc<AppState>>,
+    Path(post_id): Path<i32>
+    ) -> impl IntoResponse {
+    info!("register form requested");
+
+    let post_db = sqlx::query_as::<Postgres, BlogPostModel>(
+        "SELECT * FROM posts WHERE id = $1")
+        .bind(&post_id)
+        .fetch_optional(&state.db)
+        .await;
+    let Ok(post) = post_db else {
+        debug!("Db error: {:?}", post_db);
+        let template = DbErrorTemplate{};
+        return HtmlTemplate(template).into_response()
+    };
+    let Some(post) = post else {
+        let template = PostNotFoundTemplate{};
+        return HtmlTemplate(template).into_response()
+    };
+
+    let template = UpdatePostFormTemplate {path: "register", user, post, post_id};
+    return HtmlTemplate(template).into_response()
 }

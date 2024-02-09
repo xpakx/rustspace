@@ -18,6 +18,7 @@
 {% if owner %}
 <section class="actions">
 	<button class="action-btn" hx-delete="/blog/{{post_id}}">Delete</button>
+	<a class="action-btn" href="/blog/{{post_id}}/edit">Edit</a>
 </section>
 {% endif %}
 

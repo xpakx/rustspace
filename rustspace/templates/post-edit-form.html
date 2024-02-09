@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block head %}
+  <link href="/assets/form.css" rel="stylesheet" />
+{% endblock %}
+
+{% block title %}Edit post{% endblock %}
+
+{% block content %}
+<h1>Edit post</h1>
+<div id="error-container" class="error-container"></div>
+<form hx-put="/blog/{{post_id}}" hx-target="#error-container" class="edit-form">
+	<div class="form-row">
+		<label for="title"><b>Title</b></label>
+		<input type="text" placeholder="Enter title" name="title" id="title" value="{{post.title.as_ref().unwrap()}}" required>
+	</div>
+	<div class="form-row">
+		<label for="content"><b>Content</b></label>
+		<input type="text" placeholder="Post content" name="content" id="content" value="{{post.content.as_ref().unwrap()}}" required>
+	</div>
+
+		<div class="button-container">
+			<button type="submit" class="form-btn">Send</button>
+		</div>
+	</form>
+{% endblock %}
