@@ -1,5 +1,6 @@
 {% for comment in comments %}
 <article class="comment">
+	<div class="username">{{comment.screen_name}}</div>
 	{{comment.content.as_ref().unwrap()}}
 </article>
 {% endfor %}

@@ -5,7 +5,7 @@ use sqlx::{PgPool, postgres::PgQueryResult, Postgres};
 use tracing::{info, debug};
 use serde::Deserialize;
 
-use crate::{template::{HtmlTemplate, ErrorsTemplate, CommentsTemplate, CommentFormTemplate}, UserData, AppState, validation::validate_non_empty, CommentRequest, BlogCommentModel};
+use crate::{template::{HtmlTemplate, ErrorsTemplate, CommentsTemplate, CommentFormTemplate}, UserData, AppState, validation::validate_non_empty, CommentRequest, BlogCommentModel, BlogCommentDetails};
 
 fn validate_comment(request: &CommentRequest) -> Vec<&'static str> {
     let mut errors = vec![];
@@ -204,12 +204,16 @@ pub async fn comments_for_post(
     };
 }
 
-async fn get_comments(db: &PgPool, post_id: i32, page: i32) -> Result<(Vec<BlogCommentModel>, Option<i64>), sqlx::Error> {
+async fn get_comments(db: &PgPool, post_id: i32, page: i32) -> Result<(Vec<BlogCommentDetails>, Option<i64>), sqlx::Error> {
     let page_size = 25;
     let offset = page_size * page;
-    let users = sqlx::query_as::<Postgres, BlogCommentModel>(
-        "SELECT * FROM comments WHERE post_id = $1 
-        ORDER BY created_at
+    let users = sqlx::query_as::<Postgres, BlogCommentDetails>(
+        "SELECT c.*, u.screen_name 
+        FROM comments c 
+        LEFT JOIN users u
+        ON c.user_id = u.id
+        WHERE c.post_id = $1 
+        ORDER BY c.created_at
         LIMIT $2 OFFSET $3 "
         )
         .bind(&post_id)

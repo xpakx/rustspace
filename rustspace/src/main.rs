@@ -210,6 +210,18 @@ pub struct CommentRequest {
     content: Option<String>,
 }
 
+#[derive(Serialize, Deserialize, sqlx::FromRow, Debug)]
+#[allow(non_snake_case)]
+struct BlogCommentDetails {
+    id: Option<i32>,
+    user_id: i32,
+    post_id: i32,
+    screen_name: String,
+    content: Option<String>,
+    created_at: Option<chrono::DateTime<chrono::Utc>>,
+    updated_at: Option<chrono::DateTime<chrono::Utc>>,
+}
+
 pub struct UserData {
     username: Option<String>,
 }

@@ -2,7 +2,7 @@ use askama::Template;
 use axum::response::{Html, IntoResponse, Response};
 use axum::http::StatusCode;
 
-use crate::{UserData, UserModel, ProfileModel, UserDetails, FriendshipDetails, BlogPostModel, BlogPostDetails, BlogCommentModel};
+use crate::{UserData, UserModel, ProfileModel, UserDetails, FriendshipDetails, BlogPostModel, BlogPostDetails, BlogCommentModel, BlogCommentDetails};
 
 #[derive(Template)]
 #[template(path = "index.html")]
@@ -292,7 +292,7 @@ pub struct NewPostsTemplate {
 #[derive(Template)]
 #[template(path = "comments-result.html")]
 pub struct CommentsTemplate {
-    pub comments: Vec<BlogCommentModel>,
+    pub comments: Vec<BlogCommentDetails>,
     pub post_id: i32,
     pub pages: i32,
     pub page: i32,
