@@ -166,7 +166,7 @@ pub async fn edit_comment(
         return HtmlTemplate(template).into_response()
     }
 
-    let query_result = sqlx::query("UPDATE comments SET content = $1 WHERE id = $2)")
+    let query_result = sqlx::query("UPDATE comments SET content = $1 WHERE id = $2")
         .bind(&request.content)
         .bind(&comment_id)
         .execute(&state.db)

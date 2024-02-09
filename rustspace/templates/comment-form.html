@@ -1,8 +1,8 @@
 <div id="error-container-comment-{{comment_id}}"></div>
-<form hx-post="/blog/comment/{{comment_id}}" hx-target="#error-container-comment-{{comment_id}}">
+<form hx-put="/blog/comment/{{comment_id}}" hx-target="#error-container-comment-{{comment_id}}">
 	<div class="form-row">
 		<label for="content"><b>Content</b></label>
-		<input type="text" placeholder="Comment content" name="content" id="content" value="comment.content.as_ref().unwrap()" required>
+		<input type="text" placeholder="Comment content" name="content" id="content" value="{{comment.content.as_ref().unwrap()}}" required>
 	</div>
 
 	<div class="button-container">
