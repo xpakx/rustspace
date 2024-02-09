@@ -307,6 +307,13 @@ pub struct UpdatePostFormTemplate {
     pub post: BlogPostModel,
 }
 
+#[derive(Template)]
+#[template(path = "comment-form.html")]
+pub struct CommentFormTemplate {
+    pub comment_id: i32,
+    pub comment: BlogCommentModel,
+}
+
 pub struct HtmlTemplate<T>(pub T);
 
 impl<T> IntoResponse for HtmlTemplate<T> where T: Template, {

@@ -5,7 +5,7 @@ use sqlx::{PgPool, postgres::PgQueryResult, Postgres};
 use tracing::{info, debug};
 use serde::Deserialize;
 
-use crate::{template::{HtmlTemplate, ErrorsTemplate, CommentsTemplate}, UserData, AppState, validation::validate_non_empty, CommentRequest, BlogCommentModel};
+use crate::{template::{HtmlTemplate, ErrorsTemplate, CommentsTemplate, CommentFormTemplate}, UserData, AppState, validation::validate_non_empty, CommentRequest, BlogCommentModel};
 
 fn validate_comment(request: &CommentRequest) -> Vec<&'static str> {
     let mut errors = vec![];
@@ -264,4 +264,27 @@ fn records_to_count(records: Option<i64>) -> i32 {
             count
         }
     }
+}
+
+pub async fn comment_form(
+    State(state): State<Arc<AppState>>,
+    Path(comment_id): Path<i32>
+    ) -> impl IntoResponse {
+    let comment_db = sqlx::query_as::<Postgres, BlogCommentModel>(
+        "SELECT * FROM comments WHERE id = $1")
+        .bind(&comment_id)
+        .fetch_optional(&state.db)
+        .await;
+    let Ok(comment) = comment_db else {
+        debug!("Db error: {:?}", comment_db);
+        let template = ErrorsTemplate {errors: vec!["Db error!"]};
+        return HtmlTemplate(template).into_response()
+    };
+    let Some(comment) = comment else {
+        let template = ErrorsTemplate {errors: vec!["No such comment!"]};
+        return HtmlTemplate(template).into_response()
+    };
+
+    let template = CommentFormTemplate {comment, comment_id};
+    return HtmlTemplate(template).into_response()
 }
