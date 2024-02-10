@@ -316,3 +316,29 @@ async fn test_deleting_post() {
         assert_eq!(result.get::<i64, _>(0), 0);
     }
 }
+
+// editing post
+
+#[tokio::test]
+#[serial]
+async fn test_editing_post_by_unauthenticated_user() {
+    let response = prepare_server_with_user(false)
+        .await
+        .oneshot(
+            Request::builder()
+            .method("PUT")
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .uri("/blog/1")
+            .body(Body::from("title=title&content=content"))
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    let body = to_bytes(response.into_body(), 1000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    assert!(content.contains("error"));
+    assert!(content.contains("Unauthenticated"));
+}
