@@ -401,3 +401,131 @@ async fn test_editing_post_authored_by_different_user() {
     assert!(content.contains("error"));
     assert!(content.contains("cannot edit"));
 }
+
+#[tokio::test]
+#[serial]
+async fn test_editing_post_with_no_title() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let db = prepare_db().await;
+    insert_new_user("Test", "test@mail.com", &db).await;
+    let post_id = insert_post("Test", "Title", "Content", &db).await;
+    let response = prepare_server_with_user(false)
+        .await
+        .oneshot(
+            Request::builder()
+            .method("PUT")
+            .header("Cookie", format!("Token={};", token))
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .uri(format!("/blog/{}", post_id))
+            .body(Body::from("content=content"))
+            .unwrap()
+            )
+        .await
+        .unwrap();
+    clear_posts(&db).await;
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = to_bytes(response.into_body(), 1000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    assert!(content.contains("error"));
+    assert!(content.contains("title"));
+    assert!(content.contains("empty"));
+}
+
+#[tokio::test]
+#[serial]
+async fn test_editing_post_with_empty_title() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let db = prepare_db().await;
+    insert_new_user("Test", "test@mail.com", &db).await;
+    let post_id = insert_post("Test", "Title", "Content", &db).await;
+    let response = prepare_server_with_user(false)
+        .await
+        .oneshot(
+            Request::builder()
+            .method("PUT")
+            .header("Cookie", format!("Token={};", token))
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .uri(format!("/blog/{}", post_id))
+            .body(Body::from("title=&content=content"))
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    clear_posts(&db).await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = to_bytes(response.into_body(), 1000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    assert!(content.contains("error"));
+    assert!(content.contains("title"));
+    assert!(content.contains("empty"));
+}
+
+#[tokio::test]
+#[serial]
+async fn test_editing_post_with_no_content() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let db = prepare_db().await;
+    insert_new_user("Test", "test@mail.com", &db).await;
+    let post_id = insert_post("Test", "Title", "Content", &db).await;
+    let response = prepare_server_with_user(false)
+        .await
+        .oneshot(
+            Request::builder()
+            .method("PUT")
+            .header("Cookie", format!("Token={};", token))
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .uri(format!("/blog/{}", post_id))
+            .body(Body::from("title=title"))
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    clear_posts(&db).await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = to_bytes(response.into_body(), 1000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    assert!(content.contains("error"));
+    assert!(content.contains("content"));
+    assert!(content.contains("empty"));
+}
+
+#[tokio::test]
+#[serial]
+async fn test_editing_post_with_empty_content() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let db = prepare_db().await;
+    insert_new_user("Test", "test@mail.com", &db).await;
+    let post_id = insert_post("Test", "Title", "Content", &db).await;
+    let response = prepare_server_with_user(false)
+        .await
+        .oneshot(
+            Request::builder()
+            .method("PUT")
+            .header("Cookie", format!("Token={};", token))
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .uri(format!("/blog/{}", post_id))
+            .body(Body::from("title=title&content="))
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    clear_posts(&db).await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = to_bytes(response.into_body(), 1000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    assert!(content.contains("error"));
+    assert!(content.contains("content"));
+    assert!(content.contains("empty"));
+}
