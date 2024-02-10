@@ -268,6 +268,7 @@ async fn test_deleting_post_authored_by_different_user() {
             )
         .await
         .unwrap();
+    clear_posts(&db).await;
 
     assert_eq!(response.status(), StatusCode::OK);
     let body = to_bytes(response.into_body(), 1000).await;
@@ -312,6 +313,6 @@ async fn test_deleting_post() {
     }
     assert!(result.is_ok());
     if let Ok(result) = result {
-        assert_eq!(result.get::<i64, _>(0), 1);
+        assert_eq!(result.get::<i64, _>(0), 0);
     }
 }
