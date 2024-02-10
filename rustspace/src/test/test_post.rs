@@ -592,3 +592,30 @@ async fn test_getting_nonexistent_post() {
     let content = std::str::from_utf8(&*bytes).unwrap();
     assert!(content.contains("no such post"));
 }
+
+#[tokio::test]
+#[serial]
+async fn test_getting_post() {
+    let db = prepare_db().await;
+    insert_new_user("Test", "test@mail.com", &db).await;
+    let post_id = insert_post("Test", "Title", "Content", &db).await;
+    let response = prepare_server_with_db(db.clone())
+        .await
+        .oneshot(
+            Request::builder()
+            .method("GET")
+            .uri(format!("/blog/{}", post_id))
+            .body(Body::empty())
+            .unwrap()
+            )
+        .await
+        .unwrap();
+    clear_posts(&db).await;
+
+    let body = to_bytes(response.into_body(), 1000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    assert!(content.contains("Title"));
+    assert!(content.contains("Content"));
+}
