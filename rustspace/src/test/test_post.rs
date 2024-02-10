@@ -3,7 +3,7 @@ use sqlx::Row;
 use tower::ServiceExt;
 use serial_test::serial;
 
-use crate::{test::{prepare_server_with_user, prepare_db, prepare_server_with_db, insert_new_user}, security::get_token};
+use crate::{test::{prepare_server_with_user, prepare_db, prepare_server_with_db, insert_new_user, clear_posts}, security::get_token};
 
 #[tokio::test]
 #[serial]
@@ -139,4 +139,37 @@ async fn test_making_post_request_with_empty_content() {
     assert!(content.contains("error"));
     assert!(content.contains("content"));
     assert!(content.contains("empty"));
+}
+
+#[tokio::test]
+#[serial]
+async fn test_adding_post() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let db = prepare_db().await;
+    insert_new_user("Test", "Test@mail.com", &db).await;
+    let response = prepare_server_with_db(db.clone())
+        .await
+        .oneshot(
+            Request::builder()
+            .method("POST")
+            .header("Cookie", format!("Token={};", token))
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .uri("/blog")
+            .body(Body::from("title=title&content=content"))
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+
+    let result = sqlx::query("SELECT COUNT(*) FROM posts")
+        .fetch_one(&db)
+        .await;
+    clear_posts(&db).await;
+
+    assert!(result.is_ok());
+    if let Ok(result) = result {
+        assert_eq!(result.get::<i64, _>(0), 1);
+    }
 }

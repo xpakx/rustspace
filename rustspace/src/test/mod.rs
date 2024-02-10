@@ -31,6 +31,12 @@ async fn clear_friendships(db: &PgPool) {
         .await;
 }
 
+async fn clear_posts(db: &PgPool) {
+    _ = sqlx::query("DELETE FROM posts")
+        .execute(db)
+        .await;
+}
+
 async fn prepare_server() -> axum::Router {
     let db = get_db("postgresql://root:password@localhost:5432/rustspacetest").await;
     clear_db(&db).await;
