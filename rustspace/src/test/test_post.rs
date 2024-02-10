@@ -277,3 +277,41 @@ async fn test_deleting_post_authored_by_different_user() {
     assert!(content.contains("error"));
     assert!(content.contains("cannot delete"));
 }
+
+#[tokio::test]
+#[serial]
+async fn test_deleting_post() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let db = prepare_db().await;
+    insert_new_user("Test", "test@mail.com", &db).await;
+    let post_id = insert_post("Test", "Title", "Content", &db).await;
+    let response = prepare_server_with_db(db.clone())
+        .await
+        .oneshot(
+            Request::builder()
+            .method("DELETE")
+            .header("Cookie", format!("Token={};", token))
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .uri(format!("/blog/{}", post_id))
+            .body(Body::empty())
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    let result = sqlx::query("SELECT COUNT(*) FROM posts")
+        .fetch_one(&db)
+        .await;
+    clear_posts(&db).await;
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let header = response.headers().get("HX-redirect");
+    assert!(header.is_some());
+    if let Some(header) = header {
+        assert_eq!(header.to_str().unwrap(), "/user/Test/blog");
+    }
+    assert!(result.is_ok());
+    if let Ok(result) = result {
+        assert_eq!(result.get::<i64, _>(0), 1);
+    }
+}
