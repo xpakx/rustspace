@@ -3,7 +3,7 @@ use sqlx::{Row, PgPool, Postgres};
 use tower::ServiceExt;
 use serial_test::serial;
 
-use crate::{test::{prepare_server_with_user, prepare_db, prepare_server_with_db, insert_new_user, clear_posts}, security::get_token, UserModel};
+use crate::{test::{prepare_server_with_user, prepare_db, prepare_server_with_db, insert_new_user, clear_posts}, security::get_token, UserModel, BlogPostModel};
 
 // adding post
 
@@ -528,4 +528,43 @@ async fn test_editing_post_with_empty_content() {
     assert!(content.contains("error"));
     assert!(content.contains("content"));
     assert!(content.contains("empty"));
+}
+
+#[tokio::test]
+#[serial]
+async fn test_editing_post() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let db = prepare_db().await;
+    insert_new_user("Test", "test@mail.com", &db).await;
+    let post_id = insert_post("Test", "Title", "Content", &db).await;
+    let response = prepare_server_with_user(false)
+        .await
+        .oneshot(
+            Request::builder()
+            .method("PUT")
+            .header("Cookie", format!("Token={};", token))
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .uri(format!("/blog/{}", post_id))
+            .body(Body::from("title=new&content=new_content"))
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+
+    let post = sqlx::query_as::<Postgres, BlogPostModel>("SELECT * FROM posts WHERE id = $1")
+        .bind(&post_id)
+        .fetch_optional(&db)
+        .await;
+    clear_posts(&db).await;
+
+    assert_eq!(response.status(), StatusCode::OK);
+    assert!(post.is_ok());
+    if let Ok(post) = post {
+        assert!(post.is_some());
+        if let Some(post) = post {
+            assert_eq!(post.content.unwrap(), "new_content");
+            assert_eq!(post.title.unwrap(), "new");
+        }
+    }
 }
