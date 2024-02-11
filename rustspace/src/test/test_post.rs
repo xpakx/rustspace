@@ -3,7 +3,7 @@ use sqlx::{Row, PgPool, Postgres};
 use tower::ServiceExt;
 use serial_test::serial;
 
-use crate::{test::{prepare_server_with_user, prepare_db, prepare_server_with_db, insert_new_user, clear_posts}, security::get_token, UserModel, BlogPostModel};
+use crate::{test::{prepare_server_with_user, prepare_db, prepare_server_with_db, insert_new_user, clear_posts, clear_comments}, security::get_token, UserModel, BlogPostModel};
 
 // adding post
 
@@ -304,6 +304,65 @@ async fn test_deleting_post() {
         .fetch_one(&db)
         .await;
     clear_posts(&db).await;
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let header = response.headers().get("HX-redirect");
+    assert!(header.is_some());
+    if let Some(header) = header {
+        assert_eq!(header.to_str().unwrap(), "/user/Test/blog");
+    }
+    assert!(result.is_ok());
+    if let Ok(result) = result {
+        assert_eq!(result.get::<i64, _>(0), 0);
+    }
+}
+
+async fn insert_comment(username: &str, post_id: &i32, content: &str, db: &PgPool) {
+    let user_db = sqlx::query_as::<Postgres, UserModel>("SELECT * FROM users WHERE screen_name = $1")
+        .bind(&username)
+        .fetch_optional(db)
+        .await;
+    let Ok(Some(user)) = user_db else {
+        panic!("No such user!");
+    };
+
+    _ = sqlx::query("INSERT INTO comments (user_id, post_id, content) VALUES ($1, $2, $3)")
+        .bind(&user.id)
+        .bind(post_id)
+        .bind(content)
+        .execute(db)
+        .await;
+}
+
+#[tokio::test]
+#[serial]
+async fn test_deleting_post_with_comments() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let db = prepare_db().await;
+    insert_new_user("Test", "test@mail.com", &db).await;
+    insert_new_user("User", "user@mail.com", &db).await;
+    let post_id = insert_post("Test", "Title", "Content", &db).await;
+    insert_comment("Test", &post_id, "comment 1", &db).await;
+    insert_comment("User", &post_id, "comment 2", &db).await;
+    let response = prepare_server_with_db(db.clone())
+        .await
+        .oneshot(
+            Request::builder()
+            .method("DELETE")
+            .header("Cookie", format!("Token={};", token))
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .uri(format!("/blog/{}", post_id))
+            .body(Body::empty())
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    let result = sqlx::query("SELECT COUNT(*) FROM posts")
+        .fetch_one(&db)
+        .await;
+    clear_posts(&db).await;
+    clear_comments(&db).await;
 
     assert_eq!(response.status(), StatusCode::OK);
     let header = response.headers().get("HX-redirect");
