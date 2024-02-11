@@ -64,8 +64,12 @@ pub async fn add_comment(
     };
 
     let query_result = insert_comment(&state.db, &user_id, &post_id, &request).await;
-    if let Err(_) = query_result {
-        debug!("Db error: {:?}", query_result);
+    if let Err(err) = query_result {
+        debug!("Db error: {:?}", err);
+        if err.contains("constraint") && err.contains("fk_post_id") {
+            let template = ErrorsTemplate {errors: vec!["No such post!"]};
+            return HtmlTemplate(template).into_response()
+        }
         let template = ErrorsTemplate {errors: vec!["Db error!"]};
         return HtmlTemplate(template).into_response()
     };
