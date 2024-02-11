@@ -409,7 +409,7 @@ async fn test_editing_post_with_no_title() {
     let db = prepare_db().await;
     insert_new_user("Test", "test@mail.com", &db).await;
     let post_id = insert_post("Test", "Title", "Content", &db).await;
-    let response = prepare_server_with_user(false)
+    let response = prepare_server_with_db(db.clone())
         .await
         .oneshot(
             Request::builder()
@@ -441,7 +441,7 @@ async fn test_editing_post_with_empty_title() {
     let db = prepare_db().await;
     insert_new_user("Test", "test@mail.com", &db).await;
     let post_id = insert_post("Test", "Title", "Content", &db).await;
-    let response = prepare_server_with_user(false)
+    let response = prepare_server_with_db(db.clone())
         .await
         .oneshot(
             Request::builder()
@@ -473,7 +473,7 @@ async fn test_editing_post_with_no_content() {
     let db = prepare_db().await;
     insert_new_user("Test", "test@mail.com", &db).await;
     let post_id = insert_post("Test", "Title", "Content", &db).await;
-    let response = prepare_server_with_user(false)
+    let response = prepare_server_with_db(db.clone())
         .await
         .oneshot(
             Request::builder()
@@ -505,7 +505,7 @@ async fn test_editing_post_with_empty_content() {
     let db = prepare_db().await;
     insert_new_user("Test", "test@mail.com", &db).await;
     let post_id = insert_post("Test", "Title", "Content", &db).await;
-    let response = prepare_server_with_user(false)
+    let response = prepare_server_with_db(db.clone())
         .await
         .oneshot(
             Request::builder()
@@ -537,7 +537,7 @@ async fn test_editing_post() {
     let db = prepare_db().await;
     insert_new_user("Test", "test@mail.com", &db).await;
     let post_id = insert_post("Test", "Title", "Content", &db).await;
-    let response = prepare_server_with_user(false)
+    let response = prepare_server_with_db(db.clone())
         .await
         .oneshot(
             Request::builder()
