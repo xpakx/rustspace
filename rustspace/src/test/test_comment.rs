@@ -370,3 +370,37 @@ async fn test_editing_nonexistent_comment() {
     assert!(content.contains("error"));
     assert!(content.contains("No such comment"));
 }
+
+#[tokio::test]
+#[serial]
+async fn test_editing_comment_authored_by_different_user() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let db = prepare_db().await;
+    insert_new_user("User", "user@mail.com", &db).await;
+    insert_new_user("Test", "test@mail.com", &db).await;
+    let post_id = insert_post("User", "Title", "Content", &db).await;
+    let comment_id = insert_comment("User", &post_id, "Content", &db).await;
+    let response = prepare_server_with_db(db.clone())
+        .await
+        .oneshot(
+            Request::builder()
+            .method("PUT")
+            .header("Cookie", format!("Token={};", token))
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .uri(format!("/blog/comment/{}", comment_id))
+            .body(Body::from("content=content"))
+            .unwrap()
+            )
+        .await
+        .unwrap();
+    clear_posts(&db).await;
+    clear_comments(&db).await;
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = to_bytes(response.into_body(), 1000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    assert!(content.contains("error"));
+    assert!(content.contains("cannot edit"));
+}
