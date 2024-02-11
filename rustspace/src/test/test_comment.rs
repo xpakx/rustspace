@@ -281,3 +281,39 @@ async fn test_deleting_comment_authored_by_different_user() {
     assert!(content.contains("error"));
     assert!(content.contains("cannot delete"));
 }
+
+#[tokio::test]
+#[serial]
+async fn test_deleting_comment() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let db = prepare_db().await;
+    insert_new_user("Test", "test@mail.com", &db).await;
+    insert_new_user("User", "user@mail.com", &db).await;
+    let post_id = insert_post("User", "Title", "Content", &db).await;
+    let comment_id = insert_comment("Test", &post_id, "content", &db).await;
+    let response = prepare_server_with_db(db.clone())
+        .await
+        .oneshot(
+            Request::builder()
+            .method("DELETE")
+            .header("Cookie", format!("Token={};", token))
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .uri(format!("/blog/comment/{}", comment_id))
+            .body(Body::empty())
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    let result = sqlx::query("SELECT COUNT(*) FROM comments")
+        .fetch_one(&db)
+        .await;
+    clear_posts(&db).await;
+    clear_comments(&db).await;
+
+    assert_eq!(response.status(), StatusCode::OK);
+    assert!(result.is_ok());
+    if let Ok(result) = result {
+        assert_eq!(result.get::<i64, _>(0), 0);
+    }
+}
