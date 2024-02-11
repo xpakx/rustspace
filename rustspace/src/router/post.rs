@@ -115,6 +115,17 @@ pub async fn delete_post(
         return HtmlTemplate(template).into_response()
     }
 
+    let delete_comments_result = sqlx::query("DELETE FROM comments WHERE post_id = $1")
+        .bind(&post.id)
+        .execute(&state.db)
+        .await
+        .map_err(|err: sqlx::Error| err.to_string());
+
+    if let Err(_) = delete_comments_result  {
+        let template = ErrorsTemplate {errors: vec!["Db error!"]};
+        return HtmlTemplate(template).into_response()
+    }
+
     let query_result = sqlx::query("DELETE FROM posts WHERE id = $1")
         .bind(&post.id)
         .execute(&state.db)
