@@ -474,3 +474,44 @@ async fn test_editing_comment_with_empty_content() {
     assert!(content.contains("content"));
     assert!(content.contains("empty"));
 }
+
+#[tokio::test]
+#[serial]
+async fn test_editing_comment() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let db = prepare_db().await;
+    insert_new_user("Test", "test@mail.com", &db).await;
+    insert_new_user("User", "user@mail.com", &db).await;
+    let post_id = insert_post("User", "Title", "Content", &db).await;
+    let comment_id = insert_comment("Test", &post_id, "Content", &db).await;
+    let response = prepare_server_with_db(db.clone())
+        .await
+        .oneshot(
+            Request::builder()
+            .method("PUT")
+            .header("Cookie", format!("Token={};", token))
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .uri(format!("/blog/comment/{}", comment_id))
+            .body(Body::from("content=new_content"))
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+
+    let comment = sqlx::query_as::<Postgres, BlogCommentModel>("SELECT * FROM comments WHERE id = $1")
+        .bind(&comment_id)
+        .fetch_optional(&db)
+        .await;
+    clear_posts(&db).await;
+    clear_comments(&db).await;
+
+    assert_eq!(response.status(), StatusCode::OK);
+    assert!(comment.is_ok());
+    if let Ok(post) = comment {
+        assert!(post.is_some());
+        if let Some(post) = post {
+            assert_eq!(post.content.unwrap(), "new_content");
+        }
+    }
+}
