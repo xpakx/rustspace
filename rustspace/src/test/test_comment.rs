@@ -113,3 +113,31 @@ async fn test_making_comment_request_with_empty_content() {
     assert!(content.contains("content"));
     assert!(content.contains("empty"));
 }
+
+#[tokio::test]
+#[serial]
+async fn test_making_comment_request_to_nonexistent_post() {
+    let (token, _) = get_token(&Some(String::from("Test")));
+    let db = prepare_db().await;
+    insert_new_user("Test", "test@mail.com", &db).await;
+    let response = prepare_server_with_db(db.clone())
+        .await
+        .oneshot(
+            Request::builder()
+            .method("POST")
+            .header("Cookie", format!("Token={};", token))
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .uri("/blog/1/comments")
+            .body(Body::from("content=content"))
+            .unwrap()
+            )
+        .await
+        .unwrap();
+
+    let body = to_bytes(response.into_body(), 1000).await;
+    assert!(body.is_ok());
+    let bytes = body.unwrap();
+    let content = std::str::from_utf8(&*bytes).unwrap();
+    assert!(content.contains("error"));
+    assert!(content.contains("No such post"));
+}
