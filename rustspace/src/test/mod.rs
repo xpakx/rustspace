@@ -12,6 +12,7 @@ mod test_profile;
 mod test_community;
 mod test_friendships;
 mod test_post;
+mod test_comment;
 
 async fn clear_db(db: &PgPool) {
     _ = sqlx::query("DELETE FROM users")
@@ -33,6 +34,12 @@ async fn clear_friendships(db: &PgPool) {
 
 async fn clear_posts(db: &PgPool) {
     _ = sqlx::query("DELETE FROM posts")
+        .execute(db)
+        .await;
+}
+
+async fn clear_comments(db: &PgPool) {
+    _ = sqlx::query("DELETE FROM comments")
         .execute(db)
         .await;
 }
