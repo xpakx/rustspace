@@ -1,0 +1,117 @@
+h1 {
+	color: #e44d26;
+	font-size: 24px;
+	margin-bottom: 10px;
+}
+
+.post-data {
+	color: #555;
+	margin-bottom: 15px;
+}
+
+.post-data a {
+	color: #e44d26;
+	text-decoration: none;
+}
+
+.post-data a:hover {
+	text-decoration: underline;
+}
+
+.post {
+	margin-bottom: 30px;
+}
+
+h2 {
+	color: #e44d26;
+	font-size: 20px;
+	margin-top: 30px;
+	margin-bottom: 10px;
+}
+
+form {
+	margin-bottom: 15px;
+}
+
+.form-row {
+	margin-bottom: 15px;
+}
+
+.form-row label {
+	font-weight: bold;
+}
+
+.form-row input[type="text"] {
+	width: 90%;
+	padding: 8px;
+	border: 1px solid #ccc;
+	border-radius: 5px;
+}
+
+.button-container {
+	margin-top: 15px;
+}
+
+.btn {
+	background-color: #e44d26;
+	color: #fff;
+	padding: 8px 15px;
+	border: none;
+	border-radius: 5px;
+	cursor: pointer;
+	transition: background-color 0.3s ease;
+}
+
+.btn:hover {
+	background-color: #54271d;
+}
+
+.actions {
+	margin-top: 20px;
+	display: flex;
+	justify-content: end;
+	width: 100%;
+}
+
+.action-btn {
+	background-color: #e44d26;
+	color: #fff;
+	padding: 8px 15px;
+	border: none;
+	border-radius: 5px;
+	cursor: pointer;
+	transition: background-color 0.3s ease;
+	margin-right: 10px;
+	text-decoration: none;
+	font-size: 13px;
+	vertical-align: middle;
+}
+
+a.action-btn {
+	display: inline-block;
+}
+
+.action-btn:hover {
+	background-color: #54271d;
+}
+
+.comment {
+	margin-bottom: 20px;
+}
+
+.username {
+	color: #e44d26;
+	font-weight: bold;
+	margin-bottom: 5px;
+}
+
+.comment-content {
+	color: #333;
+	margin-bottom: 10px;
+}
+
+/* Actions Section */
+.actions {
+	margin-top: 10px;
+}
+

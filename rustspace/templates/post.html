@@ -1,6 +1,10 @@
 {% extends "base.html" %}
  
 {% block title %}Rustspace: {{post.title.as_ref().unwrap()}}{% endblock %}
+
+{% block head %}
+  <link href="/assets/post.css" rel="stylesheet" />
+{% endblock %}
  
 {% block content %}
 {% let post_id = post.id.as_ref().unwrap() %}
