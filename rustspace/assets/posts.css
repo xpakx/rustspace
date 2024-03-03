@@ -1,0 +1,39 @@
+.post {
+	margin-bottom: 5px;
+}
+
+.post h1 {
+	color: #8B0000;
+	font-size: 24px;
+	margin-bottom: 5px;
+}
+
+.post-content {
+	color: #333;
+	line-height: 1.6;
+}
+
+.post-link {
+	display: inline-block;
+	background-color: #e44d26;
+	color: #fff;
+	padding: 8px 15px;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+	text-decoration: none;
+	margin-bottom: 30px;
+}
+
+.post-link:hover {
+	background-color: #54271d;
+}
+
+a.more-link {
+  color: #e44d26;
+  text-decoration: none;
+}
+
+a.more-link:hover {
+  text-decoration: underline;
+}
