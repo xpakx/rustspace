@@ -13,7 +13,7 @@
 {% for friend in friends %}
 <div class="user">
 	<span class="at">@</span><a href="/profile/{{friend.screen_name}}"><span class="screen_name">{{ friend.screen_name }}</span></a>  
-	<button class="accept-btn" hx-post="/friends/requests/{{friend.id.unwrap()}}" hx-vals='{"state": "accepted"}'>Accept</button>
+	<button class="accept-btn" hx-put="/friends/requests/{{friend.id.unwrap()}}" hx-vals='{"state": "accepted"}'>Accept</button>
 </div>
 {% endfor %}
 </section>

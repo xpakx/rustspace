@@ -8,6 +8,8 @@
 
 {% block content %}
 <h1>Hello, {{user_db.screen_name}}!</h1>
+<a class="field-btn" href="/profile/{{user_db.screen_name}}">Go to profile</a>
+
 <div class="user-field">
 	<div class="field-name">email</div> 
 	<div class="field" id="email">
