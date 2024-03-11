@@ -366,6 +366,7 @@ pub async fn change_request_state(
         true => Some(Utc::now()),
         false => friendship.accepted_at
     };
+
     if &friendship.friend_id != &user_id {
         if (friendship.cancelled && rejected) || (!friendship.cancelled && accepted) {
             let template = ErrorsTemplate {errors: vec!["TODO"]};
@@ -401,7 +402,7 @@ pub async fn change_request_state(
         .await
         .map_err(|err: sqlx::Error| err.to_string());
     if let Ok(_) = result {
-        let template = ErrorsTemplate {errors: vec!["TODO"]};
+        let template = RequestResultTemplate {id: request_id, accepted};
         return HtmlTemplate(template).into_response()
     } else {
         let template = ErrorsTemplate {errors: vec!["Database error, please try again later"]};
