@@ -4,6 +4,7 @@
  
 {% block head %}
   <link href="/assets/community.css" rel="stylesheet" />
+  <link href="/assets/friends.css" rel="stylesheet" />
 {% endblock %}
 
 {% block content %}
@@ -14,8 +15,8 @@
 <div class="user" id="request-{{friend.id.unwrap()}}">
 	<span class="at">@</span><a href="/profile/{{friend.screen_name}}"><span class="screen_name">{{ friend.screen_name }}</span></a>  
 	<div id="actions-{{friend.id.unwrap()}}">
-		<button class="accept-btn" hx-put="/friends/requests/{{friend.id.unwrap()}}" hx-vals='{"state": "accepted"}'>Accept</button>
-		<button class="reject-btn" hx-put="/friends/requests/{{friend.id.unwrap()}}" hx-vals='{"state": "rejected"}'>Reject</button>
+		<button class="accept-btn field-btn" hx-put="/friends/requests/{{friend.id.unwrap()}}" hx-vals='{"state": "accepted"}'>Accept</button>
+		<button class="reject-btn field-btn" hx-put="/friends/requests/{{friend.id.unwrap()}}" hx-vals='{"state": "rejected"}'>Reject</button>
 	</div>
 </div>
 {% endfor %}

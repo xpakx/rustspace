@@ -10,7 +10,7 @@
 <h1>{{username}}'s posts</h1>
 
 {% if owner %}
-	<a class="field-btn" href="/blog/post">New post</a>
+	<a class="post-link" href="/blog/post">New post</a>
 {% endif %}
 
 <section class="posts" id="posts">
@@ -20,7 +20,7 @@
 <article class="post">
 	{{post.content.as_ref().unwrap()}}
 </article>
-<a href="/blog/{{post.id.as_ref().unwrap()}}" class="post-link">Go</a>
+<a href="/blog/{{post.id.as_ref().unwrap()}}" class="post-link field-btn">Go</a>
 {% endfor %}
 </section>
 
@@ -38,6 +38,6 @@
 	{% endif %}
 </section>
 
-<a href="/profile/{{username}}" class="profile-link">Back to profile</a>
+<a href="/profile/{{username}}" class="post-link">Back to profile</a>
 
 {% endblock %}

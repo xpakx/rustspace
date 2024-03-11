@@ -23,10 +23,17 @@
 	cursor: pointer;
 	text-decoration: none;
 	margin-bottom: 30px;
+	transition: background-color 0.3s ease;
+	font-size: 13px;
+	vertical-align: middle;
 }
 
 .post-link:hover {
 	background-color: #54271d;
+}
+
+a.post-link {
+	display: inline-block;
 }
 
 a.more-link {

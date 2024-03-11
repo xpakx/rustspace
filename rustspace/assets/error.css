@@ -48,9 +48,17 @@ h1, p {
 	border-radius: 4px;
 	cursor: pointer;
 	font-weight: bold;
+	transition: background-color 0.3s ease;
+	margin-right: 10px;
 	text-decoration: none;
+	font-size: 13px;
+	vertical-align: middle;
 }
 
 .redir-btn:hover {
 	background-color: #54271d;
+}
+
+a.redir-btn {
+	display: inline-block;
 }
