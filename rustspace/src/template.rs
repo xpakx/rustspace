@@ -322,6 +322,14 @@ pub struct RequestResultTemplate {
     pub accepted: bool,
 }
 
+#[derive(Template)]
+#[template(path = "friends-result.html")]
+pub struct FriendsResultTemplate {
+    pub friends: Vec<FriendshipDetails>,
+    pub pages: i32,
+    pub page: i32,
+}
+
 pub struct HtmlTemplate<T>(pub T);
 
 impl<T> IntoResponse for HtmlTemplate<T> where T: Template, {

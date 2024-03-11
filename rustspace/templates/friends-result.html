@@ -1,0 +1,30 @@
+{% for friend in friends %}
+<div class="user">
+	<span class="at">@</span><a href="/profile/{{friend.screen_name}}"><span class="screen_name">{{ friend.screen_name }}</span></a>  
+	<button class="unfriend-btn" hx-put="/friends/requests/{{friend.id.unwrap()}}" hx-vals='{"state": "rejected"}'>Unfriend</button>
+</div>
+{% endfor %}
+
+<section hx-swap-oob="true" class="page-nav" id="page-nav">
+	{% if page >= 2 %}
+	<button hx-get="/friends/search?page=0" hx-target="#requests">0</button>
+	{% endif %}
+	{% if page > 2 %}
+	…
+	{% endif %}
+
+	{% if page > 0 %}
+	<button hx-get="/friends/search?page={{page-1}}" hx-target="#requests">{{page-1}}</button>
+	{% endif %}
+	<span class="current">{{page}}</span>
+	{% if page < pages-1 %}
+	<button hx-get="/friends/search?page={{page+1}}" hx-target="#requests">{{page+1}}</button>
+	{% endif %}
+
+	{% if page < pages-3 %}
+	…
+	{% endif %}
+	{% if page <= pages-3 %}
+	<button hx-get="/friends/search?page={{pages+1}}" hx-target="#requests">{{pages-1}}</button>
+	{% endif %}
+</section>
