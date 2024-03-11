@@ -369,7 +369,7 @@ pub async fn change_request_state(
 
     if &friendship.friend_id != &user_id {
         if (friendship.cancelled && rejected) || (!friendship.cancelled && accepted) {
-            let template = ErrorsTemplate {errors: vec!["TODO"]};
+            let template = ErrorsTemplate {errors: vec!["State is already set!"]};
             return HtmlTemplate(template).into_response()
         }
         let result = sqlx::query("UPDATE friendships SET cancelled = $1, accepted_at = $2 WHERE id = $3")
@@ -387,9 +387,14 @@ pub async fn change_request_state(
             return HtmlTemplate(template).into_response()
         }
     }
+
+    if &friendship.user_id != &user_id {
+        let template = ErrorsTemplate {errors: vec!["You cannot change state of friendship you aren't part of!"]};
+        return HtmlTemplate(template).into_response()
+    }
     
     if (friendship.rejected && rejected) || (friendship.accepted && accepted) {
-        let template = ErrorsTemplate {errors: vec!["TODO"]};
+        let template = ErrorsTemplate {errors: vec!["State is already set!"]};
         return HtmlTemplate(template).into_response()
     }
 
