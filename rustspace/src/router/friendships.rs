@@ -6,7 +6,7 @@ use tracing::{info, debug};
 use chrono::Utc;
 use serde::Deserialize;
 
-use crate::{template::{HtmlTemplate, ErrorsTemplate, UnauthorizedTemplate, FriendRequestsTemplate, FriendsTemplate, FriendRequestsResultsTemplate, InvitedTemplate, RejectedFriendRequestsTemplate, RejectedRequestsResultsTemplate}, UserData, AppState, UserModel, FriendshipModel, FriendshipRequest, FriendshipStateRequest, validation::validate_non_empty, FriendshipDetails};
+use crate::{template::{HtmlTemplate, ErrorsTemplate, UnauthorizedTemplate, FriendRequestsTemplate, FriendsTemplate, FriendRequestsResultsTemplate, InvitedTemplate, RejectedFriendRequestsTemplate, RejectedRequestsResultsTemplate, RequestResultTemplate}, UserData, AppState, UserModel, FriendshipModel, FriendshipRequest, FriendshipStateRequest, validation::validate_non_empty, FriendshipDetails};
 
 pub async fn send_friend_request(
     user: UserData,
@@ -379,7 +379,7 @@ pub async fn change_request_state(
             .await
             .map_err(|err: sqlx::Error| err.to_string());
         if let Ok(_) = result {
-            let template = ErrorsTemplate {errors: vec!["TODO"]};
+            let template = RequestResultTemplate {id: request_id, accepted};
             return HtmlTemplate(template).into_response()
         } else {
             let template = ErrorsTemplate {errors: vec!["Database error, please try again later"]};

@@ -11,10 +11,12 @@
 
 <section class="requests" id="requests">
 {% for friend in friends %}
-<div class="user">
+<div class="user" id="request-{{friend.id.unwrap()}}">
 	<span class="at">@</span><a href="/profile/{{friend.screen_name}}"><span class="screen_name">{{ friend.screen_name }}</span></a>  
-	<button class="accept-btn" hx-post="/friends/requests/{{friend.id.unwrap()}}" hx-vals='{"state": "accepted"}'>Accept</button>
-	<button class="reject-btn" hx-post="/friends/requests/{{friend.id.unwrap()}}" hx-vals='{"state": "rejected"}'>Reject</button>
+	<div id="actions-{{friend.id.unwrap()}}">
+		<button class="accept-btn" hx-post="/friends/requests/{{friend.id.unwrap()}}" hx-vals='{"state": "accepted"}'>Accept</button>
+		<button class="reject-btn" hx-post="/friends/requests/{{friend.id.unwrap()}}" hx-vals='{"state": "rejected"}'>Reject</button>
+	</div>
 </div>
 {% endfor %}
 </section>
