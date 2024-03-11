@@ -254,6 +254,7 @@ pub struct PostsTemplate {
     pub username: String,
     pub posts: Vec<BlogPostModel>,
     pub pages: i32,
+    pub owner: bool,
 }
 
 #[derive(Template)]

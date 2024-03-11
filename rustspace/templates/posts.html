@@ -9,6 +9,10 @@
 {% block content %}
 <h1>{{username}}'s posts</h1>
 
+{% if owner %}
+	<a class="field-btn" href="/blog/post">New post</a>
+{% endif %}
+
 <section class="posts" id="posts">
 {% for post in posts %}
 <h1>{{post.title.as_ref().unwrap()}}</h1>
@@ -19,7 +23,6 @@
 <a href="/blog/{{post.id.as_ref().unwrap()}}" class="post-link">Go</a>
 {% endfor %}
 </section>
-
 
 <section class="page-nav" id="page-nav">
 	<span class="current">0</span>

@@ -263,7 +263,11 @@ pub async fn get_users_posts(
         },
         Ok((posts, records)) => {
             let pages = records_to_count(records);
-            let template = PostsTemplate {posts, user, pages, username, path: "/posts"};
+            let owner = match &user.username {
+                None => false,
+                Some(u) => u == &username,
+            };
+            let template = PostsTemplate {posts, user, pages, username, path: "/posts", owner};
             return HtmlTemplate(template).into_response()
         }
     };
