@@ -339,6 +339,12 @@ pub struct CommentAddResultTemplate {
     pub id: String,
 }
 
+#[derive(Template)]
+#[template(path = "deleted-comment.html")]
+pub struct DeletedCommentTemplate {
+    pub id: i32,
+}
+
 pub struct HtmlTemplate<T>(pub T);
 
 impl<T> IntoResponse for HtmlTemplate<T> where T: Template, {

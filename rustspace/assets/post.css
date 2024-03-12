@@ -110,8 +110,14 @@ a.action-btn {
 	margin-bottom: 10px;
 }
 
-/* Actions Section */
 .actions {
 	margin-top: 10px;
 }
 
+.comment.new-comment {
+	border: 1px solid #ccc;
+}
+
+.comment.deleted {
+	display: none;
+}
