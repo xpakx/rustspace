@@ -5,7 +5,7 @@ use sqlx::{PgPool, postgres::PgQueryResult, Postgres};
 use tracing::{info, debug};
 use serde::Deserialize;
 
-use crate::{template::{HtmlTemplate, ErrorsTemplate, CommentsTemplate, CommentFormTemplate}, UserData, AppState, validation::validate_non_empty, CommentRequest, BlogCommentModel, BlogCommentDetails};
+use crate::{template::{HtmlTemplate, ErrorsTemplate, CommentsTemplate, CommentFormTemplate, CommentAddResultTemplate}, UserData, AppState, validation::validate_non_empty, CommentRequest, BlogCommentModel, BlogCommentDetails};
 
 fn validate_comment(request: &CommentRequest) -> Vec<&'static str> {
     let mut errors = vec![];
@@ -75,7 +75,7 @@ pub async fn add_comment(
     };
     info!("comment succesfully created.");
 
-    let template = ErrorsTemplate {errors: vec!["TODO"]};
+    let template = CommentAddResultTemplate {comment: request.content.unwrap(), screen_name: username};
     return HtmlTemplate(template).into_response()
 }
 

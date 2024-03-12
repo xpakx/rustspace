@@ -44,3 +44,7 @@ a.more-link {
 a.more-link:hover {
   text-decoration: underline;
 }
+
+new-comment {
+  border: 1px solid #ccc;
+}

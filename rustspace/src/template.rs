@@ -331,6 +331,13 @@ pub struct FriendsResultTemplate {
     pub page: i32,
 }
 
+#[derive(Template)]
+#[template(path = "comment-add-result.html")]
+pub struct CommentAddResultTemplate {
+    pub comment: String,
+    pub screen_name: String,
+}
+
 pub struct HtmlTemplate<T>(pub T);
 
 impl<T> IntoResponse for HtmlTemplate<T> where T: Template, {

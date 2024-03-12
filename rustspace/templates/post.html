@@ -30,7 +30,7 @@
 
 {% if user.username.is_some() %}
 <div id="error-container-comment"></div>
-<form hx-post="/blog/{{post_id}}/comments" hx-target="#error-container-comment">
+<form hx-post="/blog/{{post_id}}/comments" hx-target="#error-container-comment" id="comment-form">
 	<div class="form-row">
 		<label for="content"><b>Content</b></label>
 		<input type="text" placeholder="Comment content" name="content" id="content" required>
