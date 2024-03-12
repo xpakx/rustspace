@@ -75,7 +75,11 @@ pub async fn add_comment(
     };
     info!("comment succesfully created.");
 
-    let template = CommentAddResultTemplate {comment: request.content.unwrap(), screen_name: username};
+    let template = CommentAddResultTemplate {
+        comment: request.content.unwrap(),
+        screen_name: username,
+        id: String::from("comment-form"),
+    };
     return HtmlTemplate(template).into_response()
 }
 
@@ -182,7 +186,11 @@ pub async fn edit_comment(
         return HtmlTemplate(template).into_response()
     }
     info!("comment succesfully updated.");
-    let template = ErrorsTemplate {errors: vec!["TODO"]};
+    let template = CommentAddResultTemplate {
+        comment: request.content.unwrap(),
+        screen_name: username,
+        id: format!("comment-{}", comment_id)
+    };
     return HtmlTemplate(template).into_response()
 }
 

@@ -336,6 +336,7 @@ pub struct FriendsResultTemplate {
 pub struct CommentAddResultTemplate {
     pub comment: String,
     pub screen_name: String,
+    pub id: String,
 }
 
 pub struct HtmlTemplate<T>(pub T);
